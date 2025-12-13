@@ -89,6 +89,7 @@ alias trs="trash-restore"
 # Custom commands in .bash_profile
 # ─────────────────────────────────────────
 alias gc="grepcat"
+alias gits="git global-status"
 
 # ─────────────────────────────────────────
 # Find directories by name (Arch equivalent)
