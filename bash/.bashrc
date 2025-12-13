@@ -10,4 +10,4 @@ alias grep='grep --color=auto'
 PS1='[\u@\h \W]\$ '
 
 
-source ~/Arch_alias.sh
+source ~/arch_alias.sh
