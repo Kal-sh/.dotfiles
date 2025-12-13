@@ -1,0 +1,112 @@
+{
+    "51464c32-eabd-4a79-af8e-d61a60f5ee3e": {
+        "id": "51464c32-eabd-4a79-af8e-d61a60f5ee3e",
+        "name": "Google Search",
+        "keyword": "g",
+        "cmd": "https://google.com/search?q=%s",
+        "icon": "/usr/share/ulauncher/media/google-search-icon.png",
+        "is_default_search": true,
+        "run_without_argument": false,
+        "added": 1762643687.8880103
+    },
+    "55383f50-3f24-40a9-90c5-0d46c2064dc3": {
+        "id": "55383f50-3f24-40a9-90c5-0d46c2064dc3",
+        "name": "Stack Overflow",
+        "keyword": "so",
+        "cmd": "https://stackoverflow.com/search?q=%s",
+        "icon": "/usr/share/ulauncher/media/stackoverflow-icon.svg",
+        "is_default_search": true,
+        "run_without_argument": false,
+        "added": 1762643687.8880856
+    },
+    "3e97a100-1e1e-482f-a59a-d23b13380421": {
+        "id": "3e97a100-1e1e-482f-a59a-d23b13380421",
+        "name": "Wikipedia",
+        "keyword": "wiki",
+        "cmd": "https://en.wikipedia.org/wiki/%s",
+        "icon": "/usr/share/ulauncher/media/wikipedia-icon.png",
+        "is_default_search": true,
+        "run_without_argument": false,
+        "added": 1762643687.8881273
+    },
+    "faef7648-fc8d-4f66-bda5-ef79bb0edf98": {
+        "id": "faef7648-fc8d-4f66-bda5-ef79bb0edf98",
+        "name": "Youtube",
+        "keyword": "yt",
+        "cmd": "https://www.youtube.com/results?search_query=%s",
+        "icon": "~/Pictures/PNG/icons8-youtube-100.png",
+        "is_default_search": false,
+        "run_without_argument": false,
+        "added": 1762661499.3819296
+    },
+    "7a7758db-e455-4aca-b2ab-33350195257e": {
+        "id": "7a7758db-e455-4aca-b2ab-33350195257e",
+        "name": "Phind",
+        "keyword": "p",
+        "cmd": "https://phind.com/search?q=%s",
+        "icon": "~/Pictures/PNG/phind.png",
+        "is_default_search": false,
+        "run_without_argument": false,
+        "added": 1762661533.1607852
+    },
+    "22dcd9c0-af04-4987-8c18-625526b11c47": {
+        "id": "22dcd9c0-af04-4987-8c18-625526b11c47",
+        "name": "Chatgpt",
+        "keyword": "ch",
+        "cmd": "https://chatgpt.com/?q=%s",
+        "icon": "~/Pictures/PNG/chatgpt-app-icon-hd.png",
+        "is_default_search": false,
+        "run_without_argument": false,
+        "added": 1762829347.2648482
+    },
+    "605c1c31-140c-40f2-b456-f667367e92a5": {
+        "id": "605c1c31-140c-40f2-b456-f667367e92a5",
+        "name": "Brave",
+        "keyword": "br",
+        "cmd": "https://search.brave.com/search?q=%s",
+        "icon": "~/Pictures/PNG/brave-browser-logo.png",
+        "is_default_search": false,
+        "run_without_argument": false,
+        "added": 1762829613.662865
+    },
+    "bfcc4aef-5725-4c3a-ae3f-e6b602e8c2d4": {
+        "id": "bfcc4aef-5725-4c3a-ae3f-e6b602e8c2d4",
+        "name": "Perplexity",
+        "keyword": "px",
+        "cmd": "https://www.perplexity.ai/search/new?q=%s",
+        "icon": "~/Pictures/PNG/perplexity-app-icon-hd.png",
+        "is_default_search": false,
+        "run_without_argument": false,
+        "added": 1762830189.0079947
+    },
+    "edff5a33-eced-469b-ba1c-453635effd5b": {
+        "id": "edff5a33-eced-469b-ba1c-453635effd5b",
+        "name": "Github",
+        "keyword": "gg",
+        "cmd": "https://github.com/search?q=%s",
+        "icon": "~/Pictures/PNG/Git.png",
+        "is_default_search": false,
+        "run_without_argument": false,
+        "added": 1762830659.303213
+    },
+    "fe10cace-9cbd-40fa-a3b3-ee3c156bb418": {
+        "id": "fe10cace-9cbd-40fa-a3b3-ee3c156bb418",
+        "name": "Flathub",
+        "keyword": "fl",
+        "cmd": "https://flathub.org/en/apps/search?q=%s",
+        "icon": "~/Pictures/PNG/Flathub--Streamline-Simple-Icons.png",
+        "is_default_search": false,
+        "run_without_argument": false,
+        "added": 1763268620.1714344
+    },
+    "d69a99f4-e6af-45d1-b1c5-3e961f8595c8": {
+        "id": "d69a99f4-e6af-45d1-b1c5-3e961f8595c8",
+        "name": "Invidious",
+        "keyword": "v",
+        "cmd": "https://yewtu.be/search?q=%s",
+        "icon": "~/Pictures/PNG/icons8-youtube-100.png",
+        "is_default_search": false,
+        "run_without_argument": false,
+        "added": 1764496379.1775403
+    }
+}
