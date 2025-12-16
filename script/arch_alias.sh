@@ -14,6 +14,7 @@ alias cln="sudo pacman -Rns $(pacman -Qdtq)"
 alias clean="cln && cc"
 alias installed="pacman -Qe"
 alias repo="pacman -Ql"
+alias rip="expac --timefmt='%Y-%m-%d %T' '%l\t%n %v' | sort | tail -200 | nl"
 
 # ─────────────────────────────────────────
 # CachyOS pacman wrapper
