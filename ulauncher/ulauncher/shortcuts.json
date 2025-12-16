@@ -15,7 +15,7 @@
         "keyword": "so",
         "cmd": "https://stackoverflow.com/search?q=%s",
         "icon": "/usr/share/ulauncher/media/stackoverflow-icon.svg",
-        "is_default_search": true,
+        "is_default_search": false,
         "run_without_argument": false,
         "added": 1762643687.8880856
     },
@@ -25,7 +25,7 @@
         "keyword": "wiki",
         "cmd": "https://en.wikipedia.org/wiki/%s",
         "icon": "/usr/share/ulauncher/media/wikipedia-icon.png",
-        "is_default_search": true,
+        "is_default_search": false,
         "run_without_argument": false,
         "added": 1762643687.8881273
     },
@@ -65,7 +65,7 @@
         "keyword": "br",
         "cmd": "https://search.brave.com/search?q=%s",
         "icon": "~/Pictures/PNG/brave-browser-logo.png",
-        "is_default_search": false,
+        "is_default_search": true,
         "run_without_argument": false,
         "added": 1762829613.662865
     },
@@ -105,8 +105,18 @@
         "keyword": "v",
         "cmd": "https://yewtu.be/search?q=%s",
         "icon": "~/Pictures/PNG/icons8-youtube-100.png",
-        "is_default_search": false,
+        "is_default_search": true,
         "run_without_argument": false,
         "added": 1764496379.1775403
+    },
+    "133e1c05-56c9-45ef-af93-767c424f54bb": {
+        "id": "133e1c05-56c9-45ef-af93-767c424f54bb",
+        "name": "Startpage",
+        "keyword": "st",
+        "cmd": "https://www.startpage.com/do/search?q=%s",
+        "icon": "~/Pictures/PNG/startpage-512px.png",
+        "is_default_search": true,
+        "run_without_argument": false,
+        "added": 1765669305.7471666
     }
 }
