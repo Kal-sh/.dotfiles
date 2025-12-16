@@ -1,0 +1,13 @@
+{
+    "required_api_version": "^2.0.0",
+    "name": "Smart URL Opener",
+    "description": "Intelligent URL completion and opening with shortcuts, local development support, and smart suggestions",
+    "developer_name": "Kevin Coovi",
+    "icon": "images/icon.png",
+    "preferences": [{
+        "id": "browser_kw",
+        "type": "keyword",
+        "name": "Open URL",
+        "default_value": "go"
+    }]
+}

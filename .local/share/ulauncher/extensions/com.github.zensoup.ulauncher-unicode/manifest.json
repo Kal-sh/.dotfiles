@@ -1,0 +1,19 @@
+{
+  "name": "Unicode extension",
+  "description": "Search for Unicode characters and copy them to the clipboard",
+  "developer_name": "Vangelis Kostalas",
+  "icon": "images/unicode.png",
+  "required_api_version": "^2.0.0",
+  "options": {
+    "query_debounce": 0.5
+  },
+  "preferences": [
+    {
+      "id": "unicode",
+      "type": "keyword",
+      "name": "Unicode",
+      "description": "Search for Unicode characters and copy them to the clipboard",
+      "default_value": "uni"
+    }
+  ]
+}

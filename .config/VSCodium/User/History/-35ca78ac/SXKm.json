@@ -1,0 +1,292 @@
+{
+  //* cspell:disable
+  //* Editor
+  "files.autoSave": "onWindowChange",
+  "files.trimTrailingWhitespace": true,
+  "files.exclude": {
+    "**/.classpath": true,
+    "**/.factorypath": true,
+    "**/.project": true,
+    "**/.settings": true,
+    "**/.Workspace": true,
+    "**/*-lock.json": true,
+    "**/*.class": true,
+    "**/*.code-workspace": true,
+    "**/*.css.map": true,
+    "**/*.exe": true
+  },
+  "window.title": "${dirty}${activeEditorShort}",
+  "workbench.startupEditor": "newUntitledFile",
+  "workbench.sideBar.location": "right",
+  "workbench.editor.showTabs": "single",
+  "editor.fontSize": 18,
+  "editor.fontFamily": "'Hack', 'Space Mono', 'Geist mono', 'Fira Code', Consolas, 'Courier New', monospace",
+  "editor.fontLigatures": true,
+  "editor.suggestSelection": "first",
+  "editor.formatOnSave": true,
+  "editor.linkedEditing": true,
+  "editor.wordWrap": "on",
+  "editor.minimap.enabled": false,
+  "explorer.confirmDragAndDrop": false,
+  "extensions.autoUpdate": true,
+  "zenMode.showTabs": "single",
+  /*
+	"vsintellicode.modify.editor.suggestSelection": "automaticallyOverrodeDefaultValue",
+	"editor.scrollbar.horizontalScrollbarSize": 14,
+	"editor.scrollbar.vertical": "hidden",
+	"editor.scrollbar.horizontal": "hidden",
+	"settingsSync.ignoredExtensions": [],
+	"diffEditor.renderSideBySide": false,
+	"workbench.editor.closeButton": "false",
+	*/
+  "window.newWindowDimensions": "inherit",
+  "markdown.preview.fontSize": 16,
+  "telemetry.telemetryLevel": "off",
+  "diffEditor.ignoreTrimWhitespace": false,
+  "scm.diffDecorationsIgnoreTrimWhitespace": "true",
+  "window.menuBarVisibility": "compact",
+  //* Default formatters
+  /*"editor.defaultFormatter": "esbenp.prettier-vscode",
+	"prettier.singleQuote": true,
+	"prettier.useTabs": true,
+	"notebook.defaultFormatter": "ms-python.vscode-pylance",
+	*/
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.autopep8",
+    "diffEditor.ignoreTrimWhitespace": true
+  },
+  "[sql]": {
+    "editor.defaultFormatter": "cweijan.vscode-database-client2"
+  },
+  "[java]": {
+    "editor.defaultFormatter": null
+  },
+  "[csharp]": {
+    "editor.defaultFormatter": null
+  },
+  //* Python
+  "python.languageServer": "Jedi",
+  /*
+  "python.analysis.typeCheckingMode": "standard",
+  "python.analysis.completeFunctionParens": true,
+  "python.analysis.autoFormatStrings": true,
+  "python.analysis.autoIndent": true,
+	"python.pythonPath": "C:\\Users\\Kal\\anaconda3\\python.exe",
+	"jupyter.disableJupyterAutoStart": true,
+	"notebook.cellToolbarVisibility": "hover",
+	"notebook.lineNumbers": "on",
+	"notebook.formatOnSave.enabled": true,
+	"notebook.globalToolbarShowLabel": "never",
+	"notebook.globalToolbar": false,
+	"notebook.compactView": false,
+	"workbench.editorAssociations": {
+		"*.ipynb": "jupyter-notebook"
+	},
+	"notebook.cellToolbarLocation": {
+		"default": "right",
+		"jupyter-notebook": "left"
+	},
+	*/
+  //* Theme
+  //"workbench.productIconTheme": "fluent-icons",
+  // "dayNightThemeSwitcher.dayTheme": "Bearded Theme Milkshake Blueberry",
+  // "dayNightThemeSwitcher.nightTheme": "Bearded Theme Black & Ruby",
+  // "workbench.colorTheme": "Bearded Theme Black & Ruby",
+  "vscode-auto-light-dark-theme.lightTheme": "Bearded Theme Milkshake Blueberry",
+  "vscode-auto-light-dark-theme.darkTheme": "Bearded Theme Black & Amethyst",
+  "vscode-auto-light-dark-theme.autoToggle": false,
+  "workbench.iconTheme": "material-icon-theme",
+  "workbench.colorCustomizations": {},
+  //* Terminal
+  "terminal.integrated.copyOnSelection": true,
+  "terminal.integrated.cursorStyle": "line",
+  "terminal.integrated.cursorBlinking": true,
+  "terminal.integrated.defaultProfile.linux": "zsh",
+  "terminal.integrated.defaultProfile.windows": "Git Bash",
+  "terminal.integrated.showExitAlert": false,
+  //* Git
+  "git.confirmSync": true,
+  "git.autofetch": true,
+  "git.enableSmartCommit": true,
+  //* Custome css and js styles
+  "custom-ui-style.external.imports": [
+    "file:///home/kal/Documents/Github/.vscode_styles/custom-vscode.css"
+    // s"file:///home/kal/Documents/Github/.vscode_styles/vscode-script.js"
+  ],
+  /*
+  //* Code runner
+  "code-runner.clearPreviousOutput": true,
+  "code-runner.saveFileBeforeRun": true,
+  "code-runner.runInTerminal": true,
+  "code-runner.enableAppInsights": false,
+  "code-runner.preserveFocus": false,
+
+  //* Liveserver
+  "liveServer.settings.donotVerifyTags": true,
+  "liveServer.settings.donotShowInfoMsg": true,
+
+	//* AI
+	"github.copilot.enable": {
+		"*": false,
+		"plaintext": false,
+		"markdown": false,
+		"scminput": false
+	},
+  "Prettier-SQL.expressionWidth": 60,
+	*/
+  //* Vim
+  "vim.cursorStylePerMode.insert": "line",
+  "vim.cursorStylePerMode.normal": "line",
+  "vim.easymotion": true,
+  "vim.incsearch": true,
+  "vim.useSystemClipboard": true,
+  "vim.useCtrlKeys": true,
+  "vim.hlsearch": true,
+  "vim.insertModeKeyBindings": [
+    {
+      "before": [
+        "j",
+        "j"
+      ],
+      "after": [
+        "<Esc>"
+      ]
+    }
+  ],
+  "vim.normalModeKeyBindingsNonRecursive": [
+    {
+      "before": [
+        "<leader>",
+        "d"
+      ],
+      "after": [
+        "d",
+        "d"
+      ]
+    },
+    {
+      "before": [
+        "<C-n>"
+      ],
+      "commands": [
+        ":nohl"
+      ]
+    },
+    {
+      "before": [
+        "K"
+      ],
+      "commands": [
+        "lineBreakInsert"
+      ],
+      "silent": true
+    }
+  ],
+  "vim.leader": "<space>",
+  "vim.handleKeys": {
+    "<C-a>": false,
+    "<C-f>": false,
+    "<C-w>": false
+  },
+  // To improve performance
+  "extensions.experimental.affinity": {
+    "vscodevim.vim": 1
+  },
+  //* Container and Database config
+  "database-client.telemetry.usesOnlineServices": false,
+  "database-client.autoSync": true,
+  "database-client.capitalizeKeywordsWhenFormatting": true,
+  "containers.containerClient": "com.microsoft.visualstudio.containers.podman",
+  "containers.orchestratorClient": "com.microsoft.visualstudio.orchestrators.podmancompose",
+  "workbench.colorTheme": "Bearded Theme Black & Amethyst",
+  //* New
+  // "vsicons.dontShowNewVersionMessage": true,
+  /**
+	//* Code snap
+	"codesnap.showWindowControls": false,
+	"codesnap.transparentBackground": true,
+	"codesnap.shutterAction": "copy",
+
+	//* Template String
+	"javascript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBrackets": true,
+	"javascript.format.insertSpaceAfterOpeningAndBeforeClosingTemplateStringBraces": true,
+	"typescript.format.insertSpaceAfterOpeningAndBeforeClosingTemplateStringBraces": true,
+	"typescript.format.insertSpaceAfterOpeningAndBeforeClosingJsxExpressionBraces": true,
+
+	//* SQL
+	"database-client.highlightSQLBlock": true,
+	"mssql.connections": [
+		{
+			"server": ".",
+			"database": "",
+			"authenticationType": "SqlLogin",
+			"user": "SA",
+			"password": "",
+			"emptyPasswordInput": false,
+			"savePassword": true,
+			"profileName": "MSSQL",
+			"encrypt": "Mandatory",
+			"trustServerCertificate": true
+		}
+	],
+
+	//* Dart
+	"[dart]": {
+		"editor.formatOnSave": true,
+		"editor.formatOnType": true,
+		"editor.rulers": [80],
+		"editor.selectionHighlight": false,
+		"editor.suggest.snippetsPreventQuickSuggestions": false,
+		"editor.suggestSelection": "first",
+		"editor.tabCompletion": "onlySnippets",
+		"editor.wordBasedSuggestions": "off"
+	},
+
+	//* java
+	"redhat.telemetry.enabled": false,
+	"java.semanticHighlighting.enabled": true,
+
+	//* C#
+	"omnisharp.useModernNet": true,
+	"cSpell.customDictionaries": {
+		"custom-dictionary-user": {
+			"name": "custom-dictionary-user",
+			"path": "~/.cspell/custom-dictionary-user.txt",
+			"addWords": true,
+			"scope": "user"
+		}
+	},
+
+	//* Kubernetes
+	"vs-kubernetes": {
+		"vscode-kubernetes.kubectl-path.linux": "/home/kal/.local/state/vs-kubernetes/tools/kubectl/kubectl",
+		"vscode-kubernetes.minikube-path.linux": "/home/kal/.local/state/vs-kubernetes/tools/minikube/linux-amd64/minikube",
+		"vscode-kubernetes.helm-path.linux": "/home/kal/.local/state/vs-kubernetes/tools/helm/linux-amd64/helm"
+	},
+
+
+	"vscode-edge-devtools.mirrorEdits": true,
+	"vscode-edge-devtools.headless": true,
+
+	"npm.keybindingsChangedWarningShown": true,
+	"aws.telemetry": false,
+
+	//* AI
+	"tabnine.experimentalAutoImports": true,
+
+	"Codegeex.Privacy": false,
+	"Codegeex.EnableExtension": true,
+	"codeium.enableSearch": true,
+	"codeium.enableConfig": {
+		"*": false
+	},
+
+	"sonarlint.rules": {
+		"Web:AvoidCommentedOutCodeCheck": {
+			"level": "off"
+		}
+	},
+	"sonarlint.disableTelemetry": false,
+
+	*/
+}

@@ -1,0 +1,86 @@
+{
+    "telemetry.sqmId": "",
+    "telemetry.machineId": "c61bbd7c567243aea29b8708baa53af0c839c1dd338b52a3280710fdf0ae0bbb",
+    "telemetry.devDeviceId": "6657080b-318c-400e-982c-3cf1a4903a97",
+    "backupWorkspaces": {
+        "workspaces": [
+            {
+                "id": "c5f850161bd27639c760bf513acae5ad",
+                "configURIPath": "file:///home/kal/.config/VSCodium/Workspaces/1764519891252/workspace.json"
+            }
+        ],
+        "folders": [],
+        "emptyWindows": []
+    },
+    "windowControlHeight": 35,
+    "profileAssociations": {
+        "workspaces": {
+            "file:///home/kal/Documents/Github": "__default__profile__",
+            "file:///home/kal/.config/VSCodium/Workspaces/1764519891252/workspace.json": "__default__profile__"
+        },
+        "emptyWindows": {}
+    },
+    "theme": "vs-dark",
+    "themeBackground": "#111418",
+    "windowSplash": {
+        "zoomLevel": 0,
+        "baseTheme": "vs-dark",
+        "colorInfo": {
+            "foreground": "#a0acbb",
+            "background": "#111418",
+            "editorBackground": "#111418",
+            "titleBarBackground": "#060708",
+            "titleBarBorder": "#040506",
+            "activityBarBackground": "#0c0f11",
+            "activityBarBorder": "#040506",
+            "sideBarBackground": "#0c0f11",
+            "sideBarBorder": "#040506",
+            "statusBarBackground": "#111418",
+            "statusBarBorder": "#040506",
+            "statusBarNoFolderBackground": "#0c0f11"
+        },
+        "layoutInfo": {
+            "sideBarSide": "right",
+            "editorPartMinWidth": 220,
+            "titleBarHeight": 35,
+            "activityBarWidth": 48,
+            "sideBarWidth": 323,
+            "auxiliaryBarWidth": 0,
+            "statusBarHeight": 22,
+            "windowBorder": false
+        }
+    },
+    "windowsState": {
+        "lastActiveWindow": {
+            "workspaceIdentifier": {
+                "id": "c5f850161bd27639c760bf513acae5ad",
+                "configURIPath": "file:///home/kal/.config/VSCodium/Workspaces/1764519891252/workspace.json"
+            },
+            "backupPath": "/home/kal/.config/VSCodium/Backups/c5f850161bd27639c760bf513acae5ad",
+            "uiState": {
+                "mode": 1,
+                "x": 8,
+                "y": 35,
+                "width": 2544,
+                "height": 1397
+            }
+        },
+        "openedWindows": []
+    },
+    "windowSplashWorkspaceOverride": {
+        "layoutInfo": {
+            "sideBarWidth": 323,
+            "auxiliaryBarWidth": 170,
+            "workspaces": {
+                "fd47f8b57fb576a542d6dbbe15264ead": {
+                    "sideBarVisible": true,
+                    "auxiliaryBarVisible": false
+                },
+                "c5f850161bd27639c760bf513acae5ad": {
+                    "sideBarVisible": true,
+                    "auxiliaryBarVisible": false
+                }
+            }
+        }
+    }
+}
