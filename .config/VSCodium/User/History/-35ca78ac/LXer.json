@@ -1,6 +1,0 @@
-{
-    "workbench.iconTheme": "material-icon-theme",
-    "containers.containerClient": "com.microsoft.visualstudio.containers.podman",
-    "containers.orchestratorClient": "com.microsoft.visualstudio.orchestrators.podmancompose",
-    "workbench.colorTheme": "Bearded Theme Black & Ruby"
-}

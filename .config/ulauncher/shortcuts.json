@@ -34,7 +34,7 @@
         "name": "Youtube",
         "keyword": "yt",
         "cmd": "https://www.youtube.com/results?search_query=%s",
-        "icon": "~/Pictures/PNG/icons8-youtube-100.png",
+        "icon": "~/Pictures/wallpapers/PNG/icons8-youtube-100.png",
         "is_default_search": false,
         "run_without_argument": false,
         "added": 1762661499.3819296
@@ -44,7 +44,7 @@
         "name": "Phind",
         "keyword": "p",
         "cmd": "https://phind.com/search?q=%s",
-        "icon": "~/Pictures/PNG/phind.png",
+        "icon": "~/Pictures/wallpapers/PNG/phind.png",
         "is_default_search": false,
         "run_without_argument": false,
         "added": 1762661533.1607852
@@ -54,7 +54,7 @@
         "name": "Chatgpt",
         "keyword": "ch",
         "cmd": "https://chatgpt.com/?q=%s",
-        "icon": "~/Pictures/PNG/chatgpt-app-icon-hd.png",
+        "icon": "~/Pictures/wallpapers/PNG/chatgpt-app-icon-hd.png",
         "is_default_search": false,
         "run_without_argument": false,
         "added": 1762829347.2648482
@@ -64,7 +64,7 @@
         "name": "Brave",
         "keyword": "br",
         "cmd": "https://search.brave.com/search?q=%s",
-        "icon": "~/Pictures/PNG/brave-browser-logo.png",
+        "icon": "~/Pictures/wallpapers/PNG/brave-browser-logo.png",
         "is_default_search": true,
         "run_without_argument": false,
         "added": 1762829613.662865
@@ -74,7 +74,7 @@
         "name": "Perplexity",
         "keyword": "px",
         "cmd": "https://www.perplexity.ai/search/new?q=%s",
-        "icon": "~/Pictures/PNG/perplexity-app-icon-hd.png",
+        "icon": "~/Pictures/wallpapers/PNG/perplexity-app-icon-hd.png",
         "is_default_search": false,
         "run_without_argument": false,
         "added": 1762830189.0079947
@@ -84,7 +84,7 @@
         "name": "Github",
         "keyword": "gg",
         "cmd": "https://github.com/search?q=%s",
-        "icon": "~/Pictures/PNG/Git.png",
+        "icon": "~/Pictures/wallpapers/PNG/Git.png",
         "is_default_search": false,
         "run_without_argument": false,
         "added": 1762830659.303213
@@ -94,7 +94,7 @@
         "name": "Flathub",
         "keyword": "fl",
         "cmd": "https://flathub.org/en/apps/search?q=%s",
-        "icon": "~/Pictures/PNG/Flathub--Streamline-Simple-Icons.png",
+        "icon": "~/Pictures/wallpapers/PNG/Flathub--Streamline-Simple-Icons.png",
         "is_default_search": false,
         "run_without_argument": false,
         "added": 1763268620.1714344
@@ -104,7 +104,7 @@
         "name": "Invidious",
         "keyword": "v",
         "cmd": "https://yewtu.be/search?q=%s",
-        "icon": "~/Pictures/PNG/icons8-youtube-100.png",
+        "icon": "~/Pictures/wallpapers/PNG/icons8-youtube-100.png",
         "is_default_search": true,
         "run_without_argument": false,
         "added": 1764496379.1775403
@@ -114,7 +114,7 @@
         "name": "Startpage",
         "keyword": "st",
         "cmd": "https://www.startpage.com/do/search?q=%s",
-        "icon": "~/Pictures/PNG/startpage-512px.png",
+        "icon": "~/Pictures/wallpapers/PNG/startpage-512px.png",
         "is_default_search": true,
         "run_without_argument": false,
         "added": 1765669305.7471666
