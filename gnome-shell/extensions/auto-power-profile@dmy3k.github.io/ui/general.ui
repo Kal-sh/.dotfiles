@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface domain="org.gnome.shell.extensions.auto-power-profile">
+    <template class="AutoPowerProfileGeneralPrefs" parent="AdwPreferencesPage">
+        <property name="name">general</property>
+        <property name="title" translatable="yes">General</property>
+        <property name="icon-name">power-profile-balanced-rtl-symbolic</property>
+        <child>
+            <object class="AdwPreferencesGroup" id="ui_group">
+                <property name="title" translatable="yes">Default Profiles</property>
+                <property name="description" translatable="yes">Applied automatically unless user sets manually another one</property>
+
+                <child>
+                    <object class="AdwComboRow" id="ac_profile">
+                        <property name="title" translatable="yes">On AC</property>
+                        <property name="subtitle" translatable="yes">Select the default profile when connected to AC</property>
+                        <property name="model">platform_profile_model</property>
+                    </object>
+                </child>
+
+                <child>
+                    <object class="AdwComboRow" id="bat_profile">
+                        <property name="title" translatable="yes">On Battery</property>
+                        <property name="subtitle" translatable="yes">Select the default profile when running on battery</property>
+                        <property name="model">platform_profile_model</property>
+                    </object>
+                </child>
+
+                <child>
+                    <object class="AdwExpanderRow" id="row_low_battery">
+                        <property name="title" translatable="yes">Low Battery Threshold</property>
+                        <property name="subtitle" translatable="yes">Automatic power-saver on low battery</property>
+                        <property name="show-enable-switch">False</property>
+                        <child type="suffix">
+                            <object class="GtkLabel" id="low_battery_value">
+                                <property name="valign">center</property>
+                                <style>
+                                    <class name="dim-label"/>
+                                </style>
+                            </object>
+                        </child>
+                        <child>
+                            <object class="AdwActionRow">
+                                <property name="title" translatable="yes">Enable/disable in GNOME Settings → Power → Power Saving Options. The percentage threshold value is configured in the UPower config file (/etc/UPower/UPower.conf)</property>
+                                <property name="title-lines">0</property>
+                                <property name="title-selectable">True</property>
+                                <style>
+                                    <class name="property"/>
+                                </style>
+                            </object>
+                        </child>
+                    </object>
+                </child>
+            </object>
+        </child>
+
+        <child>
+            <object class="AdwPreferencesGroup">
+                <child>
+                    <object class="AdwActionRow" id="row_remember_user_profile">
+                        <property name="title" translatable="yes">Remember manual profile changes</property>
+                        <property name="subtitle" translatable="yes">When enabled, manually selected profiles become the new default for the current power state. When disabled, manual changes are temporary</property>
+                        <property name="activatable-widget">remember_user_profile</property>
+                        <child>
+                            <object class="GtkSwitch" id="remember_user_profile">
+                                <property name="valign">center</property>
+                            </object>
+                        </child>
+                    </object>
+                </child>
+
+                <child>
+                    <object class="AdwActionRow" id="row_notifications">
+                        <property name="title" translatable="yes">Notifications</property>
+                        <property name="subtitle" translatable="yes">Allow extension notifications</property>
+                        <property name="activatable-widget">notifications</property>
+                        <child>
+                            <object class="GtkSwitch" id="notifications">
+                                <property name="valign">center</property>
+                            </object>
+                        </child>
+                    </object>
+                </child>
+            </object>
+        </child>
+    </template>
+
+    <object class="GtkStringList" id="platform_profile_model"></object>
+</interface>

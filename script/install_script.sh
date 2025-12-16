@@ -14,7 +14,7 @@ install_apps() {
     sudo apt update && sudo apt upgrade -y
 
     # List of applications to install
-    apps=("curl" "vim" "git" "ufw" "tor" "ncdu" "nethogs" "gnome-tweaks" "ulauncher")
+    apps=("curl" "vim" "git" "ufw" "stow" "tor" "ncdu" "nethogs" "gnome-tweaks" "ulauncher")
 
     for app in "${apps[@]}"; do
       echo "Installing $app..."
@@ -27,7 +27,7 @@ install_apps() {
     sudo pacman -Syu --noconfirm
 
     # List of applications to install
-    apps=("curl" "vim" "git" "ufw" "ncdu" "nethogs" "tor" "gnome-tweaks" "ulauncher")
+    apps=("curl" "vim" "git" "ufw" "stow" "ncdu" "nethogs" "tor" "gnome-tweaks") 
 
     for app in "${apps[@]}"; do
       echo "Installing $app..."

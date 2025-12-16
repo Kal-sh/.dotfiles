@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+    <requires lib="gtk" version="4.0" />
+    <requires lib="libadwaita" version="1.0" />
+    <object class="AdwPreferencesPage" id="freqBoostGeneralTab">
+        <property name="name">freqBoostGeneralTab</property>
+        <property name="title" translatable="yes">General</property>
+        <property name="icon-name">emblem-system-symbolic</property>
+        <child>
+            <object class="AdwPreferencesGroup">
+                <property name="halign">center</property>
+                <child>
+                    <object class="AdwPreferencesGroup">
+                        <child>
+                            <object class="AdwActionRow">
+                                <property name="title" translatable="yes">Persist</property>
+                                <property name="subtitle" translatable="yes">Warning! This will make permissions dialog to appear 5s after login (only if boost needs to be changed).</property>
+                                <property name="activatable-widget">freqBoostPersistSwitch</property>
+                                <child>
+                                    <object class="GtkSwitch" id="freqBoostPersistSwitch">
+                                        <property name="valign">center</property>
+                                    </object>
+                                </child>
+                            </object>
+                        </child>
+                    </object>
+                </child>
+                <child>
+                    <object class="AdwPreferencesGroup">
+                        <property name="margin-top">24</property>
+                        <child>
+                            <object class="AdwActionRow">
+                                <property name="title" translatable="yes">Clean toggle</property>
+                                <property name="subtitle" translatable="yes">Remove the submenu and subtitle from the toggle for a cleaner look</property>
+                                <property name="activatable-widget">cleanSwitch</property>
+                                <child>
+                                    <object class="GtkSwitch" id="cleanSwitch">
+                                        <property name="valign">center</property>
+                                    </object>
+                                </child>
+                            </object>
+                        </child>
+                    </object>
+                </child>
+                <child>
+                    <object class="AdwPreferencesGroup">
+                        <property name="title" translatable="yes">Get rid of the permissions dialog</property>
+                        <property name="margin-top">24</property>
+                        <child>
+                            <object class="AdwActionRow" id="freqBoostPolkitOk">
+                                <property name="visible">0</property>
+                                <property name="title" translatable="yes">Add Polkit rules</property>
+                                <property name="activatable-widget">freqBoostPolkitSwitch</property>
+                                <child>
+                                    <object class="GtkSwitch" id="freqBoostPolkitSwitch">
+                                        <property name="valign">center</property>
+                                    </object>
+                                </child>
+                            </object>
+                        </child>
+                        <child>
+                            <object class="AdwActionRow" id="freqBoostOutdatedPolkit">
+                                <property name="title" translatable="yes">Outdated Polkit</property>
+                                <property name="subtitle" translatable="yes">Update it to at least 0.106 to be able to get rid of the permissions dialog.</property>
+                            </object>
+                        </child>
+                    </object>
+                </child>
+                <child>
+                    <object class="AdwPreferencesGroup" id="ppdFrame">
+                        <property name="title" translatable="yes">power-profiles-daemon control</property>
+                        <property name="margin-top">24</property>
+                        <child>
+                            <object class="AdwActionRow">
+                                <property name="title" translatable="yes">When I switch frequency boost to &lt;b&gt;ON&lt;/b&gt; set Power Profile to</property>
+                                <property name="subtitle">powerprofilesctl set ...</property>
+                                <property name="activatable-widget">ppdOn</property>
+                                <child>
+                                    <object class="GtkComboBoxText" id="ppdOn">
+                                        <property name="valign">center</property>
+                                        <property name="name">ppd-on</property>
+                                        <items>
+                                            <item translatable="yes" id="">No change</item>
+                                        </items>
+                                    </object>
+                                </child>
+                            </object>
+                        </child>
+                        <child>
+                            <object class="AdwActionRow">
+                                <property name="title" translatable="yes">When I switch frequency boost to &lt;b&gt;OFF&lt;/b&gt; set Power Profile to</property>
+                                <property name="subtitle">powerprofilesctl set ...</property>
+                                <property name="activatable-widget">ppdOff</property>
+                                <child>
+                                    <object class="GtkComboBoxText" id="ppdOff">
+                                        <property name="valign">center</property>
+                                        <property name="name">ppd-off</property>
+                                        <items>
+                                            <item translatable="yes" id="">No change</item>
+                                        </items>
+                                    </object>
+                                </child>
+                            </object>
+                        </child>
+                    </object>
+                </child>
+                <child>
+                    <object class="AdwPreferencesGroup" id="tunedFrame">
+                        <property name="title" translatable="yes">TuneD control</property>
+                        <property name="margin-top">24</property>
+                        <child>
+                            <object class="AdwActionRow">
+                                <property name="title" translatable="yes">When I switch frequency boost to &lt;b&gt;ON&lt;/b&gt; set TuneD Profile to</property>
+                                <property name="subtitle">tuned-adm profile ...</property>
+                                <property name="activatable-widget">tunedOn</property>
+                                <child>
+                                    <object class="GtkComboBoxText" id="tunedOn">
+                                        <property name="valign">center</property>
+                                        <property name="name">tuned-on</property>
+                                        <items>
+                                            <item translatable="yes" id="">No change</item>
+                                        </items>
+                                    </object>
+                                </child>
+                            </object>
+                        </child>
+                        <child>
+                            <object class="AdwActionRow">
+                                <property name="title" translatable="yes">When I switch frequency boost to &lt;b&gt;OFF&lt;/b&gt; set TuneD Profile to</property>
+                                <property name="subtitle">tuned-adm profile ...</property>
+                                <property name="activatable-widget">tunedOff</property>
+                                <child>
+                                    <object class="GtkComboBoxText" id="tunedOff">
+                                        <property name="valign">center</property>
+                                        <property name="name">tuned-off</property>
+                                        <items>
+                                            <item translatable="yes" id="">No change</item>
+                                        </items>
+                                    </object>
+                                </child>
+                            </object>
+                        </child>
+                    </object>
+                </child>
+            </object>
+        </child>
+    </object>
+</interface>

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.gnome.shell.extensions.auto-power-profile" path="/org/gnome/shell/extensions/auto-power-profile/">
+    <key name="ac" type="s">
+      <default>"performance"</default>
+      <summary>On AC profile</summary>
+      <description>Select the default profile to use when connected to AC</description>
+    </key>
+
+    <key name="bat" type="s">
+      <default>"balanced"</default>
+      <summary>On battery profile</summary>
+      <description>Select the default profile to use when running on battery</description>
+    </key>
+
+    <key name="notifications" type="b">
+      <default>true</default>
+      <summary>Show notifications</summary>
+      <description>Show extension notifications</description>
+    </key>
+
+    <key name="remember-user-profile" type="b">
+      <default>false</default>
+      <summary>Remember manual profile changes</summary>
+      <description>When enabled, manually selected profiles become the new default for the current power state (AC/battery). When disabled, manual changes are temporary and the extension will revert to configured defaults on the next power state change.</description>
+    </key>
+
+    <key name="performance-apps" type="as">
+      <default>[]</default>
+      <summary>List of application IDs that should enable performance mode</summary>
+      <description>
+        This is a list of desktop application IDs. When any of these applications are running, performance mode will be enabled.
+      </description>
+    </key>
+
+    <key name="performance-apps-bat" type="s">
+      <default>"performance"</default>
+      <summary>Profile to use for performance apps on battery</summary>
+      <description>
+        The power profile to enter when launching a performance app while on battery.
+      </description>
+    </key>
+    
+    <key name="performance-apps-ac" type="s">
+      <default>"performance"</default>
+      <summary>Profile to use for performance apps on AC</summary>
+      <description>
+        The power profile to enter when launching a performance app while on AC power.
+      </description>
+    </key>
+  </schema>
+</schemalist>

@@ -1,0 +1,9 @@
+.fbs-pref-btn {
+    border-radius: 3em;
+    padding: .4em;
+    background: rgba(128, 128, 128, .1);
+}
+
+.fbs-pref-btn:hover {
+    background: rgba(128, 128, 128, .3);
+}
