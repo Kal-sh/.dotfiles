@@ -1,46 +1,76 @@
 #!/bin/bash
 
-# Function to check the OS and install the apps accordingly
+# 🚀 install-apps.sh — OS-aware installer with emojis
+
 install_apps() {
   if [[ -f /etc/os-release ]]; then
     . /etc/os-release
     DISTRO=$ID
   fi
 
-  # Install applications based on distribution
+  echo "🧠 Detected distro: $DISTO"
+
   case $DISTRO in
   ubuntu | debian)
-    echo "Detected Ubuntu/Debian. Installing apps using apt..."
+    echo "🐧 Ubuntu/Debian detected — updating & installing via apt…"
     sudo apt update && sudo apt upgrade -y
 
-    # List of applications to install
-    apps=("curl" "vim" "git" "ufw" "stow" "tor" "ncdu" "nethogs" "gnome-tweaks" "ulauncher")
+    apps=(
+      curl
+      vim
+      git
+      ufw
+      stow
+      tor
+      ncdu
+      nethogs
+      gnome-tweaks
+      ulauncher
+    )
 
     for app in "${apps[@]}"; do
-      echo "Installing $app..."
-      sudo apt install -y $app
+      if dpkg -l | grep -q "$app"; then
+        echo "✅ $app already installed"
+      else
+        echo "⬇️ Installing $app…"
+        sudo apt install -y "$app"
+      fi
     done
     ;;
 
   arch | cachyos)
-    echo "Detected Arch/Cachyos. Installing apps using pacman..."
+    echo "🏔️ Arch/Cachyos detected — updating & installing via pacman…"
     sudo pacman -Syu --noconfirm
 
-    # List of applications to install
-    apps=("curl" "vim" "git" "ufw" "stow" "ncdu" "nethogs" "tor" "gnome-tweaks") 
+    apps=(
+      curl
+      vim
+      git
+      ufw
+      stow
+      ncdu
+      nethogs
+      tor
+      gnome-tweaks
+    )
 
     for app in "${apps[@]}"; do
-      echo "Installing $app..."
-      sudo pacman -S --noconfirm $app
+      if pacman -Qs "$app" >/dev/null; then
+        echo "✅ $app already installed"
+      else
+        echo "⬇️ Installing $app…"
+        sudo pacman -S --noconfirm "$app"
+      fi
     done
     ;;
 
   *)
-    echo "Unsupported OS. Please use either Ubuntu/Debian or Arch-based distributions."
+    echo "❌ Unsupported OS. Please use Ubuntu/Debian or Arch-based distros."
     exit 1
     ;;
   esac
+
+  echo "🎉 All listed apps processed!"
 }
 
-# Run the installation function
 install_apps
