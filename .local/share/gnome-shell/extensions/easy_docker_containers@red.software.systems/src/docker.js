@@ -42,7 +42,7 @@ export const isUserInDockerGroup = (() => {
  * @return {Boolean} whether docker daemon is running or not
  */
 export const isDockerRunning = async () => {
-  const cmdResult = await execCommand(["/bin/ps", "cax"]);
+  const cmdResult = await execCommand(["sh", "-c", "ps cax"]);
   return cmdResult.search(/dockerd/) >= 0;
 };
 
@@ -70,26 +70,39 @@ export const getContainers = async () => {
       };
     });
 
-  const containersInfo = await Promise.all(
-    images.map(({ name }) =>
-      execCommand(["docker", "inspect", "-f", "{{json .Config.Labels}}", name]),
-    ),
-  );
+  let containersInfo = [];
+  if (images.length) {
+    const inspectOut = await execCommand([
+      "docker",
+      "inspect",
+      "-f",
+      "{{json .Config.Labels}}",
+      ...images.map(({ name }) => name),
+    ]);
+    containersInfo = inspectOut.trim().split("\n");
+  }
+
   return containersInfo.map((commandOutput, i) => {
-    const jsonOutput = JSON.parse(commandOutput);
-    return {
-      ...(jsonOutput[`${COMPOSE_PREFIX}.project`]
-        ? {
-            compose: {
-              service: jsonOutput[`${COMPOSE_PREFIX}.service`],
-              project: jsonOutput[`${COMPOSE_PREFIX}.project`],
-              configFiles: jsonOutput[`${COMPOSE_PREFIX}.project.config_files`],
-              workingDir: jsonOutput[`${COMPOSE_PREFIX}.project.working_dir`],
-            },
-          }
-        : {}),
-      ...images[i],
-    };
+    try {
+      const jsonOutput = JSON.parse(commandOutput);
+      return {
+        ...(jsonOutput[`${COMPOSE_PREFIX}.project`]
+          ? {
+              compose: {
+                service: jsonOutput[`${COMPOSE_PREFIX}.service`],
+                project: jsonOutput[`${COMPOSE_PREFIX}.project`],
+                configFiles:
+                  jsonOutput[`${COMPOSE_PREFIX}.project.config_files`],
+                workingDir: jsonOutput[`${COMPOSE_PREFIX}.project.working_dir`],
+              },
+            }
+          : {}),
+        ...images[i],
+      };
+    } catch (e) {
+      logError(e);
+      return images[i];
+    }
   });
 };
 
