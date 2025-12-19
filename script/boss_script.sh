@@ -32,7 +32,7 @@ bootstrap_tasks() {
   DOTFILES_REPO="https://github.com/kal-sh/.dotfiles.git"
   DOTFILES_DIR="$HOME/.dotfiles"
 
-  # Clone dotfiles
+  # Clone dotfiles if not already cloned
   if [ -d "$DOTFILES_DIR" ]; then
     echo "📌 Dotfiles directory exists — skipping clone."
   else
@@ -43,7 +43,7 @@ bootstrap_tasks() {
     }
   fi
 
-  cd "$DOTFILES_DIR"
+  cd "$HOME/.dotfiles"
 
   # Deploy distro-specific alias
   echo "📂 Deploying distro-specific alias file…"
@@ -84,6 +84,22 @@ bootstrap_tasks() {
 
   echo "🎉 Bootstrap tasks complete!"
 }
+
+# Check if the dotfiles repo already exists
+DOTFILES_DIR="$HOME/.dotfiles"
+
+if [ ! -d "$DOTFILES_DIR" ]; then
+  echo "📦 Cloning dotfiles repo…"
+  git clone "https://github.com/kal-sh/.dotfiles.git" "$DOTFILES_DIR" || {
+    echo "❌ Failed to clone dotfiles repo!"
+    exit 1
+  }
+else
+  echo "📌 Dotfiles directory exists — skipping clone."
+fi
+
+# Change to the dotfiles directory to ensure the necessary scripts exist
+cd "$HOME/.dotfiles/script/"
 
 # Run the install-script.sh first
 run_script install-script.sh
