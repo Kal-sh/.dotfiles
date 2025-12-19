@@ -90,7 +90,7 @@ DOTFILES_DIR="$HOME/.dotfiles"
 
 if [ ! -d "$DOTFILES_DIR" ]; then
   echo "📦 Cloning dotfiles repo…"
-  git clone "https://github.com/kal-sh/.dotfiles.git" "$DOTFILES_DIR" || {
+  git clone "https://github.com/kal-sh/.dotfiles.git" || {
     echo "❌ Failed to clone dotfiles repo!"
     exit 1
   }
