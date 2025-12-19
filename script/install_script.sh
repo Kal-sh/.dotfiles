@@ -21,6 +21,7 @@ install_apps() {
       git
       ufw
       stow
+      ttf-hack-nerd
       tor
       ncdu
       nethogs
@@ -48,6 +49,7 @@ install_apps() {
       git
       ufw
       stow
+      ttf-hack-nerd
       ncdu
       nethogs
       tor
