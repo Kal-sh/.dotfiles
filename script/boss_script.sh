@@ -11,6 +11,11 @@ run_script() {
   echo "🎯 [$(date)] ✔ Finished $1."
 }
 
+cd "$HOME/.dotfiles"
+
+echo "📦 adding git remote origin"
+git remote add origin git@github.com:Kal-sh/.dotfiles.git
+
 cd "$HOME/.dotfiles/script/"
 
 echo "👉 Now running install-script.sh"
@@ -18,6 +23,9 @@ run_script install-script.sh
 
 echo "👉 Now running install-flatpaks.sh"
 run_script install-flatpaks.sh
+
+#echo "👉 Now running zsh4humans.sh"
+#run_script zsh4humans.sh
 
 # —————————————
 # Alias linking + Stow (added as requested)
@@ -53,15 +61,25 @@ fedora)
 esac
 
 if [[ -n "$ALIAS_SRC" && -f "$ALIAS_SRC" ]]; then
-  if [[ -L "$ALIAS_DEST" || -e "$ALIAS_DEST" ]]; then
-    echo "🔗 Alias link already exists: $ALIAS_DEST"
-  else
-    echo "🔗 Creating symlink: $ALIAS_DEST → $ALIAS_SRC"
-    ln -s "$ALIAS_SRC" "$ALIAS_DEST"
+  if [[ -e "$ALIAS_DEST" || -L "$ALIAS_DEST" ]]; then
+    echo "🗑️ Removing existing file/link: $ALIAS_DEST"
+    rm -rf "$ALIAS_DEST"
   fi
+  echo "🔗 Creating symlink: $ALIAS_DEST → $ALIAS_SRC"
+  ln -s "$ALIAS_SRC" "$ALIAS_DEST"
 else
   echo "⚠️  No distro-specific alias found for: $DISTRO"
 fi
+
+echo "🧹 Removing conflicting files in HOME before stow…"
+# Remove files that would conflict with stow
+# Only remove if they are regular files or symlinks
+for f in .zshrc .zshenv .bashrc .bash_profile .p10k.zsh .gitconfig .icons .theme; do
+  if [[ -e "$HOME/$f" || -L "$HOME/$f" ]]; then
+    echo "🗑️  Removing ~/${f}"
+    rm -rf "$HOME/$f"
+  fi
+done
 
 echo "🛠️  Running stow for dotfiles…"
 cd "$DOTFILES_DIR"
