@@ -10,6 +10,7 @@ run_script() {
     echo "✅ [$(date)] Finished 🎉 $1."
   else
     echo "❌ [$(date)] $1 failed 😢"
+    return 1
   fi
 }
 
@@ -36,7 +37,10 @@ bootstrap_tasks() {
     echo "📌 Dotfiles directory exists — skipping clone."
   else
     echo "📦 Cloning dotfiles repo…"
-    git clone "$DOTFILES_REPO" "$DOTFILES_DIR"
+    git clone "$DOTFILES_REPO" "$DOTFILES_DIR" || {
+      echo "❌ Failed to clone dotfiles repo!"
+      exit 1
+    }
   fi
 
   cd "$DOTFILES_DIR"
@@ -73,13 +77,21 @@ bootstrap_tasks() {
 
   # Run stow
   echo "📌 Running stow…"
-  stow . --ignore='^script$'
+  stow . --ignore='^script$' || {
+    echo "❌ Stow failed!"
+    exit 1
+  }
 
   echo "🎉 Bootstrap tasks complete!"
 }
 
-run_script install-script.sh &
-run_script install-flatpaks.sh &
+# Run the install-script.sh first
+run_script install-script.sh
 
-wait
+# Once install-script.sh completes, run install-flatpaks.sh
+run_script install-flatpaks.sh
+
+# Run bootstrap tasks after both scripts are done
+bootstrap_tasks
+
 echo "🎯 All done at $(date)! 🎉"
