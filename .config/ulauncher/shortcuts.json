@@ -65,7 +65,7 @@
         "keyword": "br",
         "cmd": "https://search.brave.com/search?q=%s",
         "icon": "~/Pictures/Wallpapers/PNG/brave-browser-logo.png",
-        "is_default_search": true,
+        "is_default_search": false,
         "run_without_argument": false,
         "added": 1762829613.662865
     },

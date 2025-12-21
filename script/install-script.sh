@@ -18,16 +18,18 @@ ubuntu | debian)
 
   apps=(
     curl
-    vim
+    vim-nox
     git
     ufw
     stow
     ttf-hack-nerd
+    ghostty
     tor
     ncdu
     nethogs
     gnome-tweaks
     ulauncher
+    vscodium
   )
 
   for app in "${apps[@]}"; do
@@ -52,10 +54,13 @@ arch | cachyos)
     ufw
     stow
     ttf-hack-nerd
+    ghostty
+    tor
     ncdu
     nethogs
     tor
     gnome-tweaks
+    vscodium
   )
 
   for app in "${apps[@]}"; do
@@ -88,16 +93,19 @@ fedora)
 
   apps=(
     curl
-    vim
+    vim-enhanced
     git
     ufw
     stow
     ttf-hack-nerd
+    ghostty
+    tor
     tor
     ncdu
     nethogs
     gnome-tweaks
     ulauncher
+    vscodium
   )
 
   for app in "${apps[@]}"; do

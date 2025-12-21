@@ -1,0 +1,154 @@
+{
+	"name": "vscode-auto-light-dark-theme",
+	"displayName": "Auto Light/Dark Theme Switch",
+	"description": "Change your light/dark theme based on time or system preference",
+	"author": "Aaron Zhou",
+	"publisher": "AaaaronZhou",
+	"version": "1.2.0",
+	"license": "MIT",
+	"type": "module",
+	"engines": {
+		"vscode": "^1.60.0"
+	},
+	"categories": [
+		"Themes"
+	],
+	"keywords": [
+		"theme",
+		"color theme",
+		"auto",
+		"light",
+		"dark",
+		"day",
+		"night",
+		"switch",
+		"toggle"
+	],
+	"files": [
+		"dist"
+	],
+	"homepage": "https://github.com/Clarkkkk/vscode-auto-light-dark-theme.git#readme",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/Clarkkkk/vscode-auto-light-dark-theme.git"
+	},
+	"bugs": {
+		"url": "https://github.com/Clarkkkk/vscode-auto-light-dark-theme.git/issues"
+	},
+	"badges": [],
+	"galleryBanner": {
+		"theme": "light"
+	},
+	"icon": "assets/logo.png",
+	"main": "./dist/extension.cjs",
+	"browser": "./dist/extension.cjs",
+	"contributes": {
+		"commands": [
+			{
+				"command": "vscode-auto-light-dark-theme.toggleTheme",
+				"title": "Toggle Light/Dark Theme"
+			},
+			{
+				"command": "vscode-auto-light-dark-theme.turnOnAutoToggle",
+				"title": "Turn On Auto Toggle",
+				"enablement": "vscode-auto-light-dark-theme.showTurnOnAutoToggle == true"
+			},
+			{
+				"command": "vscode-auto-light-dark-theme.turnOffAutoToggle",
+				"title": "Turn Off Auto Toggle",
+				"enablement": "vscode-auto-light-dark-theme.showTurnOffAutoToggle == true"
+			}
+		],
+		"configuration": {
+			"title": "Auto Light/Dark Theme Switch",
+			"properties": {
+				"vscode-auto-light-dark-theme.lightTheme": {
+					"description": "Light theme to use",
+					"type": "string",
+					"default": "Light Modern"
+				},
+				"vscode-auto-light-dark-theme.darkTheme": {
+					"description": "Dark theme to use",
+					"type": "string",
+					"default": "Dark Modern"
+				},
+				"vscode-auto-light-dark-theme.autoToggle": {
+					"description": "Toggle theme automatically",
+					"type": "boolean",
+					"default": true
+				},
+				"vscode-auto-light-dark-theme.toggleSetting": {
+					"description": "Toggle setting",
+					"markdownDescription": "Only applies when `#vscode-auto-light-dark-theme.autoToggle#` is checked.",
+					"type": "string",
+					"enum": [
+						"custom",
+						"system"
+					],
+					"enumDescriptions": [
+						"Set custom time to toggle",
+						"Follow system preference"
+					],
+					"default": "custom"
+				},
+				"vscode-auto-light-dark-theme.lightStartTime": {
+					"description": "Toggle to light theme at",
+					"markdownDescription": "Only applies when `#vscode-auto-light-dark-theme.toggleSetting#` is set to `custom`.",
+					"type": "number",
+					"default": 7
+				},
+				"vscode-auto-light-dark-theme.darkStartTime": {
+					"description": "Toggle to dark theme at",
+					"markdownDescription": "Only applies when `#vscode-auto-light-dark-theme.toggleSetting#` is set to `custom`.",
+					"type": "number",
+					"default": 19
+				},
+				"vscode-auto-light-dark-theme.showToggleButton": {
+					"description": "Whether to show toggle button on the status bar",
+					"type": "boolean",
+					"default": true
+				}
+			}
+		}
+	},
+	"activationEvents": [
+		"onStartupFinished"
+	],
+	"scripts": {
+		"vscode:prepublish": "pnpm run package",
+		"typecheck": "tsc --noEmit --watch --preserveWatchOutput",
+		"compile": "vite build",
+		"watch": "vite build --watch",
+		"package": "vite build",
+		"compile-tests": "tsc -p . --outDir out",
+		"watch-tests": "tsc -p . -w --outDir out",
+		"lint": "eslint --cache --fix src/**/*.{js,ts}",
+		"lint-staged": "lint-staged",
+		"test": "vitest",
+		"test:update": "vitest --update",
+		"test:run": "vitest --run --changed",
+		"release": "commit-and-tag-version"
+	},
+	"devDependencies": {
+		"@types/node": "20.11.5",
+		"@types/vscode": "^1.60.0",
+		"@typescript-eslint/eslint-plugin": "^6.19.0",
+		"@typescript-eslint/parser": "^6.19.0",
+		"commit-and-tag-version": "^12.2.0",
+		"eslint": "^8.56.0",
+		"eslint-config-prettier": "^9.1.0",
+		"eslint-config-standard": "^17.1.0",
+		"eslint-plugin-prettier": "^5.1.3",
+		"eslint-plugin-simple-import-sort": "^10.0.0",
+		"prettier": "^3.2.4",
+		"rollup-plugin-node-externals": "^6.1.2",
+		"typescript": "^5.3.3",
+		"vite": "^5.0.12",
+		"vite-plugin-dts": "^3.7.1"
+	},
+	"__metadata": {
+		"installedTimestamp": 1764435594593,
+		"targetPlatform": "universal",
+		"size": 631220
+	}
+}

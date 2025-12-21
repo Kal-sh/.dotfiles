@@ -2,18 +2,20 @@
 # install-flatpaks.sh
 
 flatpaks=(
-  com.mattjakeman.ExtensionManager  
+  com.mattjakeman.ExtensionManager
   org.localsend.localsend_app
   app.zen_browser.zen
   flathub io.mpv.Mpv
   org.telegram.desktop
   com.spotify.Client
   com.stremio.Stremio
-  com.protonvpn.www
   com.github.dynobo.normcap
   io.github.milkshiift.GoofCord
   org.jdownloader.JDownloader
   com.brave.Browser
+  com.collaboraoffice.Office
+  io.github.brunofin.Cohesion
+  #com.protonvpn.www
   #org.videolan.VLC
   #io.github.kolunmi.Bazaar
   #com.github.wwmm.easyeffects
@@ -31,4 +33,3 @@ for app in "${flatpaks[@]}"; do
 done
 
 echo "🎉 All apps installed!"
-
