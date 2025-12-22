@@ -4,10 +4,19 @@
 local M = {}
 
 function M.setup()
-  -- Patch nvim_buf_set_extmark to handle out of range end_col values
+  -- Patch nvim_buf_set_extmark to handle out of range end_col values and invalid ns_id
   local set_extmark = vim.api.nvim_buf_set_extmark
   
   vim.api.nvim_buf_set_extmark = function(bufnr, ns_id, line, col, opts)
+    -- Validate namespace ID
+    local ns_exists = pcall(vim.api.nvim_get_namespace, ns_id)
+    if not ns_exists then
+      vim.schedule(function()
+        vim.notify("Extmark error (handled): invalid key: ns_id " .. ns_id, vim.log.levels.WARN)
+      end)
+      return -1
+    end
+
     -- Validate buffer exists
     if not vim.api.nvim_buf_is_valid(bufnr) then
       return -1
