@@ -40,13 +40,13 @@ alias cl="clear"
 alias ff='fd --type f --hidden --exclude .git | fzf-tmux -p -w 90% --reverse --preview "bat --color=always {}" | { read -r file && [ -n "$file" ] && case "$file" in *.pdf) xdg-open "$file" ;; *.ppt|*.pptx) xdg-open "$file" ;; *.doc|*.docx) xdg-open "$file" ;; *.jpg|*.jpeg|*.png) xdg-open "$file" ;; *.mp4|*.mkv|*.webm) xdg-open "$file" ;; *) nvim "$file" ;; esac }'
 
 # ─────────────────────────────────────────
-# Toolbox / Distrobox (only if you installed them manually)
+# Toolbox / Distrobox
 # ─────────────────────────────────────────
-alias tb="toolbox enter"
-alias tbl="toolbox list"
-alias tbc="toolbox create"
-alias tbs="podman container stop"
-alias tbr="toolbox rm -f"
+#alias tb="toolbox enter"
+#alias tbl="toolbox list"
+#alias tbc="toolbox create"
+#alias tbs="podman container stop"
+#alias tbr="toolbox rm -f"
 
 alias dbe="distrobox enter"
 alias dbl="distrobox list"
@@ -69,6 +69,8 @@ alias e="vim"
 alias lol="lolcat"
 alias n="nvim"
 alias y="yazi"
+alias oc="opencode"
+alias gm="gemini"
 
 # ─────────────────────────────────────────
 # Tmux
@@ -87,13 +89,13 @@ alias trm="trash-rm"
 alias trs="trash-restore"
 
 # ─────────────────────────────────────────
-# Custom commands in .bash_profile
+# User custom commands
 # ─────────────────────────────────────────
 alias gc="grepcat"
 alias gits="git global-status"
 
 # ─────────────────────────────────────────
-# Find directories by name (Arch equivalent)
+# Find directories by name
 # ─────────────────────────────────────────
 alias f="sudo find / -type d -name"
 
@@ -126,18 +128,18 @@ alias tost="sys status tor"
 # ─────────────────────────────────────────
 # Docker
 # ─────────────────────────────────────────
-alias ds="sudo systemctl start docker"
-alias dst="sudo systemctl stop docker docker.socket"
-alias dstat="sudo systemctl status docker"
+#alias ds="sudo systemctl start docker"
+#alias dst="sudo systemctl stop docker docker.socket"
+#alias dstat="sudo systemctl status docker"
 
-alias dds="systemctl --user start docker-desktop"
-alias ddst="systemctl --user stop docker-desktop"
+#alias dds="systemctl --user start docker-desktop"
+#alias ddst="systemctl --user stop docker-desktop"
 
-alias alpine="docker start -i alpine"
-alias mssql="docker start -i mssql"
+#alias alpine="docker start -i alpine"
+#alias mssql="docker start -i mssql"
 
-alias dock="ds && dds"
-alias dockd="dst && ddst"
+#alias dock="ds && dds"
+#alias dockd="dst && ddst"
 
 # ─────────────────────────────────────────
 # Podman

@@ -14,9 +14,6 @@ if not (vim.uv or vim.loop).fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
--- Load opencode fix before plugins to prevent extmark errors
-require("config.opencode_fix").setup()
-
 require("lazy").setup({
   spec = {
     -- add LazyVim and import its plugins

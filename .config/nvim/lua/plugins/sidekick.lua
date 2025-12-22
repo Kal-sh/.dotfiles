@@ -1,5 +1,4 @@
 -- Sidekick AI Assistant Configuration for LazyVim
--- Integrated with opencode prompts and keymaps for a unified experience
 
 return {
   "folke/sidekick.nvim",
@@ -22,27 +21,19 @@ return {
 
     return {
       -- Sidekick toggle (main command)
-      { "<leader>s", nil, desc = "+sidekick", mode = { "n", "v" } },
-      { "<leader>st", function() require("sidekick.cli").toggle() end, desc = "Sidekick Toggle", mode = { "n", "t", "i", "x" } },
-      { "<leader>sa", function() require("sidekick.cli").toggle() end, desc = "Sidekick Toggle CLI" },
+      { "<leader>o", nil, desc = "+sidekick", mode = { "n", "v" } },
+      { "<leader>ot", function() require("sidekick.cli").toggle() end, desc = "Sidekick Toggle", mode = { "n", "t", "i", "x" } },
+      { "<leader>oa", function() require("sidekick.cli").toggle() end, desc = "Sidekick Toggle CLI" },
 
       -- CLI management
-      { "<leader>ss", function() require("sidekick.cli").select() end, desc = "Select AI Tool" },
-      { "<leader>sd", function() require("sidekick.cli").close() end, desc = "Detach CLI Session" },
-
-      -- ### Integrated OpenCode Keymaps ###
-      { "<leader>o", nil, desc = "+opencode (migrated)", mode = { "n", "v" } },
-      { "<leader>oe", send_prompt("explain"), desc = "Explain Code (Sidekick)", mode = { "n", "v" } },
-      { "<leader>or", send_prompt("review"), desc = "Review Code (Sidekick)", mode = { "n", "v" } },
-      { "<leader>od", send_prompt("debug"), desc = "Debug Code (Sidekick)", mode = { "n", "v" } },
-      { "<leader>of", send_prompt("refactor"), desc = "Refactor Code (Sidekick)", mode = { "n", "v" } },
-      { "<leader>ot", send_prompt("test"), desc = "Write Tests (Sidekick)", mode = { "n", "v" } },
+      { "<leader>os", function() require("sidekick.cli").select() end, desc = "Select AI Tool" },
+      { "<leader>od", function() require("sidekick.cli").close() end, desc = "Detach CLI Session" },
 
       -- Original Send actions
-      { "<leader>sc", function() require("sidekick.cli").send({ msg = "{this}" }) end, desc = "Send This", mode = { "x", "n" } },
-      { "<leader>sf", function() require("sidekick.cli").send({ msg = "{file}" }) end, desc = "Send File" },
-      { "<leader>sv", function() require("sidekick.cli").send({ msg = "{selection}" }) end, desc = "Send Selection", mode = { "x" } },
-      { "<leader>sp", function() require("sidekick.cli").prompt() end, desc = "Select Prompt", mode = { "n", "x" } },
+      { "<leader>oc", function() require("sidekick.cli").send({ msg = "{this}" }) end, desc = "Send This", mode = { "x", "n" } },
+      { "<leader>of", function() require("sidekick.cli").send({ msg = "{file}" }) end, desc = "Send File" },
+      { "<leader>ov", function() require("sidekick.cli").send({ msg = "{selection}" }) end, desc = "Send Selection", mode = { "x" } },
+      { "<leader>op", function() require("sidekick.cli").prompt() end, desc = "Select Prompt", mode = { "n", "x" } },
 
       -- NES (Next Edit Suggestions) - AI inline suggestions
       { "<Tab>", function()
@@ -60,6 +51,21 @@ return {
   opts = function()
     -- Enable NES for inline AI suggestions
     return {
+      -- add tools
+      tools = {
+        -- Gemini CLI; requires google-generativeai client
+        gemini = {
+          -- make sure you have the gemini cli installed
+          -- pip install google-generativeai
+          cmd = "gemini",
+          -- The prompt will be piped to stdin
+        },
+        -- OpenCode CLI
+        opencode = {
+          cmd = "opencode",
+          args = { "-a" }, -- -a for ask, prompt will be piped to stdin
+        },
+      },
       -- Enable NES (Next Edit Suggestions)
       nes = {
         enabled = true,
@@ -72,14 +78,13 @@ return {
         height = 20,
         border = "rounded",
       },
-      -- ### Integrated OpenCode Prompts ###
+      -- Prompts
       prompts = {
         explain = "Explain this selected code in detail: {selection}",
         review = "Review this code for bugs and improvements: {selection}",
         refactor = "Refactor this code for better readability and performance: {selection}",
         debug = "Debug this code - find issues and suggest fixes: {selection}",
         test = "Write tests for this code: {selection}",
-        -- Original sidekick prompts
         optimize = "Optimize this code for performance: {selection}",
         comment = "Add comments to this code: {selection}",
         complete = "Complete this code: {this}",
@@ -119,8 +124,8 @@ return {
       set = function(state)
         require("sidekick.nes").enable(state)
       end,
-    }):map("<leader>sn")
+    }):map("<leader>on")
 
-    vim.notify("✅ Sidekick AI assistant loaded with OpenCode integration", vim.log.levels.INFO)
+    vim.notify("✅ Sidekick AI assistant loaded", vim.log.levels.INFO)
   end,
 }
