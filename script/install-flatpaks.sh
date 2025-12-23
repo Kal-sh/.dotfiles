@@ -15,6 +15,7 @@ flatpaks=(
   com.brave.Browser
   com.collaboraoffice.Office
   io.github.brunofin.Cohesion
+  io.gitlab.news_flash.NewsFlash
   #com.protonvpn.www
   #org.videolan.VLC
   #io.github.kolunmi.Bazaar

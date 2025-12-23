@@ -25,6 +25,7 @@ ubuntu | debian)
     ttf-hack-nerd
     ghostty
     tor
+    opencode
     ncdu
     nethogs
     gnome-tweaks
@@ -75,6 +76,7 @@ arch | cachyos)
   # AUR packages via paru (preinstalled as you said)
   aur_apps=(
     ulauncher
+    opencode
   )
 
   for aur_app in "${aur_apps[@]}"; do
@@ -101,6 +103,7 @@ fedora)
     ghostty
     tor
     tor
+    opencode
     ncdu
     nethogs
     gnome-tweaks
