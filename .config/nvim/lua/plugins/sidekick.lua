@@ -1,5 +1,9 @@
 -- Sidekick AI Assistant Configuration for LazyVim
 
+-- Configuration variables for easy tweaking
+local window_width = 80
+local window_height = 25
+
 return {
   "folke/sidekick.nvim",
   dependencies = {
@@ -107,47 +111,55 @@ return {
     }
   end,
   opts = function()
-    -- Enable NES for inline AI suggestions
+    -- Conditionally add tools if they are executable
+    local tools = {}
+    if vim.fn.executable("gemini") == 1 then
+      tools.gemini = {
+        cmd = "gemini",
+        -- The prompt will be piped to stdin
+      }
+    end
+    if vim.fn.executable("opencode") == 1 then
+      tools.opencode = {
+        cmd = "opencode",
+        args = { "-a" }, -- -a for ask, prompt will be piped to stdin
+      }
+    end
+
+    -- Default prompts
+    local default_prompts = {
+      explain = "Explain this selected code in detail: {selection}",
+      review = "Review this code for bugs and improvements: {selection}",
+      refactor = "Refactor this code for better readability and performance: {selection}",
+      debug = "Debug this code - find issues and suggest fixes: {selection}",
+      test = "Write tests for this code: {selection}",
+      optimize = "Optimize this code for performance: {selection}",
+      comment = "Add comments to this code: {selection}",
+      complete = "Complete this code: {this}",
+      fix = "Fix any issues in this code: {selection}",
+    }
+
+    -- Safely load and merge custom prompts from lua/config/custom_prompts.lua
+    local has_custom, custom_prompts = pcall(require, "config.custom_prompts")
+    if not has_custom then
+      custom_prompts = {}
+    end
+    local final_prompts = vim.tbl_deep_extend("force", default_prompts, custom_prompts)
+
     return {
-      -- add tools
-      tools = {
-        -- Gemini CLI; requires google-generativeai client
-        gemini = {
-          -- make sure you have the gemini cli installed
-          -- pip install google-generativeai
-          cmd = "gemini",
-          -- The prompt will be piped to stdin
-        },
-        -- OpenCode CLI
-        opencode = {
-          cmd = "opencode",
-          args = { "-a" }, -- -a for ask, prompt will be piped to stdin
-        },
-      },
-      -- Enable NES (Next Edit Suggestions)
+      tools = tools,
       nes = {
         enabled = true,
         auto_jump = false,
         auto_apply = false,
       },
-      -- Configure sidekick window
+      -- Configure sidekick window using variables from the top of the file
       window = {
-        width = 80,
-        height = 20,
+        width = window_width,
+        height = window_height,
         border = "rounded",
       },
-      -- Prompts
-      prompts = {
-        explain = "Explain this selected code in detail: {selection}",
-        review = "Review this code for bugs and improvements: {selection}",
-        refactor = "Refactor this code for better readability and performance: {selection}",
-        debug = "Debug this code - find issues and suggest fixes: {selection}",
-        test = "Write tests for this code: {selection}",
-        optimize = "Optimize this code for performance: {selection}",
-        comment = "Add comments to this code: {selection}",
-        complete = "Complete this code: {this}",
-        fix = "Fix any issues in this code: {selection}",
-      },
+      prompts = final_prompts,
     }
   end,
   config = function(_, opts)
