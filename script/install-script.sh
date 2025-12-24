@@ -28,6 +28,8 @@ ubuntu | debian)
     opencode
     ncdu
     nethogs
+    tree-sitter-cli 
+    nvim
     gnome-tweaks
     ulauncher
     vscodium
@@ -56,11 +58,14 @@ arch | cachyos)
     stow
     ttf-hack-nerd
     ghostty
+    nvim
     tor
     ncdu
     nethogs
     tor
     gnome-tweaks
+    tree-sitter-cli 
+    #glow
     vscodium
   )
 
@@ -102,11 +107,12 @@ fedora)
     ttf-hack-nerd
     ghostty
     tor
-    tor
+    nvim
     opencode
     ncdu
     nethogs
     gnome-tweaks
+    tree-sitter-cli 
     ulauncher
     vscodium
   )

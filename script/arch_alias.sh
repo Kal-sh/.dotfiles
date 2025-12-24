@@ -8,6 +8,7 @@
 alias update="sudo pacman -Syu"
 alias s="pacman -Ss"
 alias i="sudo pacman -S"
+alias iy="sudo pacman -Sy"
 alias rmi="sudo pacman -Rs"
 alias cc="sudo pacman -Sc"
 alias cln="sudo pacman -Rns $(pacman -Qdtq)"
@@ -28,6 +29,7 @@ alias p="paru"
 alias pi="paru -S"
 alias pru="paru -Rs"
 alias psyu="paru -Syu"
+alias piy="paru -Sy"
 
 # ─────────────────────────────────────────
 # System / General
