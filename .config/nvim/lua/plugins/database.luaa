@@ -1,0 +1,48 @@
+return {
+  {
+    "tpope/vim-dadbod",
+    dependencies = {
+      "kristijanhusak/vim-dadbod-ui",
+      "kristijanhusak/vim-dadbod-completion",
+    },
+    cmd = { "DBUI", "DBUIToggle", "DBUIAddConnection", "DBUIFindBuffer" },
+    config = function()
+      -- vim-dadbod-ui configuration
+      vim.g.db_ui_use_nerd_fonts = 1
+      vim.g.db_ui_show_help = 0
+      vim.g.db_ui_save_location = vim.fn.stdpath("data") .. "/db_ui"
+
+      --
+      -- IMPORTANT:
+      -- Replace the placeholder values below with your actual MySQL connection details.
+      -- You can also add more connections here.
+      --
+      vim.g.db_ui_connections = {
+        mysql_local = {
+          adapter = "mysql",
+          host = "127.0.0.1",
+          port = 3306, -- Replace with your mapped port if different
+          user = "root", -- Replace with your username
+          password = "1234", -- Replace with your password
+          database = "mysql", -- Replace with your database name
+        },
+      }
+
+      -- Keymaps
+
+      vim.keymap.set(
+        "n",
+        "<leader>du",
+        ":DBUIToggle<CR>",
+        { noremap = true, silent = true, desc = "Toggle Database UI" }
+      )
+
+      vim.keymap.set(
+        { "n", "v" },
+        "<leader>dqe",
+        ":DB<CR>",
+        { noremap = true, silent = true, desc = "Run dadbod query" }
+      )
+    end,
+  },
+}

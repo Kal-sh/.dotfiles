@@ -82,6 +82,7 @@ arch | cachyos)
   aur_apps=(
     ulauncher
     opencode
+    gnome-shell-pomodoro
   )
 
   for aur_app in "${aur_apps[@]}"; do
