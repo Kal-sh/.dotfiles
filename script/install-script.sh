@@ -109,7 +109,7 @@ fedora)
     ghostty
     tor
     nvim
-    opencode
+    opencode-bin
     ncdu
     nethogs
     gnome-tweaks

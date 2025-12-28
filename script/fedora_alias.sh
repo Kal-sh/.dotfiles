@@ -1,131 +1,174 @@
-# System
-alias check="sudo dnf check-update"
+# ─────────────────────────────────────────
+# Package Manager (Fedora)
+# ─────────────────────────────────────────
+
+# ─────────────────────────────────────────
+# DNF
+# ─────────────────────────────────────────
 alias update="sudo dnf update"
+alias s="dnf search"
 alias i="sudo dnf install"
+alias iy="sudo dnf install"
 alias rmi="sudo dnf remove"
-alias ref="sudo dnf makecache --refresh"
-alias sys="systemctl"
+alias cc="sudo dnf clean all"
+alias cln="sudo dnf autoremove"
+alias clean="cln && cc"
+alias installed="dnf list installed"
+alias repo="dnf repoquery"
+alias rip="dnf history list | tail -200 | nl"
+
+# ─────────────────────────────────────────
+# System / General
+# ─────────────────────────────────────────
+alias sys="sudo systemctl"
 alias q="exit"
 alias cl="clear"
+alias fn="fd --type d --hidden --exclude .git | fzf-tmux -p -w 90% --reverse --preview 'bat --color=always {}' | xargs -I {} xdg-open '{}'"
+#alias fn="fd --type f --hidden --exclude .git | fzf-tmux -p -w 90% --reverse --preview 'bat --color=always {}' | xargs nvim"
+alias ff='fd --type f --hidden --exclude .git | fzf-tmux -p -w 90% --reverse --preview "bat --color=always {}" | { read -r file && [ -n "$file" ] && case "$file" in *.pdf) xdg-open "$file" ;; *.ppt|*.pptx) xdg-open "$file" ;; *.doc|*.docx) xdg-open "$file" ;; *.jpg|*.jpeg|*.png) xdg-open "$file" ;; *.mp4|*.mkv|*.webm) xdg-open "$file" ;; *) nvim "$file" ;; esac }'
 
-# OS-Tree
-alias ot="rpm-ostree"
-alias ots="ot status"
-alias oti="ot install"
+# ─────────────────────────────────────────
+# Toolbox / Distrobox
+# ─────────────────────────────────────────
+#alias tb="toolbox enter"
+#alias tbl="toolbox list"
+#alias tbc="toolbox create"
+#alias tbs="podman container stop"
+#alias tbr="toolbox rm -f"
 
-# Toolbox
-alias tb="toolbox enter"
-alias tbl="toolbox list"
-alias tbc="toolbox create"
-alias tbs="podman container stop"
-alias tbr="toolbox rm -f"
-
-# Distrobox
 alias dbe="distrobox enter"
 alias dbl="distrobox list"
 alias dbc="distrobox create"
 alias dbs="distrobox stop"
 alias drm="distrobox rm -f"
 
-# cli tools
+# ─────────────────────────────────────────
+# CLI Tools
+# ─────────────────────────────────────────
 alias ls="lsd -A"
 alias lsa="lsd -lA"
 alias bp="bpytop"
 alias td="tldr"
 alias st="curl -s https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest.py | python3 -"
 alias fk="fuck"
+alias nc="ncdu"
+alias xd="xdg-open"
+alias e="vim"
+alias lol="lolcat"
+alias n="nvim"
+alias y="yazi"
+alias oc="opencode"
+alias gm="gemini"
 
+# ─────────────────────────────────────────
 # Tmux
+# ─────────────────────────────────────────
 alias t="tmux"
 alias tl="tmux ls"
 alias ta="tmux a"
 alias tta="tmux a -t"
-alias n="nvim"
 
-# Clean
-alias cc="sudo dnf clean all"
-alias cln="sudo dnf autoremove"
-alias clean="cln && cc"
-alias rip="remove-retired-packages"
-
-# File related
-alias nc="ncdu"
-alias xd="xdg-open"
-alias e="vi"
-alias lol="lolcat"
-alias f="sudo find / -type d -name"
-alias installed="sudo dnf list installed"
-alias repo="dnf repoquery --list"
-alias mt="cd /run/media/kal && ls"
-
-# AppImages
-alias tor="cd /home/kal/Downloads/XDM/General/tor-browser-linux64-12.0.7_ALL/tor-browser && ./start-tor-browser.desktop"
-alias qb="cd ~/Applications && ./qBittorrent-Enhanced-Edition.AppImage"
-alias brave="cd ~/Applications && ./Brave-stable-v1.52.126-x86_64.AppImage"
-alias onlyoffice="cd ~/Applications && ./OnlyOffice.AppImage"
-alias rss="cd ~/Applications && ./Fluent_Reader.AppImage"
-alias gpt="cd ~/AppImages && ./chat-gpt_1.1.0_amd64.AppImage &"
-alias nt="cd ~/AppImages && ./Notion-2.3.2-1-x86-64.AppImage &"
-alias wps="cd ~/AppImages && ./WPS-Office_11.1.0.11719-x86_64.AppImage &"
-
+# ─────────────────────────────────────────
 # Trash-cli
-
+# ─────────────────────────────────────────
 alias tr="trash-put -i"
 alias trl="trash-list"
 alias trm="trash-rm"
 alias trs="trash-restore"
 
-# Network
+# ─────────────────────────────────────────
+# User custom commands
+# ─────────────────────────────────────────
+alias gc="grepcat"
+alias gits="git global-status"
+
+# ─────────────────────────────────────────
+# Find directories by name
+# ─────────────────────────────────────────
+alias f="sudo find / -type d -name"
+
+# ─────────────────────────────────────────
+# Mount media
+# ─────────────────────────────────────────
+alias mt="cd /run/media/$USER && ls"
+
+# ─────────────────────────────────────────
+# AppImages
+# ─────────────────────────────────────────
+#alias tor="cd ~/Downloads/XDM/General/tor-browser && ./start-tor-browser.desktop"
+#alias wps="cd ~/AppImages && ./WPS-Office.AppImage &"
+
+# ─────────────────────────────────────────
+# Network Tools
+# ─────────────────────────────────────────
 alias pvpsh="nmcli connection show --active"
 alias pvpd="nmcli connection delete"
 alias nh="sudo nethogs"
 
-# tor
+# ─────────────────────────────────────────
+# TOR service
+# ─────────────────────────────────────────
 alias tor="sys start tor"
 alias stor="sys stop tor"
 alias rtor="sys restart tor"
 alias tost="sys status tor"
 
+# ─────────────────────────────────────────
 # Docker
-alias ds="systemctl start docker"
-alias dst="systemctl stop docker docker.socket"
-alias dstat="systemctl status docker"
-alias dds="systemctl --user start docker-desktop"
-alias ddst="systemctl --user stop docker-desktop"
-alias alpine="docker start -i alpine"
-alias mssql="docker start -i mssql"
-alias dock="ds && dds"
-alias dockd="dst && ddst"
+# ─────────────────────────────────────────
+#alias ds="sudo systemctl start docker"
+#alias dst="sudo systemctl stop docker docker.socket"
+#alias dstat="sudo systemctl status docker"
 
+#alias dds="systemctl --user start docker-desktop"
+#alias ddst="systemctl --user stop docker-desktop"
+
+#alias alpine="docker start -i alpine"
+#alias mssql="docker start -i mssql"
+
+#alias dock="ds && dds"
+#alias dockd="dst && ddst"
+
+# ─────────────────────────────────────────
 # Podman
-alias pds="systemctl start podman"
-alias pdst="systemctl stop podman podman.socket"
-alias pdstat="systemctl status podman"
+# ─────────────────────────────────────────
+alias pds="sudo systemctl start podman"
+alias pdst="sudo systemctl stop podman podman.socket"
+alias pdstat="sudo systemctl status podman"
 alias pdps="podman ps -a"
+
 alias polla="podman start ollama"
 alias polls="podman stop ollama"
+
 alias polq0="podman exec -it ollama ollama run qwen2.5-Coder:0.5b"
 alias polq1="podman exec -it ollama ollama run qwen2.5-Coder:1.5b"
 alias polq3="podman exec -it ollama ollama run qwen2.5-Coder:3b"
-alias psodoo="sudo podman pod stop odoo-pod && sudo ss -tuln | grep 8069 && sudo ss -tuln | grep 5433"
 
-# VScode ownership
-#alias vso="sudo chown -R $(whoami) $(which code)"
-#"$(which code)"
-alias vso="sudo chown -R $(whoami) /usr/share/code"
+# ─────────────────────────────────────────
+# Loading script
+# ─────────────────────────────────────────
+#while true; do for var in / -\\ \|; do echo -en "\r$var"; sleep .1 done; done
 
+# ─────────────────────────────────────────
+# zsh autocorrect
+# ─────────────────────────────────────────
+setopt correct
 
-# Source Update
+# ─────────────────────────────────────────
+# VSCode Permission Fix
+# ─────────────────────────────────────────
+alias vso="sudo chown -R $(whoami) /usr/share/vscodium"
+
+# ─────────────────────────────────────────
+# Source Reload
+# ─────────────────────────────────────────
 alias sr='
-#!/bin/bash
-
-# Get the name of the current shell
 current_shell=$(ps -p $$ -o comm=)
-
-# Check if the current shell is zsh
 if [[ "$current_shell" == "zsh" ]]; then
     exec zsh
 else
     source ~/.bashrc
 fi
 '
+
+
