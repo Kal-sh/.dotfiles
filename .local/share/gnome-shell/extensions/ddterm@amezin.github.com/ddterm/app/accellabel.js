@@ -14,54 +14,39 @@ export const AccelLabel = GObject.registerClass({
     },
 },
 class DDTermAccelLabel extends Gtk.Label {
-    #name = null;
-    #target_value = null;
-    #toplevel = null;
-    #keys_handler = null;
-    #hierarchy_handler = null;
+    _init(params) {
+        this._name = null;
+        this._target_value = null;
+        this._toplevel = null;
+        this._keys_handler = null;
 
-    constructor(params) {
-        super(params);
+        super._init(params);
+        this.__heapgraph_name = this.constructor.$gtype.name;
 
-        this.connect('realize', this.#realize.bind(this));
-        this.connect('unrealize', this.#unrealize.bind(this));
-    }
+        this.connect('destroy', () => {
+            if (this._keys_handler) {
+                this.get_toplevel().disconnect(this._keys_handler);
+                this._keys_handler = null;
+            }
+        });
 
-    #realize() {
-        this.#hierarchy_handler =
-            this.connect('hierarchy-changed', this.#update_hierarchy.bind(this));
-
-        this.#update_hierarchy();
-    }
-
-    #unrealize() {
-        if (this.#keys_handler) {
-            this.#toplevel.disconnect(this.#keys_handler);
-            this.#keys_handler = null;
-        }
-
-        this.#toplevel = null;
-
-        if (this.#hierarchy_handler) {
-            this.disconnect(this.#hierarchy_handler);
-            this.#hierarchy_handler = null;
-        }
+        this.on_hierarchy_changed();
     }
 
     get action_name() {
-        return this.#name;
+        return this._name;
     }
 
     vfunc_get_action_name() {
-        return this.#name;
+        return this._name;
     }
 
     get action_target() {
-        return this.#target_value;
+        return this._target_value;
     }
 
     vfunc_get_action_target_value() {
-        return this.#target_value;
+        return this._target_value;
     }
 
     set action_name(value) {
@@ -69,11 +54,11 @@ class DDTermAccelLabel extends Gtk.Label {
     }
 
     vfunc_set_action_name(value) {
-        if (this.#name === value)
+        if (this._name === value)
             return;
 
-        this.#name = value;
-        this.#update_label();
+        this._name = value;
+        this.update_label();
     }
 
     set action_target(value) {
@@ -81,45 +66,50 @@ class DDTermAccelLabel extends Gtk.Label {
     }
 
     vfunc_set_action_target_value(value) {
-        if (this.#target_value === value)
+        if (this._target_value === value)
             return;
 
-        if (value && this.#target_value && value.equal(this.#target_value))
+        if (value && this._target_value && value.equal(this._target_value))
             return;
 
-        this.#target_value = value;
-        this.#update_label();
+        this._target_value = value;
+        this.update_label();
     }
 
-    #update_hierarchy() {
-        if (this.#keys_handler) {
-            this.#toplevel.disconnect(this.#keys_handler);
-            this.#keys_handler = null;
+    on_hierarchy_changed() {
+        if (this._keys_handler) {
+            this._toplevel.disconnect(this._keys_handler);
+            this._keys_handler = null;
+            this._toplevel = null;
         }
 
-        this.#toplevel = this.get_toplevel();
+        this._toplevel = this.get_toplevel();
 
-        if (this.#toplevel instanceof Gtk.Window) {
-            this.#keys_handler =
-                this.#toplevel.connect('keys-changed', this.#update_label.bind(this));
+        if (this._toplevel instanceof Gtk.Window) {
+            this._keys_handler = this._toplevel.connect(
+                'keys-changed',
+                () => this.update_label()
+            );
         }
 
-        this.#update_label();
+        this.update_label();
     }
 
-    #get_label() {
-        if (!this.#name)
+    _get_label() {
+        if (!this._name)
             return '';
 
-        const action = Gio.Action.print_detailed_name(this.#name, this.#target_value);
-        const toplevel = this.#toplevel;
+        const action = Gio.Action.print_detailed_name(this._name, this._target_value);
+        const toplevel = this.get_toplevel();
 
         if (!(toplevel instanceof Gtk.Window))
             return '';
 
         for (const shortcut of toplevel.application?.get_accels_for_action(action) || []) {
             try {
-                return Gtk.accelerator_get_label(...Gtk.accelerator_parse(shortcut));
+                return Gtk.accelerator_get_label(
+                    ...Gtk.accelerator_parse(shortcut)
+                );
             } catch (ex) {
                 logError(ex);
             }
@@ -128,7 +118,7 @@ class DDTermAccelLabel extends Gtk.Label {
         return '';
     }
 
-    #update_label() {
-        this.label = this.#get_label();
+    update_label() {
+        this.label = this._get_label();
     }
 });

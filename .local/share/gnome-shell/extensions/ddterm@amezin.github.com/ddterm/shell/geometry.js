@@ -2,36 +2,45 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import GLib from 'gi://GLib';
-import GObject from 'gi://GObject';
-import Gio from 'gi://Gio';
-import Clutter from 'gi://Clutter';
-import Graphene from 'gi://Graphene';
-import Meta from 'gi://Meta';
-import Mtk from 'gi://Mtk';
+'use strict';
 
-import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+const GLib = imports.gi.GLib;
+const GObject = imports.gi.GObject;
+const Gio = imports.gi.Gio;
+const Clutter = imports.gi.Clutter;
+const Graphene = imports.gi.Graphene;
+const Meta = imports.gi.Meta;
+const Mtk = imports.gi.Meta;
 
-export const WindowGeometry = GObject.registerClass({
+const Main = imports.ui.main;
+
+function get_monitor_manager() {
+    if (Meta.MonitorManager.get)
+        return Meta.MonitorManager.get();
+
+    return global.backend.get_monitor_manager();
+}
+
+var WindowGeometry = GObject.registerClass({
     Properties: {
         'target-rect': GObject.ParamSpec.boxed(
             'target-rect',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READABLE,
             Mtk.Rectangle
         ),
         'workarea': GObject.ParamSpec.boxed(
             'workarea',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READABLE,
             Mtk.Rectangle
         ),
         'monitor-index': GObject.ParamSpec.int(
             'monitor-index',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READABLE,
             0,
             GLib.MAXINT32,
@@ -39,8 +48,8 @@ export const WindowGeometry = GObject.registerClass({
         ),
         'monitor-scale': GObject.ParamSpec.double(
             'monitor-scale',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READABLE,
             0,
             100,
@@ -48,31 +57,31 @@ export const WindowGeometry = GObject.registerClass({
         ),
         'pivot-point': GObject.ParamSpec.boxed(
             'pivot-point',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READABLE,
             Graphene.Point
         ),
         'orientation': GObject.ParamSpec.enum(
             'orientation',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READABLE,
             Clutter.Orientation,
             Clutter.Orientation.VERTICAL
         ),
         'maximize-flag': GObject.ParamSpec.flags(
             'maximize-flag',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READABLE,
             Meta.MaximizeFlags,
             Meta.MaximizeFlags.VERTICAL
         ),
         'window-size': GObject.ParamSpec.double(
             'window-size',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.EXPLICIT_NOTIFY,
             0,
             1,
@@ -80,23 +89,23 @@ export const WindowGeometry = GObject.registerClass({
         ),
         'window-position': GObject.ParamSpec.enum(
             'window-position',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.EXPLICIT_NOTIFY,
             Meta.Side,
             Meta.Side.TOP
         ),
         'window-monitor': GObject.ParamSpec.string(
             'window-monitor',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.EXPLICIT_NOTIFY,
             'current'
         ),
         'window-monitor-connector': GObject.ParamSpec.string(
             'window-monitor-connector',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.EXPLICIT_NOTIFY,
             ''
         ),
@@ -105,45 +114,32 @@ export const WindowGeometry = GObject.registerClass({
         'updated': {},
     },
 }, class DDTermWindowGeometry extends GObject.Object {
-    #workareas_changed_handler;
-    #target_rect = null;
-    #workarea = null;
-    #monitor_index = 0;
-    #monitor_scale = 1;
-    #pivot_point = null;
-    #orientation = Clutter.Orientation.VERTICAL;
-    #maximize_flag = Meta.MaximizeFlags.VERTICAL;
-    #notify_emitted = false;
+    _init(params) {
+        super._init(params);
 
-    constructor(params) {
-        super(params);
-
-        this.#workareas_changed_handler = global.display.connect(
+        this._workareas_changed_handler = global.display.connect(
             'workareas-changed',
-            this.#update_workarea.bind(this)
+            this._update_workarea.bind(this)
         );
 
-        this.connect('notify::window-size', this.#update_target_rect.bind(this));
-        this.connect('notify::window-position', this.#update_window_position.bind(this));
+        this.connect('notify::window-size', this._update_target_rect.bind(this));
+        this.connect('notify::window-position', this._update_window_position.bind(this));
         this.connect('notify::window-monitor', this.update_monitor.bind(this));
         this.connect('notify::window-monitor-connector', this.update_monitor.bind(this));
 
-        this.#update_window_position();
+        this._update_window_position();
         this.update_monitor();
     }
 
     disable() {
-        if (this.#workareas_changed_handler) {
-            global.display.disconnect(this.#workareas_changed_handler);
-            this.#workareas_changed_handler = null;
+        if (this._workareas_changed_handler) {
+            global.display.disconnect(this._workareas_changed_handler);
+            this._workareas_changed_handler = null;
         }
     }
 
     static get_target_rect(workarea, monitor_scale, size, window_pos) {
         const target_rect = workarea.copy();
-
-        if (size === 1)
-            return target_rect;
 
         if (window_pos === Meta.Side.LEFT || window_pos === Meta.Side.RIGHT) {
             target_rect.width *= size;
@@ -174,90 +170,90 @@ export const WindowGeometry = GObject.registerClass({
     }
 
     get target_rect() {
-        return this.#target_rect;
+        return this._target_rect;
     }
 
     get workarea() {
-        return this.#workarea;
+        return this._workarea;
     }
 
     get monitor_index() {
-        return this.#monitor_index;
+        return this._monitor_index;
     }
 
     get monitor_scale() {
-        return this.#monitor_scale;
+        return this._monitor_scale;
     }
 
     get pivot_point() {
-        return this.#pivot_point;
+        return this._pivot_point;
     }
 
     get orientation() {
-        return this.#orientation;
+        return this._orientation;
     }
 
     get maximize_flag() {
-        return this.#maximize_flag;
+        return this._maximize_flag;
     }
 
-    #set_workarea(new_workarea) {
-        if (this.#workarea?.equal(new_workarea))
+    _set_workarea(new_workarea) {
+        if (this._workarea?.equal(new_workarea))
             return;
 
-        this.#workarea = new_workarea;
+        this._workarea = new_workarea;
         this.notify('workarea');
     }
 
-    #set_target_rect(new_target_rect) {
-        if (this.#target_rect?.equal(new_target_rect))
+    _set_target_rect(new_target_rect) {
+        if (this._target_rect?.equal(new_target_rect))
             return;
 
-        this.#target_rect = new_target_rect;
+        this._target_rect = new_target_rect;
         this.notify('target-rect');
     }
 
-    #set_monitor_index(new_monitor_index) {
-        if (this.#monitor_index === new_monitor_index)
+    _set_monitor_index(new_monitor_index) {
+        if (this._monitor_index === new_monitor_index)
             return;
 
-        this.#monitor_index = new_monitor_index;
+        this._monitor_index = new_monitor_index;
         this.notify('monitor-index');
     }
 
-    #set_monitor_scale(new_monitor_scale) {
-        if (this.#monitor_scale === new_monitor_scale)
+    _set_monitor_scale(new_monitor_scale) {
+        if (this._monitor_scale === new_monitor_scale)
             return;
 
-        this.#monitor_scale = new_monitor_scale;
+        this._monitor_scale = new_monitor_scale;
         this.notify('monitor-scale');
     }
 
-    #set_pivot_point(x, y) {
-        if (this.#pivot_point?.x === x && this.#pivot_point?.y === y)
+    _set_pivot_point(x, y) {
+        if (this._pivot_point?.x === x && this._pivot_point?.y === y)
             return;
 
-        this.#pivot_point = new Graphene.Point({ x, y });
+        this._pivot_point = new Graphene.Point({ x, y });
         this.notify('pivot-point');
     }
 
-    #set_orientation(new_orientation) {
-        if (this.#orientation === new_orientation)
+    _set_orientation(new_orientation) {
+        if (this._orientation === new_orientation)
             return;
 
-        this.#orientation = new_orientation;
+        this._orientation = new_orientation;
         this.notify('orientation');
     }
 
-    #set_maximize_flag(new_maximize_flag) {
-        if (this.#maximize_flag === new_maximize_flag)
+    _set_maximize_flag(new_maximize_flag) {
+        if (this._maximize_flag === new_maximize_flag)
             return;
 
-        this.#maximize_flag = new_maximize_flag;
+        this._maximize_flag = new_maximize_flag;
         this.notify('maximize-flag');
     }
 
-    #update_workarea() {
+    _update_workarea() {
         this.freeze_notify();
 
         try {
@@ -266,20 +262,20 @@ export const WindowGeometry = GObject.registerClass({
             if (n_monitors === 0)
                 return;
 
-            if (this.#monitor_index >= n_monitors) {
+            if (this._monitor_index >= n_monitors) {
                 this.update_monitor();
                 return;
             }
 
-            this.#set_monitor_scale(global.display.get_monitor_scale(this.#monitor_index));
-            this.#set_workarea(Main.layoutManager.getWorkAreaForMonitor(this.#monitor_index));
-            this.#update_target_rect();
+            this._set_monitor_scale(global.display.get_monitor_scale(this._monitor_index));
+            this._set_workarea(Main.layoutManager.getWorkAreaForMonitor(this._monitor_index));
+            this._update_target_rect();
         } finally {
-            this.#thaw_notify_emit_updated();
+            this._thaw_notify_emit_updated();
         }
     }
 
-    #get_monitor_index() {
+    _get_monitor_index() {
         if (this.window_monitor === 'primary') {
             if (Main.layoutManager.primaryIndex >= 0)
                 return Main.layoutManager.primaryIndex;
@@ -291,7 +287,7 @@ export const WindowGeometry = GObject.registerClass({
         }
 
         if (this.window_monitor === 'connector') {
-            const monitor_manager = global.backend.get_monitor_manager();
+            const monitor_manager = get_monitor_manager();
 
             if (monitor_manager) {
                 const index = monitor_manager.get_monitor_for_connector(
@@ -310,73 +306,75 @@ export const WindowGeometry = GObject.registerClass({
         this.freeze_notify();
 
         try {
-            this.#set_monitor_index(this.#get_monitor_index());
-            this.#update_workarea();
+            this._set_monitor_index(this._get_monitor_index());
+            this._update_workarea();
         } finally {
-            this.#thaw_notify_emit_updated();
+            this._thaw_notify_emit_updated();
         }
     }
 
-    #update_window_position() {
+    _update_window_position() {
         this.freeze_notify();
 
         try {
             switch (this.window_position) {
             case Meta.Side.LEFT:
             case Meta.Side.RIGHT:
-                this.#set_orientation(Clutter.Orientation.HORIZONTAL);
-                this.#set_maximize_flag(Meta.MaximizeFlags.HORIZONTAL);
+                this._set_orientation(Clutter.Orientation.HORIZONTAL);
+                this._set_maximize_flag(Meta.MaximizeFlags.HORIZONTAL);
                 break;
 
             case Meta.Side.TOP:
             case Meta.Side.BOTTOM:
-                this.#set_orientation(Clutter.Orientation.VERTICAL);
-                this.#set_maximize_flag(Meta.MaximizeFlags.VERTICAL);
+                this._set_orientation(Clutter.Orientation.VERTICAL);
+                this._set_maximize_flag(Meta.MaximizeFlags.VERTICAL);
             }
 
-            if (this.#orientation === Clutter.Orientation.HORIZONTAL)
-                this.#set_pivot_point(this.window_position === Meta.Side.RIGHT ? 1.0 : 0.0, 0.5);
+            if (this._orientation === Clutter.Orientation.HORIZONTAL)
+                this._set_pivot_point(this.window_position === Meta.Side.RIGHT ? 1.0 : 0.0, 0.5);
             else
-                this.#set_pivot_point(0.5, this.window_position === Meta.Side.BOTTOM ? 1.0 : 0.0);
+                this._set_pivot_point(0.5, this.window_position === Meta.Side.BOTTOM ? 1.0 : 0.0);
 
-            this.#update_target_rect();
+            this._update_target_rect();
         } finally {
-            this.#thaw_notify_emit_updated();
+            this._thaw_notify_emit_updated();
         }
     }
 
-    #update_target_rect() {
+    _update_target_rect() {
         this.freeze_notify();
 
         try {
-            if (!this.#workarea)
+            if (!this._workarea)
                 return;
 
             const target_rect = WindowGeometry.get_target_rect(
-                this.#workarea,
-                Math.floor(this.#monitor_scale),
+                this._workarea,
+                Math.floor(this._monitor_scale),
                 this.window_size,
                 this.window_position
             );
 
-            this.#set_target_rect(target_rect);
+            this._set_target_rect(target_rect);
         } finally {
-            this.#thaw_notify_emit_updated();
+            this._thaw_notify_emit_updated();
         }
     }
 
-    #thaw_notify_emit_updated() {
+    _thaw_notify_emit_updated() {
         // 'updated' should ideally be emitted by vfunc_dispatch_properties_changed()
         // But implementing dispatch_properties_changed() in GJS doesn't seem possible.
 
-        this.#notify_emitted = false;
+        this._notify_emitted = false;
         this.thaw_notify();
 
-        if (this.#notify_emitted)
+        if (this._notify_emitted)
             this.emit('updated');
     }
 
     on_notify() {
-        this.#notify_emitted = true;
+        this._notify_emitted = true;
     }
 });
+
+/* exported WindowGeometry */

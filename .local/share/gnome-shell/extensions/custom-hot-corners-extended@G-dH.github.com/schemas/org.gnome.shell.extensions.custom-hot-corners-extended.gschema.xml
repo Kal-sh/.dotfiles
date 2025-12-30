@@ -69,6 +69,9 @@
     <key name='win-switch-stable-sequence' type='b'>
       <default>false</default>
     </key>
+    <key name='win-thumbnail-scale' type='i'>
+      <default>15</default>
+    </key>
     <key name='action-event-delay' type='i'>
       <default>100</default>
     </key>

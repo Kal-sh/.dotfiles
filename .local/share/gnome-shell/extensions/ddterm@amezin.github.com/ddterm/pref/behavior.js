@@ -2,33 +2,36 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import GObject from 'gi://GObject';
-import Gio from 'gi://Gio';
-import Gtk from 'gi://Gtk';
+'use strict';
 
-import { insert_settings_actions, ui_file_uri } from './util.js';
+const GObject = imports.gi.GObject;
+const Gio = imports.gi.Gio;
+const Gtk = imports.gi.Gtk;
 
-export const BehaviorWidget = GObject.registerClass({
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+const { insert_settings_actions, ui_file_uri } = Me.imports.ddterm.pref.util;
+
+var BehaviorWidget = GObject.registerClass({
     GTypeName: 'DDTermPrefsBehavior',
     Template: ui_file_uri('prefs-behavior.ui'),
     Properties: {
         'settings': GObject.ParamSpec.object(
             'settings',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
             Gio.Settings
         ),
-        'gettext-domain': GObject.ParamSpec.jsobject(
-            'gettext-domain',
-            null,
-            null,
+        'gettext-context': GObject.ParamSpec.jsobject(
+            'gettext-context',
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY
         ),
     },
 }, class PrefsBehavior extends Gtk.Grid {
-    constructor(params) {
-        super(params);
+    _init(params) {
+        super._init(params);
 
         insert_settings_actions(this, this.settings, [
             'window-resizable',
@@ -43,6 +46,8 @@ export const BehaviorWidget = GObject.registerClass({
     }
 
     get title() {
-        return this.gettext_domain.gettext('Behavior');
+        return this.gettext_context.gettext('Behavior');
     }
 });
+
+/* exported BehaviorWidget */

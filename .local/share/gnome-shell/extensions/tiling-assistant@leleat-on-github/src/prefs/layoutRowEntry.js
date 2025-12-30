@@ -1,13 +1,21 @@
-import { Gio, Gtk, GObject } from '../dependencies/prefs/gi.js';
-import { _ } from '../dependencies/prefs.js';
+'use strict';
+
+const { Gio, Gtk, GObject } = imports.gi;
+
+const ExtensionUtils = imports.misc.extensionUtils;
+const Me = ExtensionUtils.getCurrentExtension();
+
+const Gettext = imports.gettext;
+const Domain = Gettext.domain(Me.metadata.uuid);
+const _ = Domain.gettext;
 
 /**
  * Multiple LayoutRowEntries make up a LayoutRow.js. See that file for more info.
  */
 
-export const LayoutRowEntry = GObject.registerClass({
+var LayoutRowEntry = GObject.registerClass({
     GTypeName: 'TilingLayoutRowEntry',
-    Template: import.meta.url.replace(/prefs\/(.*)\.js$/, 'ui/$1.ui'),
+    Template: Gio.File.new_for_path(`${Me.path}/src/ui/layoutRowEntry.ui`).get_uri(),
     InternalChildren: [
         'rectEntry',
         'rectLabel',
@@ -34,7 +42,6 @@ export const LayoutRowEntry = GObject.registerClass({
         // Show a placeholder on the first entry, if it's empty
         if (!text) {
             if (idx === 0) {
-                // Translators: This is a placeholder text of an entry in the prefs when defining a tiling layout.
                 const placeholder = _("'User Guide' for help...");
                 this._rectEntry.set_placeholder_text(placeholder);
             } else {
@@ -47,6 +54,9 @@ export const LayoutRowEntry = GObject.registerClass({
         this._rectAppButton.set_icon_name(iconName);
     }
 
+    /**
+     * @param {Gtk.Button} appButton src of the event.
+     */
     _onAppButtonClicked() {
         // Reset app button, if it already has an app attached
         if (this._item.appId) {
@@ -98,11 +108,11 @@ export const LayoutRowEntry = GObject.registerClass({
     }
 
     /**
-     * Validates whether `text` follows the format \
+     * Validates wether `text` follows the format \
      * 'Float--Float--Float--Float[--String]'
      *
      * @param {string} text
-     * @returns {[boolean, string]} whether the `text` is valid and a
+     * @returns {[boolean, string]} wether the `text` is valid and a
      *      potential error message.
      */
     _validateFormat(text) {

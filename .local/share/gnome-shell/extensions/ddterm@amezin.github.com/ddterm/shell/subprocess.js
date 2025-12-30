@@ -2,24 +2,17 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import GLib from 'gi://GLib';
-import GObject from 'gi://GObject';
-import Gio from 'gi://Gio';
-import GnomeDesktop from 'gi://GnomeDesktop';
-import Meta from 'gi://Meta';
+'use strict';
 
-import Gi from 'gi';
+const GLib = imports.gi.GLib;
+const GObject = imports.gi.GObject;
+const Gio = imports.gi.Gio;
+const GnomeDesktop = imports.gi.GnomeDesktop;
+const Meta = imports.gi.Meta;
 
-import { sd_journal_stream_fd } from './sd_journal.js';
-
-function try_require(namespace, version = undefined) {
-    try {
-        return Gi.require(namespace, version);
-    } catch (ex) {
-        logError(ex);
-        return null;
-    }
-}
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+const { try_require } = Me.imports.ddterm.shell.compat;
+const { sd_journal_stream_fd } = Me.imports.ddterm.shell.sd_journal;
 
 const GioUnix = GLib.check_version(2, 79, 2) === null ? try_require('GioUnix') : null;
 const UnixOutputStream = GioUnix?.OutputStream ?? Gio.UnixOutputStream;
@@ -171,33 +164,26 @@ class TeeLogCollector {
     }
 }
 
-export const Subprocess = GObject.registerClass({
+var Subprocess = GObject.registerClass({
     Properties: {
         'journal-identifier': GObject.ParamSpec.string(
             'journal-identifier',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
             null
         ),
         'argv': GObject.ParamSpec.boxed(
             'argv',
-            null,
-            null,
-            GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
-            GObject.type_from_name('GStrv')
-        ),
-        'environ': GObject.ParamSpec.boxed(
-            'environ',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
             GObject.type_from_name('GStrv')
         ),
         'g-subprocess': GObject.ParamSpec.object(
             'g-subprocess',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READABLE,
             Gio.Subprocess
         ),
@@ -216,14 +202,6 @@ export const Subprocess = GObject.registerClass({
         const launch_context = global.create_app_launch_context(0, -1);
 
         subprocess_launcher.set_environ(launch_context.get_environment());
-
-        for (const extra_env of this.environ) {
-            const split_pos = extra_env.indexOf('=');
-            const name = extra_env.slice(0, split_pos);
-            const value = extra_env.slice(split_pos + 1);
-
-            subprocess_launcher.setenv(name, value, true);
-        }
 
         try {
             this._subprocess = this._spawn(subprocess_launcher);
@@ -249,15 +227,14 @@ export const Subprocess = GObject.registerClass({
         return this._subprocess;
     }
 
+    is_running() {
+        return Boolean(this._subprocess.get_identifier());
+    }
+
     owns_window(win) {
-        const win_pid = win.get_pid();
-
-        if (!win_pid)
-            return false;
-
         const identifier = this._subprocess.get_identifier();
 
-        return identifier && identifier === win_pid.toString();
+        return identifier && win.get_pid().toString() === identifier;
     }
 
     wait(cancellable = null) {
@@ -294,27 +271,21 @@ export const Subprocess = GObject.registerClass({
     }
 });
 
-const WaylandSubprocessLegacy = GObject.registerClass({
+/* exported Subprocess */
+
+var WaylandSubprocess = GObject.registerClass({
     Properties: {
         'wayland-client': GObject.ParamSpec.object(
             'wayland-client',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READABLE,
             Meta.WaylandClient
         ),
     },
-}, class DDTermWaylandSubprocessLegacy extends Subprocess {
+}, class DDTermWaylandSubprocess extends Subprocess {
     owns_window(win) {
         return this.wayland_client.owns_window(win);
-    }
-
-    hide_from_window_list(win) {
-        this._wayland_client.hide_from_window_list(win);
-    }
-
-    show_in_window_list(win) {
-        this._wayland_client.show_in_window_list(win);
     }
 
     _spawn(subprocess_launcher) {
@@ -333,28 +304,4 @@ const WaylandSubprocessLegacy = GObject.registerClass({
     }
 });
 
-const WaylandSubprocessNew = GObject.registerClass({
-}, class DDTermWaylandSubprocess extends WaylandSubprocessLegacy {
-    hide_from_window_list(win) {
-        win.hide_from_window_list();
-    }
-
-    show_in_window_list(win) {
-        win.show_in_window_list();
-    }
-
-    _spawn(subprocess_launcher) {
-        log(`Starting wayland client subprocess: ${shell_join(this.argv)}`);
-
-        this._wayland_client = Meta.WaylandClient.new_subprocess(
-            global.context,
-            subprocess_launcher,
-            this.argv
-        );
-
-        return this._wayland_client.get_subprocess();
-    }
-});
-
-export const WaylandSubprocess =
-    Meta.WaylandClient.new_subprocess ? WaylandSubprocessNew : WaylandSubprocessLegacy;
+/* exported WaylandSubprocess */

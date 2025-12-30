@@ -2,29 +2,41 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 import Gio from 'gi://Gio';
 import Gtk from 'gi://Gtk';
 
 import Gettext from 'gettext';
 
-import { metadata } from './meta.js';
+import { metadata, dir } from './meta.js';
 import { DisplayConfig } from '../util/displayconfig.js';
-import { PrefsWidget } from '../pref/widget.js';
+
+const [fakeext_import_path] = GLib.filename_from_uri(
+    GLib.Uri.resolve_relative(import.meta.url, 'fakeext', GLib.UriFlags.NONE)
+);
+
+imports.searchPath.unshift(fakeext_import_path);
+
+const { setCurrentExtension, installImporter } = imports.misc.extensionUtils;
+const Me = { dir, metadata };
+
+installImporter(Me);
+setCurrentExtension(Me);
 
 export const PrefsDialog = GObject.registerClass({
     Properties: {
         'settings': GObject.ParamSpec.object(
             'settings',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
             Gio.Settings
         ),
         'display-config': GObject.ParamSpec.object(
             'display-config',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
             DisplayConfig
         ),
@@ -32,17 +44,18 @@ export const PrefsDialog = GObject.registerClass({
 }, class PrefsDialog extends Gtk.Dialog {
     _init(params) {
         super._init(params);
+        this.__heapgraph_name = this.constructor.$gtype.name;
 
-        const gettext_domain = Gettext.domain(metadata['gettext-domain']);
+        const gettext_context = Gettext.domain(metadata['gettext-domain']);
 
-        this.set_title(gettext_domain.gettext('Preferences'));
+        this.set_title(gettext_context.gettext('Preferences'));
         this.set_default_size(640, 576);
         this.set_icon_name('preferences-system');
 
-        const widget = new PrefsWidget({
+        const widget = new Me.imports.ddterm.pref.widget.PrefsWidget({
             settings: this.settings,
             monitors: this.display_config.create_monitor_list(),
-            gettext_domain,
+            gettext_context,
         });
 
         const content_area = this.get_content_area();

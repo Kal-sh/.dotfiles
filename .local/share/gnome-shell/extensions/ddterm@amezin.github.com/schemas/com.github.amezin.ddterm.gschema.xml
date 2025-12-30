@@ -2,9 +2,6 @@
 
 <!--
 SPDX-FileCopyrightText: 2020 Aleksandr Mezin <mezin.alexander@gmail.com>
-SPDX-FileContributor: Mohammad Javad Naderi
-SPDX-FileContributor: Juan M. Cruz-Martinez
-SPDX-FileContributor: Jackson Goode
 
 SPDX-License-Identifier: GPL-3.0-or-later
 -->
@@ -236,9 +233,6 @@ SPDX-License-Identifier: GPL-3.0-or-later
       <default>true</default>
     </key>
     <key name="notebook-border" type="b">
-      <default>true</default>
-    </key>
-    <key name="save-restore-session" type="b">
       <default>true</default>
     </key>
 

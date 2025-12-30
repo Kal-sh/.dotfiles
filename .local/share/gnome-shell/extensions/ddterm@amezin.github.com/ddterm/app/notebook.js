@@ -1,5 +1,4 @@
 // SPDX-FileCopyrightText: 2023 Aleksandr Mezin <mezin.alexander@gmail.com>
-// SPDX-FileContributor: Mohammad Javad Naderi
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -14,47 +13,46 @@ import Gettext from 'gettext';
 import { TerminalPage } from './terminalpage.js';
 import { TerminalSettings } from './terminalsettings.js';
 
+function get_file(relative_path) {
+    return Gio.File.new_for_uri(
+        GLib.Uri.resolve_relative(import.meta.url, relative_path, GLib.UriFlags.NONE)
+    );
+}
+
 export const Notebook = GObject.registerClass({
     Properties: {
-        'menus': GObject.ParamSpec.object(
-            'menus',
-            null,
-            null,
-            GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
-            Gtk.Builder
-        ),
         'terminal-settings': GObject.ParamSpec.object(
             'terminal-settings',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
             TerminalSettings
         ),
         'current-child': GObject.ParamSpec.object(
             'current-child',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READABLE,
             Gtk.Widget
         ),
         'current-title': GObject.ParamSpec.string(
             'current-title',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READABLE,
             null
         ),
         'tab-expand': GObject.ParamSpec.boolean(
             'tab-expand',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.EXPLICIT_NOTIFY,
             true
         ),
         'tab-label-width': GObject.ParamSpec.int(
             'tab-label-width',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.EXPLICIT_NOTIFY,
             -1,
             GLib.MAXINT32,
@@ -62,58 +60,58 @@ export const Notebook = GObject.registerClass({
         ),
         'tab-policy': GObject.ParamSpec.string(
             'tab-policy',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.EXPLICIT_NOTIFY,
             'always'
         ),
         'tab-close-buttons': GObject.ParamSpec.boolean(
             'tab-close-buttons',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.EXPLICIT_NOTIFY,
             true
         ),
         'tab-show-shortcuts': GObject.ParamSpec.boolean(
             'tab-show-shortcuts',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.EXPLICIT_NOTIFY,
             true
         ),
         'tab-label-ellipsize-mode': GObject.ParamSpec.enum(
             'tab-label-ellipsize-mode',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.EXPLICIT_NOTIFY,
             Pango.EllipsizeMode,
             Pango.EllipsizeMode.NONE
         ),
         'show-new-tab-button': GObject.ParamSpec.boolean(
             'show-new-tab-button',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.EXPLICIT_NOTIFY,
             true
         ),
         'show-new-tab-front-button': GObject.ParamSpec.boolean(
             'show-new-tab-front-button',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.EXPLICIT_NOTIFY,
             true
         ),
         'show-tab-switch-popup': GObject.ParamSpec.boolean(
             'show-tab-switch-popup',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.EXPLICIT_NOTIFY,
             true
         ),
         'split-layout': GObject.ParamSpec.string(
             'split-layout',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.EXPLICIT_NOTIFY,
             'no-split'
         ),
@@ -125,11 +123,11 @@ export const Notebook = GObject.registerClass({
         'move-to-other-pane': {
             param_types: [TerminalPage],
         },
-        'session-update': {},
     },
 }, class DDTermNotebook extends Gtk.Notebook {
     _init(params) {
         super._init(params);
+        this.__heapgraph_name = this.constructor.$gtype.name;
 
         const button_box = new Gtk.Box({ visible: true });
 
@@ -148,6 +146,8 @@ export const Notebook = GObject.registerClass({
             'visible',
             GObject.BindingFlags.BIDIRECTIONAL | GObject.BindingFlags.SYNC_CREATE
         );
+
+        this.menus = Gtk.Builder.new_from_file(get_file('menus.ui').get_path());
 
         const menu = new Gio.Menu();
         menu.append_section(null, new NotebookMenu({ notebook: this }));
@@ -289,12 +289,6 @@ export const Notebook = GObject.registerClass({
             this.notify('current-title');
         });
 
-        const emit_session_update = () => this.emit('session-update');
-
-        this.connect('page-added', emit_session_update);
-        this.connect('page-removed', emit_session_update);
-        this.connect('page-reordered', emit_session_update);
-
         this.page_disconnect = new Map();
     }
 
@@ -327,9 +321,6 @@ export const Notebook = GObject.registerClass({
             }),
             child.connect('move-to-other-pane-request', () => {
                 this.emit('move-to-other-pane', child);
-            }),
-            child.connect('session-update', () => {
-                this.emit('session-update');
             }),
         ];
 
@@ -519,9 +510,7 @@ export const Notebook = GObject.registerClass({
                 });
 
                 this.append_page(page, page.tab_label);
-
-                if (!page.banner_visible)
-                    page.spawn();
+                page.spawn();
             } catch (ex) {
                 logError(ex, "Can't restore terminal");
             }
@@ -534,12 +523,26 @@ export const Notebook = GObject.registerClass({
     }
 });
 
+function array_common_prefix(a, b) {
+    let len = Math.min(a.length, b.length);
+    let i = 0;
+
+    while (i < len && a[i] === b[i])
+        i++;
+
+    return i;
+}
+
+function array_common_suffix(a, b) {
+    return array_common_prefix(a.slice().reverse(), b.slice().reverse());
+}
+
 const NotebookMenu = GObject.registerClass({
     Properties: {
         'notebook': GObject.ParamSpec.object(
             'notebook',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
             Notebook
         ),
@@ -553,39 +556,40 @@ const NotebookMenu = GObject.registerClass({
         this._target = [];
         this._update_source = null;
 
+        this.notebook.connect('page-added', () => this._schedule_update());
+        this.notebook.connect('page-removed', () => this._schedule_update());
+        this.notebook.connect('page-reordered', () => this._schedule_update());
+
         const page_handlers = new Map();
 
-        const handlers = [
-            this.notebook.connect('page-added', () => this._schedule_update()),
-            this.notebook.connect('page-removed', () => this._schedule_update()),
-            this.notebook.connect('page-reordered', () => this._schedule_update()),
-            this.notebook.connect('page-added', (_, page) => {
-                const handler = page.connect('notify::title', () => this._schedule_update());
-                page_handlers.set(page, handler);
-            }),
-            this.notebook.connect('page-removed', (_, page) => {
-                page.disconnect(page_handlers.get(page));
-                page_handlers.delete(page);
-            }),
-            this.notebook.connect('destroy', () => {
-                while (handlers.length)
-                    this.notebook.disconnect(handlers.pop());
+        this.notebook.connect('page-added', (_, page) => {
+            const handler = page.connect('notify::title', () => this._schedule_update());
+            page_handlers.set(page, handler);
+        });
 
-                for (const [page, handler] of page_handlers.entries())
-                    page.disconnect(handler);
-
-                page_handlers.clear();
-            }),
-        ];
+        this.notebook.connect('page-removed', (_, page) => {
+            page.disconnect(page_handlers.get(page));
+            page_handlers.delete(page);
+        });
     }
 
     _update() {
-        const prev_length = this.get_n_items();
+        const prev = this._label;
+        const update = this.notebook.get_children().map(page => page.title);
 
-        this._label = this.notebook.get_children().map(page => page.title);
-        this._target.length = this._label.length;
+        const common_prefix = array_common_prefix(prev, update);
 
-        this.items_changed(0, prev_length, this._label.length);
+        if (common_prefix === update.length && common_prefix === prev.length)
+            return;
+
+        const common = prev.length === update.length
+            ? common_prefix + array_common_suffix(prev, update)
+            : common_prefix;
+
+        this._label = update;
+        this._target.length = update.length;
+
+        this.items_changed(common_prefix, prev.length - common, update.length - common);
     }
 
     _schedule_update() {

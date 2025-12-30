@@ -1,23 +1,24 @@
 /* exported ShowDesktopExtension */
-import Clutter from 'gi://Clutter';
-import Meta from 'gi://Meta';
-import Shell from 'gi://Shell';
+const Clutter = imports.gi.Clutter;
+const Meta = imports.gi.Meta;
+const Shell = imports.gi.Shell;
 
-import { TouchpadPinchGesture } from '../trackers/pinchTracker.js'
-import { easeActor } from '../utils/environment.js'
-import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import * as Layout from 'resource:///org/gnome/shell/ui/layout.js'
-import { lerp } from 'resource:///org/gnome/shell/misc/util.js';
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+const { TouchpadPinchGesture } = Me.imports.src.trackers.pinchTracker;
+const { easeActor } = Me.imports.src.utils.environment;
+const Main = imports.ui.main;
+const Layout = imports.ui.layout;
+const { lerp } = imports.misc.util;
 
 // declare enum 
-export var WorkspaceManagerState;
+var WorkspaceManagerState;
 (function (WorkspaceManagerState) {
 	WorkspaceManagerState[WorkspaceManagerState['DEFAULT'] = 0] = 'DEFAULT';
 	WorkspaceManagerState[WorkspaceManagerState['SHOW_DESKTOP'] = 1] = 'SHOW_DESKTOP';
 })(WorkspaceManagerState || (WorkspaceManagerState = {}));
 
 // declare enum
-export var ExtensionState;
+var ExtensionState;
 (function (ExtensionState) {
 	ExtensionState[ExtensionState['DEFAULT'] = 0] = 'DEFAULT';
 	ExtensionState[ExtensionState['ANIMATING'] = 1] = 'ANIMATING';
@@ -196,7 +197,7 @@ class MonitorGroup {
 	}
 }
 
-export var ShowDesktopExtension = class ShowDesktopExtension {
+var ShowDesktopExtension = class ShowDesktopExtension {
 	constructor(nfingers) {
 		this._windows = new Set();
 		this._workspaceChangedId = 0;

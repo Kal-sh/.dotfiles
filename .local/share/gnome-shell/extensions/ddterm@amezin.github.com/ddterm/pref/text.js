@@ -2,19 +2,22 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import GObject from 'gi://GObject';
-import Gio from 'gi://Gio';
-import Gtk from 'gi://Gtk';
+'use strict';
 
-import {
+const GObject = imports.gi.GObject;
+const Gio = imports.gi.Gio;
+const Gtk = imports.gi.Gtk;
+
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+const {
     bind_sensitive,
     bind_widget,
     bind_widgets,
     insert_settings_actions,
     ui_file_uri,
-} from './util.js';
+} = Me.imports.ddterm.pref.util;
 
-export const TextWidget = GObject.registerClass({
+var TextWidget = GObject.registerClass({
     GTypeName: 'DDTermPrefsText',
     Template: ui_file_uri('prefs-text.ui'),
     Children: [
@@ -28,21 +31,21 @@ export const TextWidget = GObject.registerClass({
     Properties: {
         'settings': GObject.ParamSpec.object(
             'settings',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
             Gio.Settings
         ),
-        'gettext-domain': GObject.ParamSpec.jsobject(
-            'gettext-domain',
-            null,
-            null,
+        'gettext-context': GObject.ParamSpec.jsobject(
+            'gettext-context',
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY
         ),
     },
 }, class PrefsText extends Gtk.Grid {
-    constructor(params) {
-        super(params);
+    _init(params) {
+        super._init(params);
 
         bind_widget(
             this.settings,
@@ -82,6 +85,8 @@ export const TextWidget = GObject.registerClass({
     }
 
     get title() {
-        return this.gettext_domain.gettext('Text');
+        return this.gettext_context.gettext('Text');
     }
 });
+
+/* exported TextWidget */

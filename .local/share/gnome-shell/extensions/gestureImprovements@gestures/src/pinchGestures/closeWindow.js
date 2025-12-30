@@ -1,24 +1,25 @@
 /* exported CloseWindowExtension */
-import Clutter from 'gi://Clutter';
-import Shell from 'gi://Shell';
-import St from 'gi://St';
+const Clutter = imports.gi.Clutter;
+const Shell = imports.gi.Shell;
+const St = imports.gi.St;
 
-import { PinchGestureType } from '../../common/settings.js'
-import { WIGET_SHOWING_DURATION } from '../../constants.js'
-import { TouchpadPinchGesture } from '../trackers/pinchTracker.js'
-import { easeActor } from '../utils/environment.js'
-import { getVirtualKeyboard } from '../utils/keyboard.js'
-import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import * as Util from 'resource:///org/gnome/shell/misc/util.js';
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+const { PinchGestureType } = Me.imports.common.settings;
+const { WIGET_SHOWING_DURATION } = Me.imports.constants;
+const { TouchpadPinchGesture } = Me.imports.src.trackers.pinchTracker;
+const { easeActor } = Me.imports.src.utils.environment;
+const { getVirtualKeyboard } = Me.imports.src.utils.keyboard;
+const Main = imports.ui.main;
+const Util = imports.misc.util;
 const END_OPACITY = 0;
 const END_SCALE = 0.5;
-export var CloseWindowGestureState;
+var CloseWindowGestureState;
 (function (CloseWindowGestureState) {
 	CloseWindowGestureState[CloseWindowGestureState['PINCH_IN'] = -1] = 'PINCH_IN';
 	CloseWindowGestureState[CloseWindowGestureState['DEFAULT'] = 0] = 'DEFAULT';
 })(CloseWindowGestureState || (CloseWindowGestureState = {}));
 
-export var CloseWindowExtension = class CloseWindowExtension {
+var CloseWindowExtension = class CloseWindowExtension {
 	constructor(nfingers, closeType) {
 		this._closeType = closeType;
 		this._keyboard = getVirtualKeyboard();

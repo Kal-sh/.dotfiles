@@ -1,10 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<!--
-SPDX-FileCopyrightText: 2023 Deminder <tremminder@gmail.com>
-SPDX-License-Identifier: GPL-3.0-or-later
--->
-
 <schemalist gettext-domain="ShutdownTimer">
   <schema path="/org/gnome/shell/extensions/shutdowntimer-deminder/" id="org.gnome.shell.extensions.shutdowntimer-deminder">
 
@@ -18,30 +12,6 @@ SPDX-License-Identifier: GPL-3.0-or-later
       <default>1440</default>
       <summary>Maximum wake time (in minutes)</summary>
       <description>Set maximum selectable wake time of the slider (in minutes). Use only values greater zero.</description>
-    </key>
-
-    <key type="s" name="shutdown-ref-timer-value">
-      <default>"now"</default>
-      <summary>Reference start time for shutdown</summary>
-      <description>Reference start time for shutdown either now or HH:MM</description>
-    </key>
-
-    <key type="b" name="show-shutdown-absolute-timer-value">
-      <default>true</default>
-      <summary>Display shutdown time as absolute timestamp</summary>
-      <description>Display shutdown time as absolute timestamp "HH:MM"</description>
-    </key>
-
-    <key type="s" name="wake-ref-timer-value">
-      <default>"now"</default>
-      <summary>Reference start time for wake</summary>
-      <description>Reference start time for wake either now, shutdown, or HH:MM</description>
-    </key>
-
-    <key type="b" name="show-wake-absolute-timer-value">
-      <default>true</default>
-      <summary>Display wake time as absolute timestamp</summary>
-      <description>Display wake time as absolute timestamp "HH:MM"</description>
     </key>
 
     <key type="b" name="auto-wake-value">
@@ -123,9 +93,9 @@ SPDX-License-Identifier: GPL-3.0-or-later
     </key>
 
     <key type="s" name="show-shutdown-mode-value">
-      <default>"p,s"</default>
+      <default>"poweroff,suspend"</default>
       <summary>Shown shutdown modes</summary>
-      <description>Comma-separated shutdown modes which are shown in the popup menu (p: poweroff, s: suspend, r: reboot)</description>
+      <description>Comma-separated shutdown modes which are shown in the popup menu</description>
     </key>
 
     <key type="s" name="shutdown-mode-value">
@@ -134,10 +104,25 @@ SPDX-License-Identifier: GPL-3.0-or-later
       <description>Mode to use for timer action</description>
     </key>
 
-    <key type="b" name="show-shutdown-indicator-value">
+    <key type="s" name="check-command-value">
+      <default>"# Examples ...
+
+# Run a pre-shutdown script (e.g. updates or backups)
+# ~/.local/scripts/pre-shutdown.sh
+
+# Wait for a process to exit
+# tail -f --pid=$PID
+
+# Activate the screen saver
+# xdg-screensaver activate"</default>
+      <summary>Check command(s)</summary>
+      <description>Run command(s) before shutdown command. Proceed with shutdown only if check command succeeds.</description>
+    </key>
+
+    <key type="b" name="enable-check-command-value">
       <default>true</default>
-      <summary>Show shutdown indicator</summary>
-      <description>Shows the remaining time until shutdown action</description>
+      <summary>Enable check command</summary>
+      <description>Check command is skipped if disabled.</description>
     </key>
 
     <key type="i" name="preferences-selected-page-value">

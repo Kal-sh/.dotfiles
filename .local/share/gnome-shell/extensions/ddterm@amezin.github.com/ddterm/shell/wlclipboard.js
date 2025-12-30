@@ -2,16 +2,16 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import GLib from 'gi://GLib';
-import GObject from 'gi://GObject';
-import Meta from 'gi://Meta';
+'use strict';
 
-import { WindowMatchGeneric } from './windowmatch.js';
+const GLib = imports.gi.GLib;
+const GObject = imports.gi.GObject;
+const Meta = imports.gi.Meta;
 
-export function is_wlclipboard(win) {
-    if (!win)
-        return false;
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+const { WindowMatchGeneric } = Me.imports.ddterm.shell.windowmatch;
 
+function is_wlclipboard(win) {
     if (win.get_client_type() !== Meta.WindowClientType.WAYLAND)
         return false;
 
@@ -30,7 +30,9 @@ export function is_wlclipboard(win) {
     }
 }
 
-export const WlClipboardActivator = GObject.registerClass({
+/* exported is_wlclipboard */
+
+var WlClipboardActivator = GObject.registerClass({
 }, class DDTermWlClipboardActivator extends WindowMatchGeneric {
     _init(params) {
         super._init({
@@ -59,3 +61,5 @@ export const WlClipboardActivator = GObject.registerClass({
         return GLib.SOURCE_REMOVE;
     }
 });
+
+/* exported WlClipboardActivator */

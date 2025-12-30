@@ -1,21 +1,23 @@
 // SPDX-FileCopyrightText: 2022 Aleksandr Mezin <mezin.alexander@gmail.com>
-// SPDX-FileContributor: Lingfeng Zhang ccat3z
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import GLib from 'gi://GLib';
-import GObject from 'gi://GObject';
-import Gio from 'gi://Gio';
-import Gdk from 'gi://Gdk';
-import Gtk from 'gi://Gtk';
+'use strict';
 
-import {
+const GLib = imports.gi.GLib;
+const GObject = imports.gi.GObject;
+const Gio = imports.gi.Gio;
+const Gdk = imports.gi.Gdk;
+const Gtk = imports.gi.Gtk;
+
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+const {
     bind_sensitive,
     bind_widget,
     insert_settings_actions,
     set_scale_value_format,
     ui_file_uri,
-} from './util.js';
+} = Me.imports.ddterm.pref.util;
 
 function show_dialog(parent_window, message, message_type = Gtk.MessageType.ERROR) {
     const dialog = new Gtk.MessageDialog({
@@ -125,31 +127,35 @@ const Color = GObject.registerClass({
     Properties: {
         'rgba': GObject.ParamSpec.boxed(
             'rgba',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.EXPLICIT_NOTIFY,
             Gdk.RGBA
         ),
         'str': GObject.ParamSpec.string(
             'str',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.EXPLICIT_NOTIFY,
             null
         ),
     },
 }, class DDTermPrefsColorsColor extends GObject.Object {
-    #rgba = null;
+    _init(params) {
+        this._rgba = null;
+
+        super._init(params);
+    }
 
     get rgba() {
-        return this.#rgba;
+        return this._rgba;
     }
 
     set rgba(value) {
-        if (this.#rgba?.equal(value))
+        if (this._rgba && this._rgba.equal(value))
             return;
 
-        this.#rgba = value;
+        this._rgba = value;
         this.notify('rgba');
         this.notify('str');
     }
@@ -167,8 +173,8 @@ const ColorScheme = GObject.registerClass({
     Properties: {
         'active-preset': GObject.ParamSpec.int(
             'active-preset',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.EXPLICIT_NOTIFY,
             -1,
             GLib.MAXINT32,
@@ -176,22 +182,22 @@ const ColorScheme = GObject.registerClass({
         ),
         'presets': GObject.ParamSpec.object(
             'presets',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
             Gtk.TreeModel
         ),
         'strv': GObject.ParamSpec.boxed(
             'strv',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.EXPLICIT_NOTIFY,
             GObject.type_from_name('GStrv')
         ),
     },
 }, class DDTermPrefsColorsColorScheme extends GObject.Object {
-    constructor(params) {
-        super(params);
+    _init(params) {
+        super._init(params);
 
         this.colors = Array.from(
             { length: this.presets.get_n_columns() - 1 },
@@ -202,6 +208,10 @@ const ColorScheme = GObject.registerClass({
             color.connect('notify::str', () => this.notify('strv'));
             color.connect('notify::rgba', () => this.notify('active-preset'));
         }
+
+        this._model_handlers = ['row-changed', 'row-deleted', 'row-inserted'].map(
+            signal => this.presets.connect(signal, () => this.notify('active-preset'))
+        );
     }
 
     get active_preset() {
@@ -247,6 +257,13 @@ const ColorScheme = GObject.registerClass({
         }
     }
 
+    destroy() {
+        for (const handler_id of this._model_handlers)
+            this.presets.disconnect(handler_id);
+
+        this._model_handlers = [];
+    }
+
     preset_matches(iter, rgbav) {
         return rgbav.every((rgba, index) => {
             if (!rgba)
@@ -260,15 +277,13 @@ const ColorScheme = GObject.registerClass({
 
 const PALETTE_WIDGET_IDS = Array.from({ length: 16 }, (_, i) => `palette${i}`);
 
-export const ColorsWidget = GObject.registerClass({
+var ColorsWidget = GObject.registerClass({
     GTypeName: 'DDTermPrefsColors',
     Template: ui_file_uri('prefs-colors.ui'),
     Children: [
         'theme_variant_combo',
         'color_scheme_editor',
         'color_scheme_combo',
-        'color_scheme_list',
-        'copy_gnome_terminal_profile_button',
         'foreground_color',
         'background_color',
         'opacity_scale',
@@ -278,27 +293,26 @@ export const ColorsWidget = GObject.registerClass({
         'highlight_foreground_color',
         'highlight_background_color',
         'palette_combo',
-        'palette_list',
         'bold_color_check',
     ].concat(PALETTE_WIDGET_IDS),
     Properties: {
         'settings': GObject.ParamSpec.object(
             'settings',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
             Gio.Settings
         ),
-        'gettext-domain': GObject.ParamSpec.jsobject(
-            'gettext-domain',
-            null,
-            null,
+        'gettext-context': GObject.ParamSpec.jsobject(
+            'gettext-context',
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY
         ),
     },
 }, class PrefsColors extends Gtk.Grid {
-    constructor(params) {
-        super(params);
+    _init(params) {
+        super._init(params);
 
         insert_settings_actions(this, this.settings, [
             'cursor-colors-set',
@@ -310,14 +324,20 @@ export const ColorsWidget = GObject.registerClass({
 
         bind_widget(this.settings, 'theme-variant', this.theme_variant_combo);
 
-        bind_sensitive(this.settings, 'use-theme-colors', this.color_scheme_editor, true);
+        bind_sensitive(
+            this.settings,
+            'use-theme-colors',
+            this.color_scheme_editor,
+            true
+        );
 
         this.color_scheme = new ColorScheme({
-            presets: this.color_scheme_list,
+            presets: this.color_scheme_combo.model,
         });
+        this.connect('destroy', () => this.color_scheme.destroy());
 
-        this.#bind_color('foreground-color', this.foreground_color, this.color_scheme.colors[0]);
-        this.#bind_color('background-color', this.background_color, this.color_scheme.colors[1]);
+        this.bind_color('foreground-color', this.foreground_color, this.color_scheme.colors[0]);
+        this.bind_color('background-color', this.background_color, this.color_scheme.colors[1]);
 
         this.color_scheme.bind_property(
             'active-preset',
@@ -326,7 +346,20 @@ export const ColorsWidget = GObject.registerClass({
             GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.BIDIRECTIONAL
         );
 
-        this.#setup_color_scheme_combo_sensitivity();
+        const color_scheme_enable_handlers = [
+            this.settings.connect(
+                'writable-changed::foreground-color',
+                this.enable_color_scheme_combo.bind(this)
+            ),
+            this.settings.connect(
+                'writable-changed::background-color',
+                this.enable_color_scheme_combo.bind(this)
+            ),
+        ];
+        this.connect('destroy', () => {
+            color_scheme_enable_handlers.forEach(handler => this.settings.disconnect(handler));
+        });
+        this.enable_color_scheme_combo();
 
         bind_widget(this.settings, 'background-opacity', this.opacity_scale);
         bind_sensitive(this.settings, 'transparent-background', this.opacity_scale.parent);
@@ -341,7 +374,7 @@ export const ColorsWidget = GObject.registerClass({
             Gio.SettingsBindFlags.INVERT_BOOLEAN
         );
 
-        this.#bind_color('bold-color', this.bold_color);
+        this.bind_color('bold-color', this.bold_color);
 
         bind_sensitive(
             this.settings,
@@ -350,8 +383,8 @@ export const ColorsWidget = GObject.registerClass({
             true
         );
 
-        this.#bind_color('cursor-foreground-color', this.cursor_foreground_color);
-        this.#bind_color('cursor-background-color', this.cursor_background_color);
+        this.bind_color('cursor-foreground-color', this.cursor_foreground_color);
+        this.bind_color('cursor-background-color', this.cursor_background_color);
 
         [
             this.cursor_foreground_color,
@@ -360,8 +393,8 @@ export const ColorsWidget = GObject.registerClass({
             bind_sensitive(this.settings, 'cursor-colors-set', widget);
         });
 
-        this.#bind_color('highlight-foreground-color', this.highlight_foreground_color);
-        this.#bind_color('highlight-background-color', this.highlight_background_color);
+        this.bind_color('highlight-foreground-color', this.highlight_foreground_color);
+        this.bind_color('highlight-background-color', this.highlight_background_color);
 
         [
             this.highlight_foreground_color,
@@ -371,8 +404,9 @@ export const ColorsWidget = GObject.registerClass({
         });
 
         this.palette = new ColorScheme({
-            presets: this.palette_list,
+            presets: this.palette_combo.model,
         });
+        this.connect('destroy', () => this.palette.destroy());
 
         this.settings.bind(
             'palette',
@@ -401,32 +435,28 @@ export const ColorsWidget = GObject.registerClass({
             GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.BIDIRECTIONAL
         );
 
-        this.connect('realize', () => {
-            const handler = this.copy_gnome_terminal_profile_button.connect(
-                'clicked',
-                this.copy_gnome_terminal_profile.bind(this)
-            );
-
-            const unrealize_handler = this.connect('unrealize', () => {
-                this.disconnect(unrealize_handler);
-                this.copy_gnome_terminal_profile_button.disconnect(handler);
-            });
+        const copy_from_gnome_terminal_action = new Gio.SimpleAction({
+            name: 'copy-gnome-terminal-profile',
         });
+
+        copy_from_gnome_terminal_action.connect('activate', () => {
+            try {
+                copy_gnome_terminal_profile(this.settings);
+            } catch (e) {
+                show_dialog(this.get_toplevel(), e.message);
+            }
+        });
+
+        const aux_actions = new Gio.SimpleActionGroup();
+        aux_actions.add_action(copy_from_gnome_terminal_action);
+        this.insert_action_group('aux', aux_actions);
     }
 
     get title() {
-        return this.gettext_domain.gettext('Colors');
+        return this.gettext_context.gettext('Colors');
     }
 
-    copy_gnome_terminal_profile() {
-        try {
-            copy_gnome_terminal_profile(this.settings);
-        } catch (e) {
-            show_dialog(this.get_root ? this.get_root() : this.get_toplevel(), e.message);
-        }
-    }
-
-    #bind_color(key, widget, color = null) {
+    bind_color(key, widget, color = null) {
         if (!color) {
             color = new Color();
 
@@ -446,17 +476,11 @@ export const ColorsWidget = GObject.registerClass({
         this.settings.bind_writable(key, widget, 'sensitive', false);
     }
 
-    #setup_color_scheme_combo_sensitivity() {
-        const { foreground_color, background_color, color_scheme_combo } = this;
-
-        for (const color_button of [foreground_color, background_color]) {
-            color_button.connect('notify::sensitive', () => {
-                color_scheme_combo.sensitive =
-                    foreground_color.sensitive && background_color.sensitive;
-            });
-        }
-
-        color_scheme_combo.sensitive =
-            foreground_color.sensitive && background_color.sensitive;
+    enable_color_scheme_combo() {
+        this.color_scheme_combo.sensitive =
+            this.settings.is_writable('foreground-color') &&
+            this.settings.is_writable('background-color');
     }
 });
+
+/* exported ColorsWidget */

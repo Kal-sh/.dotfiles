@@ -12,21 +12,16 @@
 // SPDX-FileCopyrightText: Simon Schneegans <code@simonschneegans.de>
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// modified by Justin Garza <JGarza9788@gmail.com>
-
 'use strict';
 
-import Gio from 'gi://Gio';
+const {Gio} = imports.gi;
 
-import * as utils from '../utils.js';
+const _ = imports.gettext.domain('burn-my-windows').gettext;
 
-// We import some modules only in the Shell process as they are not available in the
-// preferences process. They are used only in the creator function of the ShaderFactory
-// which is only called within GNOME Shell's process.
-const ShaderFactory = await utils.importInShellOnly('./ShaderFactory.js');
-const Clutter       = await utils.importInShellOnly('gi://Clutter');
-
-const _ = await utils.importGettext();
+const ExtensionUtils = imports.misc.extensionUtils;
+const Me             = imports.misc.extensionUtils.getCurrentExtension();
+const utils          = Me.imports.src.utils;
+const ShaderFactory  = Me.imports.src.ShaderFactory.ShaderFactory;
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // This effect is a homage to the good old Compiz days. However, it is implemented      //
@@ -39,14 +34,20 @@ const _ = await utils.importGettext();
 // The effect class can be used to get some metadata (like the effect's name or supported
 // GNOME Shell versions), to initialize the respective page of the settings dialog, as
 // well as to create the actual shader for the effect.
-export default class Effect {
+var Fire = class {
+
 
   // The constructor creates a ShaderFactory which will be used by extension.js to create
   // shader instances for this effect. The shaders will be automagically created using the
   // GLSL file in resources/shaders/<nick>.glsl. The callback will be called for each
   // newly created shader instance.
   constructor() {
-    this.shaderFactory = new ShaderFactory(Effect.getNick(), (shader) => {
+    this.shaderFactory = new ShaderFactory(this.getNick(), (shader) => {
+      // We import Clutter in this function as it is not available in the preferences
+      // process. This creator function of the ShaderFactory is only called within GNOME
+      // Shell's process.
+      const Clutter = imports.gi.Clutter;
+
       // Store all uniform locations.
       shader._uGradient = [
         shader.get_uniform_location('uGradient1'),
@@ -60,21 +61,17 @@ export default class Effect {
       shader._uScale         = shader.get_uniform_location('uScale');
       shader._uMovementSpeed = shader.get_uniform_location('uMovementSpeed');
 
-      shader._uRandomColor = shader.get_uniform_location('uRandomColor');
-      shader._uSeed        = shader.get_uniform_location('uSeed');
-
       // And update all uniforms at the start of each animation.
       shader.connect('begin-animation', (shader, settings) => {
         for (let i = 1; i <= 5; i++) {
+          const c = Clutter.Color.from_string(settings.get_string('fire-color-' + i))[1];
           shader.set_uniform_float(
             shader._uGradient[i - 1], 4,
-            utils.parseColor(settings.get_string('fire-color-' + i)));
+            [c.red / 255, c.green / 255, c.blue / 255, c.alpha / 255]);
         }
 
         // clang-format off
         shader.set_uniform_float(shader._u3DNoise,       1, [settings.get_boolean('fire-3d-noise')]);
-        shader.set_uniform_float(shader._uRandomColor,   1, [settings.get_boolean('fire-random-color')]);
-        shader.set_uniform_float(shader._uSeed,          1, [Math.random()]);
         shader.set_uniform_float(shader._uScale,         1, [settings.get_double('fire-scale')]);
         shader.set_uniform_float(shader._uMovementSpeed, 1, [settings.get_double('fire-movement-speed')]);
         // clang-format on
@@ -85,7 +82,7 @@ export default class Effect {
   // ---------------------------------------------------------------------------- metadata
 
   // The effect is available on all GNOME Shell versions supported by this extension.
-  static getMinShellVersion() {
+  getMinShellVersion() {
     return [3, 36];
   }
 
@@ -93,13 +90,13 @@ export default class Effect {
   // required. It should match the prefix of the settings keys which store whether the
   // effect is enabled currently (e.g. '*-enable-effect'), and its animation time
   // (e.g. '*-animation-time').
-  static getNick() {
+  getNick() {
     return 'fire';
   }
 
   // This will be shown in the sidebar of the preferences dialog as well as in the
   // drop-down menus where the user can choose the effect.
-  static getLabel() {
+  getLabel() {
     return _('Fire');
   }
 
@@ -107,14 +104,13 @@ export default class Effect {
 
   // This is called by the preferences dialog whenever a new effect profile is loaded. It
   // binds all user interface elements to the respective settings keys of the profile.
-  static bindPreferences(dialog) {
+  bindPreferences(dialog) {
 
     // Bind all properties.
     dialog.bindAdjustment('fire-animation-time');
     dialog.bindAdjustment('fire-movement-speed');
     dialog.bindAdjustment('fire-scale');
     dialog.bindSwitch('fire-3d-noise');
-    dialog.bindSwitch('fire-random-color');
     dialog.bindColorButton('fire-color-1');
     dialog.bindColorButton('fire-color-2');
     dialog.bindColorButton('fire-color-3');
@@ -122,8 +118,8 @@ export default class Effect {
     dialog.bindColorButton('fire-color-5');
 
     // Connect the buttons only once. The bindPreferences can be called multiple times...
-    if (!Effect._isConnected) {
-      Effect._isConnected = true;
+    if (!this._isConnected) {
+      this._isConnected = true;
 
       // The fire-gradient-reset button needs to be bound explicitly.
       dialog.getBuilder().get_object('reset-fire-colors').connect('clicked', () => {
@@ -135,34 +131,7 @@ export default class Effect {
       });
 
       // Initialize the fire-preset dropdown.
-      Effect._createFirePresets(dialog);
-    }
-
-    // enables and disables the color buttons
-    function enableDisableColorButtons(dialog, state) {
-
-      for (let i = 1; i <= 5; i++) {
-        dialog.getBuilder().get_object('fire-color-' + i).set_sensitive(!state);
-      }
-    }
-
-    const switchWidget = dialog.getBuilder().get_object('fire-random-color');
-    if (switchWidget) {
-      // Connect to the "state-set" signal to update preferences dynamically based on
-      // the switch state.
-      switchWidget.connect('state-set', (widget, state) => {
-        enableDisableColorButtons(dialog,
-                                  state);  // Update sensitivity when the state changes.
-      });
-
-      // Manually call the update function on startup, using the initial state of the
-      // switch.
-      const initialState =
-        switchWidget.get_active();  // Get the current state of the switch.
-      enableDisableColorButtons(dialog, initialState);
-    } else {
-      // Log an error if the switch widget is not found in the UI.
-      log('Error: \'fire-random-color\' switch widget not found.');
+      this._createFirePresets(dialog);
     }
   }
 
@@ -171,14 +140,14 @@ export default class Effect {
   // The getActorScale() is called from extension.js to adjust the actor's size during the
   // animation. This is useful if the effect requires drawing something beyond the usual
   // bounds of the actor. This only works for GNOME 3.38+.
-  static getActorScale(settings, forOpening, actor) {
+  getActorScale(settings) {
     return {x: 1.0, y: 1.0};
   }
 
   // ----------------------------------------------------------------------- private stuff
 
   // This populates the preset dropdown menu for the fire options.
-  static _createFirePresets(dialog) {
+  _createFirePresets(dialog) {
     dialog.getBuilder().get_object('fire-prefs').connect('realize', (widget) => {
       const presets = [
         {
@@ -230,23 +199,12 @@ export default class Effect {
           color3: 'rgba(207,235,255,0.84)',
           color4: 'rgb(208,243,255)',
           color5: 'rgb(255,255,255)'
-        },
-        // i don't think he'll notice if i sneak this in
-        {
-          name: _('Nuclear ☢️'),
-          scale: 1.5,
-          speed: 0.5,
-          color1: 'rgba(0,0,0,0)',
-          color2: 'rgba(2, 40, 0, 0.3)',
-          color3: 'rgba(0, 200, 50, 0.9)',
-          color4: 'rgba(255, 255, 0, 1.0)',
-          color5: 'rgba(255, 255, 255, 1.0)'
         }
       ];
 
       const menu      = Gio.Menu.new();
       const group     = Gio.SimpleActionGroup.new();
-      const groupName = 'fire-presets';
+      const groupName = 'presets';
 
       // Add all presets.
       presets.forEach((preset, i) => {
@@ -270,7 +228,7 @@ export default class Effect {
 
       dialog.getBuilder().get_object('fire-preset-button').set_menu_model(menu);
 
-      const root = widget.get_root();
+      const root = utils.isGTK4() ? widget.get_root() : widget.get_toplevel();
       root.insert_action_group(groupName, group);
     });
   }

@@ -1,162 +1,174 @@
+/* exported init fillPreferencesWindow buildPrefsWidget */
+
+//Local extension imports
+const ExtensionUtils = imports.misc.extensionUtils;
+const Me = ExtensionUtils.getCurrentExtension();
+const { ExtensionHelper } = Me.imports.lib;
+const ShellVersion = parseFloat(imports.misc.config.PACKAGE_VERSION);
+
 //Main imports
-import Gio from 'gi://Gio';
-import Gtk from 'gi://Gtk';
-import Adw from 'gi://Adw';
-import GObject from 'gi://GObject';
+const { Gtk, Gio } = imports.gi;
+const Adw = ShellVersion >= 42 ? imports.gi.Adw : null;
 
-//Extension system imports
-import {ExtensionPreferences, gettext as _} from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
+//Use _() for translations
+const _ = imports.gettext.domain(Me.metadata.uuid).gettext;
 
-var PrefsPage = GObject.registerClass(
-class PrefsPage extends Adw.PreferencesPage {
-  _init(pageInfo, groupsInfo, settingsInfo, settings) {
-    super._init({
-      title: pageInfo[0],
-      icon_name: pageInfo[1]
+var PrefsPages = class PrefsPages {
+  constructor() {
+    this._settings = ExtensionUtils.getSettings('org.gnome.shell.extensions.privacy-menu');
+
+    this._builder = new Gtk.Builder();
+    this._builder.set_translation_domain(Me.metadata.uuid);
+
+    this.preferencesWidget = null;
+    this._createPreferences();
+  }
+
+  _updateEnabledSettings() {
+    //If using the quick settings area and running GNOME 43+, disable 'move-icon-setting'
+    let moveIconRow = this._builder.get_object('move-icon-setting');
+    if (ShellVersion >= 43 && this._settings.get_boolean('use-quick-settings')) {
+      moveIconRow.set_sensitive(false);
+    } else {
+      moveIconRow.set_sensitive(true);
+    }
+
+    //If the quick settings aren't in use, disable related options
+    let groupQuickSettingsRow = this._builder.get_object('group-quick-settings-setting');
+    let quickSubtitleSettingsRow = this._builder.get_object('use-quick-subtitle-setting');
+    if (!this._settings.get_boolean('use-quick-settings')) {
+      groupQuickSettingsRow.set_sensitive(false);
+      quickSubtitleSettingsRow.set_sensitive(false);
+    } else {
+      groupQuickSettingsRow.set_sensitive(true);
+      if (!this._settings.get_boolean('group-quick-settings')) {
+        quickSubtitleSettingsRow.set_sensitive(false);
+      } else {
+        quickSubtitleSettingsRow.set_sensitive(true);
+      }
+    }
+
+    //Grey out GNOME 43+ settings on earlier versions
+    if (ShellVersion < 43) {
+      let settingsArea = this._builder.get_object('gnome-43-settings-area');
+      settingsArea.set_sensitive(false);
+    }
+
+    //Grey out GNOME 44+ settings on earlier versions
+    if (ShellVersion < 44) {
+      let settingsArea = this._builder.get_object('gnome-44-settings-area');
+      settingsArea.set_sensitive(false);
+    }
+  }
+
+  _createPreferences() {
+    //Use different UI file for GNOME 40+ and 3.38
+    if (ShellVersion >= 40) {
+      this._builder.add_from_file(Me.path + '/ui/gtk4/prefs.ui');
+    } else {
+      this._builder.add_from_file(Me.path + '/ui/gtk3/prefs.ui');
+    }
+
+    //Get the settings container widget
+    this.preferencesWidget = this._builder.get_object('main-prefs');
+
+    let settingElements = {
+      'move-icon-switch': {
+        'settingKey': 'move-icon-right',
+        'bindProperty': 'active'
+      },
+      'use-quick-settings-switch': {
+        'settingKey': 'use-quick-settings',
+        'bindProperty': 'active'
+      },
+      'group-quick-settings-switch': {
+        'settingKey': 'group-quick-settings',
+        'bindProperty': 'active'
+      },
+      'use-quick-subtitle-switch': {
+        'settingKey': 'use-quick-subtitle',
+        'bindProperty': 'active'
+      }
+    }
+
+    //Loop through settings toggles and dropdowns and bind together
+    Object.keys(settingElements).forEach((element) => {
+      this._settings.bind(
+        settingElements[element].settingKey, //GSettings key to bind to
+        this._builder.get_object(element), //GTK UI element to bind to
+        settingElements[element].bindProperty, //The property to share
+        Gio.SettingsBindFlags.DEFAULT
+      );
     });
 
-    this._extensionSettings = settings;
-    this._settingGroups = {};
-    this._settingRows = {};
-
-    //Setup settings
-    this._createGroups(groupsInfo);
-    this._createSettings(settingsInfo);
-
     //Disable unavailable settings
-    this._settingsChangedSignal = this._extensionSettings.connect('changed', () => {
+    this._settingsChangedSignal = this._settings.connect('changed', () => {
       this._updateEnabledSettings();
     });
     this._updateEnabledSettings();
   }
+}
 
-  _createGroups(groupsInfo) {
-    //Store groups, set title and add to window
-    groupsInfo.forEach((groupInfo) => {
-      this._settingGroups[groupInfo[0]] = new Adw.PreferencesGroup();
-      this._settingGroups[groupInfo[0]].set_title(groupInfo[1]);
-      this.add(this._settingGroups[groupInfo[0]]);
-    });
+function init() {
+  ExtensionUtils.initTranslations();
+}
+
+//Create preferences window for GNOME 42+
+function fillPreferencesWindow(window) {
+  //Create pages and widgets
+  let prefsPages = new PrefsPages();
+  let settingsPage = new Adw.PreferencesPage();
+  let settingsGroup = new Adw.PreferencesGroup();
+
+  //Build the settings page
+  settingsPage.set_title(_('Settings'));
+  settingsPage.set_icon_name('preferences-system-symbolic');
+  settingsGroup.add(prefsPages.preferencesWidget);
+  settingsPage.add(settingsGroup);
+
+  //Add the pages to the window
+  window.add(settingsPage);
+}
+
+//Create preferences window for GNOME 3.38 - 41
+function buildPrefsWidget() {
+  let prefsPages = new PrefsPages();
+  let settingsWindow = new Gtk.ScrolledWindow();
+
+  //Use a stack to store pages
+  let pageStack = new Gtk.Stack();
+  pageStack.add_titled(prefsPages.preferencesWidget, 'settings', _('Settings'));
+
+  let pageSwitcher = new Gtk.StackSwitcher();
+  pageSwitcher.set_stack(pageStack);
+
+  //Add the stack to the scrolled window
+  if (ShellVersion >= 40) {
+    settingsWindow.set_child(pageStack);
+  } else {
+    settingsWindow.add(pageStack);
   }
 
-  _createSettings(settingsInfo) {
-    settingsInfo.forEach(settingInfo => {
-      //Check the target group exists
-      if (!(settingInfo[0] in this._settingGroups)) {
-        return;
-      }
-
-      //Create a row with a switch, title and subtitle
-      let settingRow = new Adw.SwitchRow({
-        title: settingInfo[2],
-        subtitle: settingInfo[3]
-      });
-
-      //Connect the switch to the setting
-      this._extensionSettings.bind(
-        settingInfo[1], //GSettings key to bind to
-        settingRow, //Object to bind to
-        'active', //The property to share
-        Gio.SettingsBindFlags.DEFAULT
-      );
-
-      //Add the row to the group, and save for later
-      this._settingGroups[settingInfo[0]].add(settingRow);
-      this._settingRows[settingInfo[1]] = settingRow;
-    });
+  //Enable all elements differently for GNOME 40+ and 3.38
+  if (ShellVersion >= 40) {
+    settingsWindow.show();
+  } else {
+    settingsWindow.show_all();
   }
 
-  addLinks(window, linksInfo, groupName) {
-    //Setup and add links group to window
-    let linksGroup = new Adw.PreferencesGroup();
-    linksGroup.set_title(groupName);
-    this.add(linksGroup);
+  //Modify top bar to add a page menu, when the window is ready
+  settingsWindow.connect('realize', () => {
+    let window = ShellVersion >= 40 ? settingsWindow.get_root() : settingsWindow.get_toplevel();
+    let headerBar = window.get_titlebar();
 
-    linksInfo.forEach((linkInfo) => {
-      //Create a row for the link widget
-      let linkEntryRow = new Adw.ActionRow({
-        title: linkInfo[0],
-        subtitle: linkInfo[1],
-        activatable: true
-      });
-
-      //Open the link when clicked
-      linkEntryRow.connect('activated', () => {
-        let uriLauncher = new Gtk.UriLauncher();
-        uriLauncher.set_uri(linkInfo[2]);
-        uriLauncher.launch(window, null, null);
-      });
-
-      linksGroup.add(linkEntryRow);
-    });
-  }
-
-  _updateEnabledSettings() {
-    /*
-     - If quick settings are enabled, disable 'move-icon-setting' option
-     - If quick settings grouping is disabled, disable 'use-quick-subtitle' option
-    */
-
-    let moveIconRow = this._settingRows['move-icon-right'];
-    let groupQuickSettingsRow = this._settingRows['group-quick-settings'];
-    let quickSubtitleSettingsRow = this._settingRows['use-quick-subtitle'];
-    let clickToggleRow = this._settingRows['click-to-toggle'];
-
-    if (this._extensionSettings.get_boolean('use-quick-settings')) {
-      moveIconRow.set_sensitive(false);
-      groupQuickSettingsRow.set_sensitive(true);
-
-      if (!this._extensionSettings.get_boolean('group-quick-settings')) {
-        quickSubtitleSettingsRow.set_sensitive(false);
-        clickToggleRow.set_sensitive(false);
-      } else {
-        quickSubtitleSettingsRow.set_sensitive(true);
-        clickToggleRow.set_sensitive(true);
-      }
+    //Add page switching menu to header
+    if (ShellVersion >= 40) {
+      headerBar.set_title_widget(pageSwitcher);
     } else {
-      moveIconRow.set_sensitive(true);
-      groupQuickSettingsRow.set_sensitive(false);
-      quickSubtitleSettingsRow.set_sensitive(false);
-      clickToggleRow.set_sensitive(false);
+      headerBar.set_custom_title(pageSwitcher);
     }
-  }
-});
+    pageSwitcher.show();
+  });
 
-export default class PrivacyQuickSettingsPrefs extends ExtensionPreferences {
-  //Create preferences window with libadwaita
-  fillPreferencesWindow(window) {
-    //Translated title, icon name
-    let pageInfo = [_('Settings'), 'preferences-system-symbolic'];
-
-    let groupsInfo = [
-      //Group ID, translated title
-      ['general', _('General settings')],
-      ['menu', _('Menu settings')]
-    ];
-
-    let settingsInfo = [
-      //Group ID, setting key, title, subtitle
-      ['general', 'move-icon-right', _('Move status icon right'), _('Force the icon to move to right side of the status area')],
-      ['menu', 'use-quick-settings',  _('Use quick settings menu'), _('Use the system quick settings area, instead of an indicator')],
-      ['menu', 'group-quick-settings',  _('Group quick settings'), _('Group quick settings together, into a menu')],
-      ['menu', 'use-quick-subtitle',  _('Use quick settings subtitle'), _('Show the privacy status in the quick settings subtitle')],
-      ['menu', 'click-to-toggle',  _('Toggle all settings at once'), _('Enable or disable all privacy settings at once, when the group is pressed')]
-    ];
-
-    //Create settings page from info
-    let settingsPage = new PrefsPage(pageInfo, groupsInfo, settingsInfo, this.getSettings());
-
-    //Define and add links
-    let linksInfo = [
-      //Translated title, link
-      [_('Report an issue'), _('GitHub issue tracker'), 'https://github.com/stuarthayhurst/privacy-menu-extension/issues'],
-      [_('Donate via GitHub'), _('Become a sponsor'), 'https://github.com/sponsors/stuarthayhurst'],
-      [_('Donate via PayPal'), _('Thanks for your support :)'), 'https://www.paypal.me/stuartahayhurst']
-    ];
-    settingsPage.addLinks(window, linksInfo, _("Links"));
-
-    //Add the pages to the window, enable searching
-    window.add(settingsPage);
-    window.set_search_enabled(true);
-  }
+  return settingsWindow;
 }

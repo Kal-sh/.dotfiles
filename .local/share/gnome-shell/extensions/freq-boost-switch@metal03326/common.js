@@ -1,10 +1,17 @@
-import GLib from 'gi://GLib';
-import Gio from 'gi://Gio';
+const {
+	      byteArray,
+	      gi: {
+		      GLib,
+		      Gio: { Subprocess, SubprocessFlags }
+	      }
+      } = imports;
 
-const CPU_INTEL         = 0;
-// acpi-cpufreq/amd-pstate/amd-pstate-epp
-const CPU_AMD           = 1;
-const CPU_NOT_SUPPORTED = 2;
+// ES6 mandates var to be used when exporting
+// intel_pstate/intel_cpufreq
+var CPU_INTEL         = 0;
+// acpi-cpufreq/amd-pstate
+var CPU_AMD           = 1;
+var CPU_NOT_SUPPORTED = 2;
 
 function getMyCpuType()
 {
@@ -16,7 +23,7 @@ function getMyCpuType()
 		{
 			return CPU_INTEL;
 		}
-		else if ( [ 'amd-pstate', 'amd-pstate-epp', 'acpi-cpufreq' ].includes( driver ) && bashSyncCommand( 'cat /sys/devices/system/cpu/cpufreq/boost' ) )
+		else if ( [ 'amd-pstate', 'acpi-cpufreq' ].includes( driver ) && bashSyncCommand( 'cat /sys/devices/system/cpu/cpufreq/boost' ) )
 		{
 			return CPU_AMD;
 		}
@@ -47,12 +54,7 @@ function pkexecCommand( command, inBash )
 {
 	const params = [ 'pkexec' ].concat( inBash ? [ '/bin/sh', '-c', command ] : command );
 
-	return asyncCommand( params );
-}
-
-function asyncCommand( commands )
-{
-	return new Promise( ( resolve, reject ) => Gio.Subprocess.new( commands, Gio.SubprocessFlags.NONE )
+	return new Promise( ( resolve, reject ) => Subprocess.new( params, SubprocessFlags.NONE )
 		.communicate_utf8_async( null, null, proc =>
 		{
 			try
@@ -77,19 +79,8 @@ function bashSyncCommand( command )
 
 	if ( out.length )
 	{
-		return new TextDecoder().decode( out ).trim();
+		return byteArray.toString( out ).trim();
 	}
 
 	return false;
 }
-
-export {
-	CPU_INTEL,
-	CPU_AMD,
-	CPU_NOT_SUPPORTED,
-	getMyCpuType,
-	getBoostState,
-	pkexecCommand,
-	asyncCommand,
-	bashSyncCommand
-};

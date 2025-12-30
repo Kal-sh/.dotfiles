@@ -17,15 +17,15 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import Meta from 'gi://Meta';
+const Meta = imports.gi.Meta;
 
-export const DEBUG = function (message) {
+var DEBUG = function (message) {
     // Enable for debugging purposes.
-    if(false) console.log(Date().substr(16,8) + " [hidetopbar]: " + message);
+    if(false) global.log(Date().substr(16,8) + " [hidetopbar]: " + message);
 }
 
 // try to simplify global signals handling
-export class GlobalSignalsHandler {
+var GlobalSignalsHandler = class HideTopBar_GlobalSignalsHandler {
     constructor() {
         this._signals = new Object();
     }
@@ -61,16 +61,14 @@ export class GlobalSignalsHandler {
     disconnectWithLabel(label) {
         if(this._signals[label]) {
             for( let i = 0; i < this._signals[label].length; i++ ) {
-                this._signals[label][i][0].disconnect(
-                    this._signals[label][i][1]
-                );
+                this._signals[label][i][0].disconnect(this._signals[label][i][1]);
             }
             delete this._signals[label];
         }
     }
 };
 
-export function getMonitorManager() {
+function getMonitorManager() {
     if (global.backend.get_monitor_manager !== undefined)
         return global.backend.get_monitor_manager();
     else

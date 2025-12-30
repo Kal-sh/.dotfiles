@@ -1,13 +1,14 @@
 /* exported TouchpadPinchGesture */
-import Clutter from 'gi://Clutter';
-import GObject from 'gi://GObject';
-import Meta from 'gi://Meta';
-import Shell from 'gi://Shell';
+const Clutter = imports.gi.Clutter;
+const GObject = imports.gi.GObject;
+const Meta = imports.gi.Meta;
+const Shell = imports.gi.Shell;
 
-import { registerClass } from '../../common/utils/gobject.js'
-import { TouchpadConstants } from '../../constants.js'
-import * as DBusUtils from '../utils/dbus.js'
-import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+const { registerClass } = Me.imports.common.utils.gobject;
+const { TouchpadConstants } = Me.imports.constants;
+const DBusUtils = Me.imports.src.utils.dbus;
+const Main = imports.ui.main;
 const MIN_ANIMATION_DURATION = 100;
 const MAX_ANIMATION_DURATION = 400;
 
@@ -52,21 +53,21 @@ class EventHistoryTracker {
 }
 
 // define enum
-export var TouchpadState;
+var TouchpadState;
 (function (TouchpadState) {
 	TouchpadState[TouchpadState['NONE'] = 0] = 'NONE';
 	TouchpadState[TouchpadState['HANDLING'] = 1] = 'HANDLING';
 	TouchpadState[TouchpadState['IGNORED'] = 2] = 'IGNORED';
 })(TouchpadState || (TouchpadState = {}));
 
-export var GestureACKState;
+var GestureACKState;
 (function (GestureACKState) {
 	GestureACKState[GestureACKState['NONE'] = 0] = 'NONE';
 	GestureACKState[GestureACKState['PENDING_ACK'] = 1] = 'PENDING_ACK';
 	GestureACKState[GestureACKState['ACKED'] = 2] = 'ACKED';
 })(GestureACKState || (GestureACKState = {}));
 
-export var TouchpadPinchGesture = registerClass({
+var TouchpadPinchGesture = registerClass({
 	Properties: {},
 	Signals: {
 		'begin': { param_types: [] },

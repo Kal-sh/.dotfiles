@@ -1,21 +1,14 @@
 // SPDX-FileCopyrightText: 2023 Aleksandr Mezin <mezin.alexander@gmail.com>
-// SPDX-FileContributor: Vicente Maroto Garzón
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import GLib from 'gi://GLib';
-import Gio from 'gi://Gio';
+'use strict';
 
-import Gi from 'gi';
+const GLib = imports.gi.GLib;
+const Gio = imports.gi.Gio;
 
-function try_require(namespace, version = undefined) {
-    try {
-        return Gi.require(namespace, version);
-    } catch (ex) {
-        logError(ex);
-        return null;
-    }
-}
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+const { try_require } = Me.imports.ddterm.shell.compat;
 
 const GLibUnix = GLib.check_version(2, 79, 2) === null ? try_require('GLibUnix') : null;
 const set_fd_nonblocking = GLibUnix?.set_fd_nonblocking ?? GLib.unix_set_fd_nonblocking;
@@ -35,7 +28,7 @@ function dup(fd) {
 }
 
 /* like gio-launch-desktop */
-export function sd_journal_stream_fd(identifier, priority = LOG_INFO, level_prefix = false) {
+function sd_journal_stream_fd(identifier, priority = LOG_INFO, level_prefix = false) {
     if (priority < 0)
         priority = 0;
 
@@ -82,3 +75,5 @@ export function sd_journal_stream_fd(identifier, priority = LOG_INFO, level_pref
         throw ex;
     }
 }
+
+/* exported sd_journal_stream_fd */

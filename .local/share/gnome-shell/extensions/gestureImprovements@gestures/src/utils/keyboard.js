@@ -1,6 +1,6 @@
 /* exported getVirtualKeyboard, extensionCleanup */
-import Clutter from 'gi://Clutter';
-import GLib from 'gi://GLib';
+const Clutter = imports.gi.Clutter;
+const GLib = imports.gi.GLib;
 const DELAY_BETWEEN_KEY_PRESS = 10; // ms
 const timeoutIds = new Set();
 class VirtualKeyboard {
@@ -38,12 +38,12 @@ class VirtualKeyboard {
 }
 let _keyboard;
 
-export function getVirtualKeyboard() {
+function getVirtualKeyboard() {
 	_keyboard = _keyboard !== null && _keyboard !== void 0 ? _keyboard : new VirtualKeyboard();
 	return _keyboard;
 }
 
-export function extensionCleanup() {
+function extensionCleanup() {
 	timeoutIds.forEach(id => GLib.Source.remove(id));
 	timeoutIds.clear();
 	_keyboard = undefined;

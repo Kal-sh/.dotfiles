@@ -2,31 +2,55 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import GLib from 'gi://GLib';
-import GObject from 'gi://GObject';
-import Gio from 'gi://Gio';
-import Meta from 'gi://Meta';
-import Shell from 'gi://Shell';
+'use strict';
 
-import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import * as MessageTray from 'resource:///org/gnome/shell/ui/messageTray.js';
-import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
-import { ExtensionState } from 'resource:///org/gnome/shell/misc/extensionUtils.js';
+const GLib = imports.gi.GLib;
+const GObject = imports.gi.GObject;
+const Gio = imports.gi.Gio;
+const Meta = imports.gi.Meta;
+const Shell = imports.gi.Shell;
 
-import { Animation, ReverseAnimation } from './animation.js';
-import { AppControl } from './appcontrol.js';
-import { DBusApi } from './dbusapi.js';
-import { WindowGeometry } from './geometry.js';
-import { Installer } from './install.js';
-import { Notifications } from './notifications.js';
-import { PanelIconProxy } from './panelicon.js';
-import { Service } from './service.js';
-import { WindowManager } from './wm.js';
-import { WindowMatch } from './windowmatch.js';
+const Main = imports.ui.main;
+const MessageTray = imports.ui.messageTray;
+
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+const { Animation, ReverseAnimation } = Me.imports.ddterm.shell.animation;
+const { AppControl } = Me.imports.ddterm.shell.appcontrol;
+const { Extension, is_extension_deactivating } = Me.imports.ddterm.shell.compat;
+const { DBusApi } = Me.imports.ddterm.shell.dbusapi;
+const { WindowGeometry } = Me.imports.ddterm.shell.geometry;
+const { Installer } = Me.imports.ddterm.shell.install;
+const { Notifications } = Me.imports.ddterm.shell.notifications;
+const { PanelIconProxy } = Me.imports.ddterm.shell.panelicon;
+const { Service } = Me.imports.ddterm.shell.service;
+const { WindowManager } = Me.imports.ddterm.shell.wm;
+const { WindowMatch } = Me.imports.ddterm.shell.windowmatch;
 
 const APP_ID = 'com.github.amezin.ddterm';
 const APP_DBUS_PATH = '/com/github/amezin/ddterm';
 const WINDOW_PATH_PREFIX = `${APP_DBUS_PATH}/window/`;
+
+function create_window_matcher(service, rollback) {
+    const window_matcher = new WindowMatch({
+        subprocess: service.subprocess,
+        display: global.display,
+        gtk_application_id: APP_ID,
+        gtk_window_object_path_prefix: WINDOW_PATH_PREFIX,
+    });
+
+    rollback.push(() => {
+        window_matcher.disable();
+    });
+
+    service.bind_property(
+        'subprocess',
+        window_matcher,
+        'subprocess',
+        GObject.BindingFlags.DEFAULT
+    );
+
+    return window_matcher;
+}
 
 function create_dbus_interface(
     window_geometry,
@@ -37,8 +61,9 @@ function create_dbus_interface(
     rollback
 ) {
     const dbus_interface = new DBusApi({
-        version: extension.metadata.version?.toString() ?? null,
-        revision: extension.metadata['version-name'] ?? null,
+        xml_file_path: extension.dbus_xml_file_path,
+        version: `${extension.metadata.version}`,
+        revision: extension.revision,
         app_control,
     });
 
@@ -91,8 +116,8 @@ function create_dbus_interface(
     return dbus_interface;
 }
 
-function create_panel_icon(settings, window_matcher, app_control, icon, gettext_domain, rollback) {
-    const panel_icon = new PanelIconProxy({ gicon: icon, gettext_domain });
+function create_panel_icon(settings, window_matcher, app_control, gettext_context, rollback) {
+    const panel_icon = new PanelIconProxy({ gettext_context });
 
     rollback.push(() => {
         panel_icon.remove();
@@ -135,7 +160,8 @@ function create_panel_icon(settings, window_matcher, app_control, icon, gettext_
 }
 
 function install(extension, rollback) {
-    const installer = new Installer(extension.launcher_path);
+    const { data_dir, launcher_path } = extension;
+    const installer = new Installer(data_dir, launcher_path);
     installer.install();
 
     if (GObject.signal_lookup('shutdown', Shell.Global)) {
@@ -156,7 +182,7 @@ function install(extension, rollback) {
 
         // Also don't uninstall if ddterm is being disabled only temporarily
         // (because some other extension is being disabled).
-        if (!extension.is_deactivating())
+        if (!is_extension_deactivating(extension))
             return;
 
         installer.uninstall();
@@ -167,7 +193,7 @@ function bind_keys(settings, app_control, rollback) {
     Main.wm.addKeybinding(
         'ddterm-toggle-hotkey',
         settings,
-        Meta.KeyBindingFlags.IGNORE_AUTOREPEAT,
+        Meta.KeyBindingFlags.NONE,
         Shell.ActionMode.NORMAL,
         () => {
             app_control.toggle().catch(
@@ -183,7 +209,7 @@ function bind_keys(settings, app_control, rollback) {
     Main.wm.addKeybinding(
         'ddterm-activate-hotkey',
         settings,
-        Meta.KeyBindingFlags.IGNORE_AUTOREPEAT,
+        Meta.KeyBindingFlags.NONE,
         Shell.ActionMode.NORMAL,
         () => {
             app_control.activate().catch(
@@ -198,14 +224,12 @@ function bind_keys(settings, app_control, rollback) {
 }
 
 class EnabledExtension {
-    #disable_callbacks = [];
-    #logger;
-
     constructor(extension) {
         this.extension = extension;
+        this._disable_callbacks = [];
 
         try {
-            this.#enable();
+            this._enable();
         } catch (ex) {
             this.disable();
             throw ex;
@@ -213,32 +237,21 @@ class EnabledExtension {
     }
 
     disable() {
-        while (this.#disable_callbacks.length > 0) {
+        while (this._disable_callbacks.length > 0) {
             try {
-                this.#disable_callbacks.pop()();
+                this._disable_callbacks.pop()();
             } catch (ex) {
                 logError(ex);
             }
         }
     }
 
-    #enable() {
-        const rollback = this.#disable_callbacks;
+    _enable() {
+        const rollback = this._disable_callbacks;
 
         this.settings = this.extension.getSettings();
 
-        this.symbolic_icon = Gio.FileIcon.new(Gio.File.new_for_uri(
-            GLib.Uri.resolve_relative(
-                import.meta.url,
-                '../../data/com.github.amezin.ddterm-symbolic.svg',
-                GLib.UriFlags.NONE
-            )
-        ));
-
-        this.notifications = new Notifications({
-            icon: this.symbolic_icon,
-            gettext_domain: this.extension,
-        });
+        this.notifications = new Notifications({ gettext_context: this.extension });
 
         rollback.push(() => {
             this.notifications.destroy();
@@ -277,7 +290,7 @@ class EnabledExtension {
                     MessageTray.NotificationDestroyedReason.EXPIRED
                 );
 
-                if (!this.extension.check_version_match())
+                if (!this.extension.check_revision_match())
                     this.notifications.show_version_mismatch();
             }
         });
@@ -325,22 +338,12 @@ class EnabledExtension {
             'hide-animation-duration'
         );
 
-        this.window_matcher = new WindowMatch({
-            service: this.service,
-            display: global.display,
-            gtk_application_id: APP_ID,
-            gtk_window_object_path_prefix: WINDOW_PATH_PREFIX,
-        });
-
-        rollback.push(() => {
-            this.window_matcher.disable();
-        });
+        this.window_matcher = create_window_matcher(this.service, rollback);
 
         this.app_control = new AppControl({
             service: this.service,
             window_matcher: this.window_matcher,
             window_geometry: this.window_geometry,
-            logger: this.logger ?? null,
         });
 
         rollback.push(() => {
@@ -356,7 +359,7 @@ class EnabledExtension {
 
             // Also don't terminate the app if ddterm is being disabled only temporarily
             // (because some other extension is being disabled).
-            if (!this.extension.is_deactivating())
+            if (!is_extension_deactivating(this.extension))
                 return;
 
             if (!this.app_control.quit())
@@ -364,21 +367,21 @@ class EnabledExtension {
         });
 
         this.window_matcher.connect('notify::current-window', () => {
-            this.#create_window_manager();
+            this._create_window_manager();
         });
 
         rollback.push(() => {
             this.window_manager?.disable();
         });
 
-        this.#create_window_manager();
+        this._create_window_manager();
 
         this.window_matcher.connect('notify::current-window', () => {
-            this.#set_skip_taskbar();
+            this._set_skip_taskbar();
         });
 
         const skip_taskbar_handler = this.settings.connect('changed::window-skip-taskbar', () => {
-            this.#set_skip_taskbar();
+            this._set_skip_taskbar();
         });
 
         rollback.push(() => {
@@ -404,7 +407,6 @@ class EnabledExtension {
             this.settings,
             this.window_matcher,
             this.app_control,
-            this.symbolic_icon,
             this.extension,
             rollback
         );
@@ -412,19 +414,21 @@ class EnabledExtension {
         install(this.extension, rollback);
     }
 
-    #set_skip_taskbar() {
+    _set_skip_taskbar() {
         const win = this.window_matcher.current_window;
 
         if (win?.get_client_type() !== Meta.WindowClientType.WAYLAND)
             return;
 
+        const wayland_client = this.service.subprocess.wayland_client;
+
         if (this.settings.get_boolean('window-skip-taskbar'))
-            this.service.hide_from_window_list(win);
+            wayland_client.hide_from_window_list(win);
         else
-            this.service.show_in_window_list(win);
+            wayland_client.show_in_window_list(win);
     }
 
-    #create_window_manager() {
+    _create_window_manager() {
         this.window_manager?.disable();
         this.window_manager = null;
 
@@ -441,79 +445,69 @@ class EnabledExtension {
             hide_animation: this.hide_animation,
         });
 
-        this.window_manager.logger = this.logger;
+        this.window_manager.debug = this.debug;
         this.window_manager.connect('hide-request', () => this.app_control.hide(false));
     }
 
-    get logger() {
-        return this.#logger;
+    get debug() {
+        return this._debug;
     }
 
-    set logger(logger) {
-        this.#logger = logger;
+    set debug(func) {
+        this._debug = func;
 
         if (this.window_manager)
-            this.window_manager.logger = logger;
-
-        if (this.app_control)
-            this.app_control.logger = logger;
+            this.window_manager.debug = func;
     }
 }
 
-export default class DDTermExtension extends Extension {
-    #app_extra_args = [];
-    #app_extra_env = [];
-    #logger = null;
-
+var DDTermExtension = class DDTermExtension extends Extension {
     constructor(meta) {
         super(meta);
 
+        this.data_dir = GLib.build_filenamev([this.path, 'data']);
         this.launcher_path = GLib.build_filenamev([this.path, 'bin', APP_ID]);
-        this.metadata_path = GLib.build_filenamev([this.path, 'metadata.json']);
+        this.dbus_xml_file_path = GLib.build_filenamev(
+            [this.data_dir, 'com.github.amezin.ddterm.Extension.xml']
+        );
+
+        this.revision_file_path = GLib.build_filenamev([this.path, 'revision.txt']);
+        this.revision = this.read_revision();
 
         this.app_process = null;
         this.enabled_state = null;
+        this._app_extra_args = [];
+        this._debug = null;
     }
 
-    get logger() {
-        return this.#logger;
+    get debug() {
+        return this._debug;
     }
 
-    set logger(logger) {
-        this.#logger = logger;
+    set debug(func) {
+        this._debug = func;
 
         if (this.enabled_state)
-            this.enabled_state.logger = logger;
+            this.enabled_state.debug = func;
     }
 
     get app_extra_args() {
-        return this.#app_extra_args;
+        return this._app_extra_args;
     }
 
     set app_extra_args(value) {
-        this.#app_extra_args = value;
+        this._app_extra_args = value;
 
         if (this.enabled_state)
             this.enabled_state.service.extra_argv = value;
     }
 
-    get app_extra_env() {
-        return this.#app_extra_env;
+    read_revision() {
+        return Shell.get_file_contents_utf8_sync(this.revision_file_path).trim();
     }
 
-    set app_extra_env(value) {
-        this.#app_extra_env = value;
-
-        if (this.enabled_state)
-            this.enabled_state.service.extra_env = value;
-    }
-
-    check_version_match() {
-        const metadata_updated =
-            JSON.parse(Shell.get_file_contents_utf8_sync(this.metadata_path));
-
-        return this.metadata.version === metadata_updated.version &&
-            this.metadata['version-name'] === metadata_updated['version-name'];
+    check_revision_match() {
+        return this.revision === this.read_revision();
     }
 
     watch_app_process(app_process) {
@@ -536,28 +530,14 @@ export default class DDTermExtension extends Extension {
 
     enable() {
         this.enabled_state = new EnabledExtension(this);
-        this.enabled_state.logger = this.logger;
+        this.enabled_state.debug = this.debug;
         this.enabled_state.service.extra_argv = this.app_extra_args;
-        this.enabled_state.service.extra_env = this.app_extra_env;
     }
 
     disable() {
         this.enabled_state?.disable();
         this.enabled_state = null;
     }
+};
 
-    is_deactivating() {
-        const info = Main.extensionManager.lookup(this.uuid);
-
-        if (!info)
-            return true;
-
-        if (info.state === (ExtensionState.ACTIVE ?? ExtensionState.ENABLED))
-            return false;
-
-        if (info.state === (ExtensionState.ACTIVATING ?? ExtensionState.ENABLING))
-            return false;
-
-        return true;
-    }
-}
+/* exported DDTermExtension */

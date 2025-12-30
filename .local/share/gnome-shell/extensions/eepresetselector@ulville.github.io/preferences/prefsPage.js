@@ -6,16 +6,14 @@
 
 'use strict';
 
-import Adw from 'gi://Adw';
-import Gtk from 'gi://Gtk';
-import GObject from 'gi://GObject';
-import Gdk from 'gi://Gdk';
+const { Adw, Gtk, GObject, Gdk } = imports.gi;
 
-import {gettext as _} from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
+const ExtensionUtils = imports.misc.extensionUtils;
 
+const _ = ExtensionUtils.gettext;
 const genParam = (type, name, ...dflt) => GObject.ParamSpec[type](name, name, name, GObject.ParamFlags.READWRITE, ...dflt);
 
-export var EEPSPrefsPage = GObject.registerClass(
+var EEPSPrefsPage = GObject.registerClass(
     class EEPSPrefsPage extends Adw.PreferencesPage {
         _init(settings) {
             super._init();
@@ -23,7 +21,7 @@ export var EEPSPrefsPage = GObject.registerClass(
 
             // Shortcut group
             // --------------
-            this.resetShortcutsButton = new Gtk.Button({
+            let resetShortcutsButton = new Gtk.Button({
                 icon_name: 'view-refresh-symbolic',
                 valign: Gtk.Align.CENTER,
                 css_classes: ['destructive-action'],
@@ -32,7 +30,7 @@ export var EEPSPrefsPage = GObject.registerClass(
             });
             let shortcutGroup = new Adw.PreferencesGroup({
                 title: _('Keyboard Shortcuts'),
-                header_suffix: this.resetShortcutsButton,
+                header_suffix: resetShortcutsButton,
             });
 
             // Cycle Output Presets Keyboard shortcut
@@ -49,51 +47,38 @@ export var EEPSPrefsPage = GObject.registerClass(
                 _('Cycle Input Presets'),
                 _('Keyboard shortcut to cycle through input presets')
             );
-            // Toggle Global Bypass Keyboard shortcut
-            this.toggleBypassRow = new ShortcutRow(
-                this._settings,
-                'toggle-global-bypass',
-                _('Toggle Global Bypass'),
-                _('Keyboard shortcut to toggle global bypass')
-            );
 
             // Hide/Show delete button
-            if (!this._isAnyAcceleratorChanged())
-                this.resetShortcutsButton.visible = false;
+            if (!(this.outputShortcutRow.isAcceleratorChanged() || this.inputShortcutRow.isAcceleratorChanged()))
+                resetShortcutsButton.visible = false;
 
 
             // Add elements
             shortcutGroup.add(this.outputShortcutRow);
             shortcutGroup.add(this.inputShortcutRow);
-            shortcutGroup.add(this.toggleBypassRow);
             this.add(shortcutGroup);
 
 
             // Bind signals
             // --------------
-            this.resetShortcutsButton.connect('clicked', this._resetShortcuts.bind(this));
-            this._settings.connect('changed::cycle-output-presets', this._changeResetButtonVisibility.bind(this));
-            this._settings.connect('changed::cycle-input-presets', this._changeResetButtonVisibility.bind(this));
-            this._settings.connect('changed::toggle-global-bypass', this._changeResetButtonVisibility.bind(this));
-        }
-
-        _changeResetButtonVisibility() {
-            if (this._isAnyAcceleratorChanged())
-                this.resetShortcutsButton.visible = true;
-            else
-                this.resetShortcutsButton.visible = false;
-        }
-
-        _isAnyAcceleratorChanged() {
-            return this.outputShortcutRow.isAcceleratorChanged() ||
-            this.inputShortcutRow.isAcceleratorChanged() ||
-            this.toggleBypassRow.isAcceleratorChanged();
+            resetShortcutsButton.connect('clicked', this._resetShortcuts.bind(this));
+            this._settings.connect('changed::cycle-output-presets', () => {
+                if (this.outputShortcutRow.isAcceleratorChanged() || this.inputShortcutRow.isAcceleratorChanged())
+                    resetShortcutsButton.visible = true;
+                else
+                    resetShortcutsButton.visible = false;
+            });
+            this._settings.connect('changed::cycle-input-presets', () => {
+                if (this.outputShortcutRow.isAcceleratorChanged() || this.inputShortcutRow.isAcceleratorChanged())
+                    resetShortcutsButton.visible = true;
+                else
+                    resetShortcutsButton.visible = false;
+            });
         }
 
         _resetShortcuts() {
             this.outputShortcutRow.resetAccelerator();
             this.inputShortcutRow.resetAccelerator();
-            this.toggleBypassRow.resetAccelerator();
         }
     });
 
@@ -108,7 +93,7 @@ const ShortcutRow = class extends Adw.ActionRow {
                 shortcut: genParam('string', 'shortcut', ''),
             },
             Signals: {
-                changed: {param_types: [GObject.TYPE_STRING]},
+                changed: { param_types: [GObject.TYPE_STRING] },
             },
         }, this);
     }

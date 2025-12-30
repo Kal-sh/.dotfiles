@@ -14,15 +14,14 @@
 
 'use strict';
 
-import * as utils from '../utils.js';
+const GObject = imports.gi.GObject;
 
-// We import some modules only in the Shell process as they are not available in the
-// preferences process. They are used only in the creator function of the ShaderFactory
-// which is only called within GNOME Shell's process.
-const ShaderFactory = await utils.importInShellOnly('./ShaderFactory.js');
-const Cogl          = await utils.importInShellOnly('gi://Cogl');
+const _ = imports.gettext.domain('burn-my-windows').gettext;
 
-const _ = await utils.importGettext();
+const ExtensionUtils = imports.misc.extensionUtils;
+const Me             = imports.misc.extensionUtils.getCurrentExtension();
+const utils          = Me.imports.src.utils;
+const ShaderFactory  = Me.imports.src.ShaderFactory.ShaderFactory;
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // This effect paints your windows with a thick paint brush.                            //
@@ -33,17 +32,25 @@ const _ = await utils.importGettext();
 // The effect class can be used to get some metadata (like the effect's name or supported
 // GNOME Shell versions), to initialize the respective page of the settings dialog, as
 // well as to create the actual shader for the effect.
-export default class Effect {
+var PaintBrush = class {
 
   // The constructor creates a ShaderFactory which will be used by extension.js to create
   // shader instances for this effect. The shaders will be automagically created using the
   // GLSL file in resources/shaders/<nick>.glsl. The callback will be called for each
   // newly created shader instance.
   constructor() {
-    this.shaderFactory = new ShaderFactory(Effect.getNick(), (shader) => {
+    this.shaderFactory = new ShaderFactory(this.getNick(), (shader) => {
+      // We import these modules in this function as they are not available in the
+      // preferences process. This callback is only called within GNOME Shell's process.
+      const {Clutter, GdkPixbuf, Cogl} = imports.gi;
+
       // Create the texture in the first call.
       if (!this._brushTexture) {
-        this._brushTexture = utils.getImageResource('/img/brush.png', true);
+        const brushData    = GdkPixbuf.Pixbuf.new_from_resource('/img/brush.png');
+        this._brushTexture = new Clutter.Image();
+        this._brushTexture.set_data(brushData.get_pixels(),
+                                    Cogl.PixelFormat.RGBA_8888_PRE, brushData.width,
+                                    brushData.height, brushData.rowstride);
       }
 
       // Store uniform locations of newly created shaders.
@@ -77,7 +84,7 @@ export default class Effect {
   // ---------------------------------------------------------------------------- metadata
 
   // This effect is only available on GNOME Shell 40+.
-  static getMinShellVersion() {
+  getMinShellVersion() {
     return [40, 0];
   }
 
@@ -85,13 +92,13 @@ export default class Effect {
   // required. It should match the prefix of the settings keys which store whether the
   // effect is enabled currently (e.g. '*-enable-effect'), and its animation time
   // (e.g. '*-animation-time').
-  static getNick() {
+  getNick() {
     return 'paint-brush';
   }
 
   // This will be shown in the sidebar of the preferences dialog as well as in the
   // drop-down menus where the user can choose the effect.
-  static getLabel() {
+  getLabel() {
     return _('Paint Brush');
   }
 
@@ -99,7 +106,7 @@ export default class Effect {
 
   // This is called by the preferences dialog whenever a new effect profile is loaded. It
   // binds all user interface elements to the respective settings keys of the profile.
-  static bindPreferences(dialog) {
+  bindPreferences(dialog) {
     dialog.bindAdjustment('paint-brush-animation-time');
     dialog.bindAdjustment('paint-brush-size');
   }
@@ -109,7 +116,7 @@ export default class Effect {
   // The getActorScale() is called from extension.js to adjust the actor's size during the
   // animation. This is useful if the effect requires drawing something beyond the usual
   // bounds of the actor. This only works for GNOME 3.38+.
-  static getActorScale(settings, forOpening, actor) {
+  getActorScale(settings) {
     return {x: 1.0, y: 1.0};
   }
 }

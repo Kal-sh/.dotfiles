@@ -1,5 +1,4 @@
 // SPDX-FileCopyrightText: 2023 Aleksandr Mezin <mezin.alexander@gmail.com>
-// SPDX-FileContributor: Jing Yen Loh
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -19,8 +18,8 @@ function clone_pspec(source, flags = DEFAULT_FLAGS) {
 
     const common_args = [
         source.get_name(),
-        source.get_nick(),
-        source.get_blurb(),
+        source.get_nick() ?? '',
+        source.get_blurb() ?? '',
         flags,
     ];
 
@@ -102,8 +101,8 @@ export const TerminalSettings = GObject.registerClass({
         ...CLONED_PSPECS,
         'cjk-ambiguous-width': GObject.ParamSpec.int(
             'cjk-ambiguous-width',
-            null,
-            null,
+            '',
+            '',
             DEFAULT_FLAGS,
             1,
             2,
@@ -111,8 +110,8 @@ export const TerminalSettings = GObject.registerClass({
         ),
         'scrollback-lines': GObject.ParamSpec.uint(
             'scrollback-lines',
-            null,
-            null,
+            '',
+            '',
             DEFAULT_FLAGS,
             0,
             GLib.MAXUINT32,
@@ -120,16 +119,16 @@ export const TerminalSettings = GObject.registerClass({
         ),
         'show-scrollbar': GObject.ParamSpec.boolean(
             'show-scrollbar',
-            null,
-            null,
+            '',
+            '',
             DEFAULT_FLAGS,
             true
         ),
         // has effect only when background color from style is used
         'background-opacity': GObject.ParamSpec.double(
             'background-opacity',
-            null,
-            null,
+            '',
+            '',
             DEFAULT_FLAGS,
             0,
             1,
@@ -137,27 +136,32 @@ export const TerminalSettings = GObject.registerClass({
         ),
         'command': GObject.ParamSpec.string(
             'command',
-            null,
-            null,
+            '',
+            '',
             DEFAULT_FLAGS,
             Command.USER_SHELL
         ),
         'custom-command': GObject.ParamSpec.string(
             'custom-command',
-            null,
-            null,
+            '',
+            '',
             DEFAULT_FLAGS,
             ''
         ),
         'preserve-working-directory': GObject.ParamSpec.boolean(
             'preserve-working-directory',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.EXPLICIT_NOTIFY,
             true
         ),
     },
 }, class DDTermTerminalSettings extends GObject.Object {
+    _init(params) {
+        super._init(params);
+        this.__heapgraph_name = this.constructor.$gtype.name;
+    }
+
     bind_terminal(to_terminal) {
         return new TerminalSettingsBinding({
             terminal: to_terminal,
@@ -186,6 +190,7 @@ const MultiBinding = GObject.registerClass({
 }, class DDTermTerminalSettingsMultiBinding extends GObject.Object {
     _init(params) {
         super._init(params);
+        this.__heapgraph_name = this.constructor.$gtype.name;
 
         this._unbind = [];
     }
@@ -213,15 +218,15 @@ export const TerminalSettingsBinding = GObject.registerClass({
     Properties: {
         'terminal': GObject.ParamSpec.object(
             'terminal',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
             Terminal
         ),
         'settings': GObject.ParamSpec.object(
             'settings',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
             TerminalSettings
         ),
@@ -229,6 +234,7 @@ export const TerminalSettingsBinding = GObject.registerClass({
 }, class DDTermTerminalSettingsBinding extends MultiBinding {
     _init(params) {
         super._init(params);
+        this.__heapgraph_name = this.constructor.$gtype.name;
 
         GObject.Object.list_properties.call(TerminalSettings).forEach(pspec => {
             if (GObject.Object.find_property.call(Terminal, pspec.name))
@@ -241,22 +247,22 @@ export const TerminalSettingsParser = GObject.registerClass({
     Properties: {
         'gsettings': GObject.ParamSpec.object(
             'gsettings',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
             Gio.Settings
         ),
         'desktop-settings': GObject.ParamSpec.object(
             'desktop-settings',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
             Gio.Settings
         ),
         'cjk-ambiguous-width': GObject.ParamSpec.int(
             'cjk-ambiguous-width',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READABLE,
             1,
             2,
@@ -264,8 +270,8 @@ export const TerminalSettingsParser = GObject.registerClass({
         ),
         'scrollback-lines': GObject.ParamSpec.uint(
             'scrollback-lines',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READABLE,
             0,
             GLib.MAXUINT32,
@@ -274,8 +280,8 @@ export const TerminalSettingsParser = GObject.registerClass({
         // has effect only when background color from style is used
         'background-opacity': GObject.ParamSpec.double(
             'background-opacity',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READABLE,
             0,
             1,
@@ -320,6 +326,7 @@ export const TerminalSettingsParser = GObject.registerClass({
 }, class DDTermTerminalSettingsParser extends GObject.Object {
     _init(params) {
         super._init(params);
+        this.__heapgraph_name = this.constructor.$gtype.name;
 
         this.add_dependency('cjk-utf8-ambiguous-width', 'cjk-ambiguous-width');
 
@@ -496,15 +503,15 @@ export const TerminalSettingsParserBinding = GObject.registerClass({
     Properties: {
         'settings': GObject.ParamSpec.object(
             'settings',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
             TerminalSettings
         ),
         'parser': GObject.ParamSpec.object(
             'parser',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
             TerminalSettingsParser
         ),
@@ -512,6 +519,7 @@ export const TerminalSettingsParserBinding = GObject.registerClass({
 }, class DDTermTerminalSettingsParserBinding extends MultiBinding {
     _init(params) {
         super._init(params);
+        this.__heapgraph_name = this.constructor.$gtype.name;
 
         GObject.Object.list_properties.call(TerminalSettings).forEach(pspec => {
             if (GObject.Object.find_property.call(TerminalSettingsParser, pspec.name))

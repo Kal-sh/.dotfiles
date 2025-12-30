@@ -1,18 +1,26 @@
-/* exported EEPSPreferences */
-
 'use strict';
 
-import * as PrefsPage from './preferences/prefsPage.js';
+const GETTEXT_DOMAIN = 'gnome-shell-extension-eepresetselector';
 
-import {ExtensionPreferences} from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
+const ExtensionUtils = imports.misc.extensionUtils;
+const Me = ExtensionUtils.getCurrentExtension();
+const PrefsPage = Me.imports.preferences.prefsPage;
 
-export default class EEPSPreferences extends ExtensionPreferences {
-    fillPreferencesWindow(window) {
-        const settings = this.getSettings();
+const _ = ExtensionUtils.gettext;
 
-        const prefsPage = new PrefsPage.EEPSPrefsPage(settings);
+// eslint-disable-next-line jsdoc/require-jsdoc, no-unused-vars
+function init() {
+    ExtensionUtils.initTranslations(GETTEXT_DOMAIN);
+}
 
-        window.add(prefsPage);
-        window._settings = settings;
-    }
+// eslint-disable-next-line jsdoc/require-jsdoc, no-unused-vars
+function fillPreferencesWindow(window) {
+    const settings = ExtensionUtils.getSettings();
+
+    const prefsPage = new PrefsPage.EEPSPrefsPage(settings);
+
+    window.add(prefsPage);
+
+    // Make sure the window doesn't outlive the settings object
+    window._settings = settings;
 }

@@ -1,21 +1,23 @@
 /* exported OverviewRoundTripGestureExtension */
-import Clutter from 'gi://Clutter';
-import Shell from 'gi://Shell';
+const Clutter = imports.gi.Clutter;
+const Shell = imports.gi.Shell;
 
-import { OverviewNavigationState } from '../common/settings.js'
-import { ExtSettings, OverviewControlsState } from '../constants.js'
-import { createSwipeTracker } from './swipeTracker.js'
-import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+const { OverviewNavigationState } = Me.imports.common.settings;
+const { ExtSettings, OverviewControlsState } = Me.imports.constants;
+const { createSwipeTracker } = Me.imports.src.swipeTracker;
+const Main = imports.ui.main;
+const { SwipeTracker } = imports.ui.swipeTracker;
 
 // declare enum
-export var ExtensionState;
+var ExtensionState;
 (function (ExtensionState) {
 	// DISABLED = 0,
 	ExtensionState[ExtensionState['DEFAULT'] = 1] = 'DEFAULT';
 	ExtensionState[ExtensionState['CUSTOM'] = 2] = 'CUSTOM';
 })(ExtensionState || (ExtensionState = {}));
 
-export var OverviewRoundTripGestureExtension = class OverviewRoundTripGestureExtension {
+var OverviewRoundTripGestureExtension = class OverviewRoundTripGestureExtension {
 	constructor(navigationStates) {
 		this._progress = 0;
 		this._extensionState = ExtensionState.DEFAULT;

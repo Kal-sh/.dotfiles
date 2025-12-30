@@ -5,13 +5,14 @@
   "name": "EasyEffects Preset Selector",
   "settings-schema": "org.gnome.shell.extensions.eepresetselector",
   "shell-version": [
-    "45",
-    "46",
-    "47",
-    "48",
-    "49"
+    "3.38",
+    "40",
+    "41",
+    "42",
+    "43",
+    "44"
   ],
   "url": "https://github.com/ulville/eepresetselector",
   "uuid": "eepresetselector@ulville.github.io",
-  "version": 29
+  "version": 28
 }

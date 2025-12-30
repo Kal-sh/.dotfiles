@@ -2,22 +2,24 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import GObject from 'gi://GObject';
-import Gio from 'gi://Gio';
-import Gtk from 'gi://Gtk';
+'use strict';
 
-import {
+const GObject = imports.gi.GObject;
+const Gio = imports.gi.Gio;
+const Gtk = imports.gi.Gtk;
+
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+const {
     bind_widgets,
     insert_settings_actions,
     set_scale_value_format,
     ui_file_uri,
-} from './util.js';
+} = Me.imports.ddterm.pref.util;
 
-export const TabsWidget = GObject.registerClass({
+var TabsWidget = GObject.registerClass({
     GTypeName: 'DDTermPrefsTabs',
     Template: ui_file_uri('prefs-tabs.ui'),
     Children: [
-        'expand_tabs_check',
         'tab_policy_combo',
         'tab_position_combo',
         'tab_label_width_scale',
@@ -26,21 +28,21 @@ export const TabsWidget = GObject.registerClass({
     Properties: {
         'settings': GObject.ParamSpec.object(
             'settings',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
             Gio.Settings
         ),
-        'gettext-domain': GObject.ParamSpec.jsobject(
-            'gettext-domain',
-            null,
-            null,
+        'gettext-context': GObject.ParamSpec.jsobject(
+            'gettext-context',
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY
         ),
     },
 }, class PrefsTabs extends Gtk.Grid {
-    constructor(params) {
-        super(params);
+    _init(params) {
+        super._init(params);
 
         bind_widgets(this.settings, {
             'tab-policy': this.tab_policy_combo,
@@ -60,52 +62,45 @@ export const TabsWidget = GObject.registerClass({
             'tab-switcher-popup',
             'notebook-border',
             'tab-show-shortcuts',
-            'save-restore-session',
         ]);
 
-        this.connect('realize', this.#realize.bind(this));
-    }
-
-    #realize() {
         this.saved_ellipsize_mode = this.settings.get_string('tab-label-ellipsize-mode');
 
         if (this.saved_ellipsize_mode === 'none')
             this.saved_ellipsize_mode = 'middle';
 
-        const auto_enable_ellipsize = this.#auto_enable_ellipsize.bind(this);
-
-        const tab_pos_handler =
-            this.tab_position_combo.connect('changed', auto_enable_ellipsize);
-
-        const tab_expand_handler =
-            this.expand_tabs_check.connect('toggled', auto_enable_ellipsize);
-
-        const unrealize_handler = this.connect('unrealize', () => {
-            this.disconnect(unrealize_handler);
-            this.tab_position_combo.disconnect(tab_pos_handler);
-            this.expand_tabs_check.disconnect(tab_expand_handler);
+        const tab_position_handler = this.settings.connect('changed::tab-position', () => {
+            this.auto_enable_ellipsize();
         });
+        this.connect('destroy', () => this.settings.disconnect(tab_position_handler));
+
+        const tab_expand_handler = this.settings.connect('changed::tab-expand', () => {
+            this.auto_enable_ellipsize();
+        });
+        this.connect('destroy', () => this.settings.disconnect(tab_expand_handler));
     }
 
     get title() {
-        return this.gettext_domain.gettext('Tabs');
+        return this.gettext_context.gettext('Tabs');
     }
 
-    #auto_enable_ellipsize() {
-        const current_mode = this.tab_label_ellipsize_combo.active_id;
+    auto_enable_ellipsize() {
+        const current_mode = this.settings.get_string('tab-label-ellipsize-mode');
         const current_enabled = current_mode !== 'none';
         const should_enable =
-            ['left', 'right'].includes(this.tab_position_combo.active_id) ||
-                this.expand_tabs_check.active;
+            ['left', 'right'].includes(this.settings.get_string('tab-position')) ||
+                this.settings.get_boolean('tab-expand');
 
         if (current_enabled === should_enable)
             return;
 
         if (should_enable) {
-            this.tab_label_ellipsize_combo.active_id = this.saved_ellipsize_mode;
+            this.settings.set_string('tab-label-ellipsize-mode', this.saved_ellipsize_mode);
         } else {
             this.saved_ellipsize_mode = current_mode;
-            this.tab_label_ellipsize_combo.active_id = 'none';
+            this.settings.set_string('tab-label-ellipsize-mode', 'none');
         }
     }
 });
+
+/* exported TabsWidget */

@@ -15,13 +15,12 @@
 
 'use strict';
 
-import Gio from 'gi://Gio';
-import GLib from 'gi://GLib';
+const {Gio, GLib}  = imports.gi;
+const Main         = imports.ui.main;
+const LookingGlass = imports.ui.lookingGlass;
 
-import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import * as LookingGlass from 'resource:///org/gnome/shell/ui/lookingGlass.js';
-
-import * as utils from './utils.js';
+const Me    = imports.misc.extensionUtils.getCurrentExtension();
+const utils = Me.imports.src.utils;
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // This is based on the window-picking functionality of the Blur-My-Shell extension.    //
@@ -30,7 +29,7 @@ import * as utils from './utils.js';
 // picking.                                                                             //
 //////////////////////////////////////////////////////////////////////////////////////////
 
-export class WindowPicker {
+var WindowPicker = class WindowPicker {
   // ------------------------------------------------------------------------- constructor
 
   constructor() {

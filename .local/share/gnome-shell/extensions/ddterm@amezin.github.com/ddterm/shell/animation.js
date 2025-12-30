@@ -2,12 +2,15 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import GObject from 'gi://GObject';
-import Gio from 'gi://Gio';
-import Clutter from 'gi://Clutter';
-import St from 'gi://St';
+'use strict';
 
-import { WindowGeometry } from './geometry.js';
+const GObject = imports.gi.GObject;
+const Gio = imports.gi.Gio;
+const Clutter = imports.gi.Clutter;
+const St = imports.gi.St;
+
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+const { WindowGeometry } = Me.imports.ddterm.shell.geometry;
 
 function animation_mode_by_nick(nick) {
     return Clutter.AnimationMode[nick.replace(/-/g, '_').toUpperCase()];
@@ -46,33 +49,33 @@ function opacity_animation_mode(animation_mode) {
     }
 }
 
-export const Animation = GObject.registerClass({
+var Animation = GObject.registerClass({
     Properties: {
         'geometry': GObject.ParamSpec.object(
             'geometry',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
             WindowGeometry
         ),
         'enable-override': GObject.ParamSpec.boolean(
             'enable-override',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.EXPLICIT_NOTIFY,
             false
         ),
         'mode': GObject.ParamSpec.string(
             'mode',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.EXPLICIT_NOTIFY,
             ''
         ),
         'duration': GObject.ParamSpec.double(
             'duration',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.EXPLICIT_NOTIFY,
             0.001,
             1.0,
@@ -80,35 +83,29 @@ export const Animation = GObject.registerClass({
         ),
         'global-disable': GObject.ParamSpec.boolean(
             'global-disable',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.EXPLICIT_NOTIFY,
             false
         ),
         'should-skip': GObject.ParamSpec.boolean(
             'should-skip',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READABLE,
             false
         ),
         'should-override': GObject.ParamSpec.boolean(
             'should-override',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READABLE,
             false
         ),
     },
 }, class DDTermAnimation extends GObject.Object {
-    #should_skip;
-    #should_override;
-    #duration;
-    #mode;
-    #opacity_mode;
-
-    constructor(params) {
-        super(params);
+    _init(params) {
+        super._init(params);
 
         this.connect('notify::enable-override', () => this.update());
         this.connect('notify::mode', () => this.update());
@@ -126,34 +123,34 @@ export const Animation = GObject.registerClass({
             const should_skip = override_enabled && this.mode === 'disable';
             const should_override = override_enabled && !should_skip;
 
-            if (should_skip !== this.#should_skip) {
-                this.#should_skip = should_skip;
+            if (should_skip !== this._should_skip) {
+                this._should_skip = should_skip;
                 this.notify('should-skip');
             }
 
-            if (should_override !== this.#should_override) {
-                this.#should_override = should_override;
+            if (should_override !== this._should_override) {
+                this._should_override = should_override;
                 this.notify('should-override');
             }
 
-            this.#duration = Math.floor(1000 * this.duration);
-            this.#mode = should_override ? animation_mode_by_nick(this.mode) : null;
-            this.#opacity_mode = opacity_animation_mode(this.#mode);
+            this._duration = Math.floor(1000 * this.duration);
+            this._mode = should_override ? animation_mode_by_nick(this.mode) : null;
+            this._opacity_mode = opacity_animation_mode(this._mode);
         } finally {
             this.thaw_notify();
         }
     }
 
     get should_override() {
-        return this.#should_override;
+        return this._should_override;
     }
 
     get should_skip() {
-        return this.#should_skip;
+        return this._should_skip;
     }
 
     apply_override(actor) {
-        if (!this.#mode)
+        if (!this._mode)
             return;
 
         actor.pivot_point = this.geometry.pivot_point;
@@ -166,8 +163,8 @@ export const Animation = GObject.registerClass({
                 this.geometry.orientation === Clutter.Orientation.HORIZONTAL ? 0.0 : 1.0
             );
 
-            scale_x_anim.progress_mode = this.#mode;
-            scale_x_anim.duration = this.#duration;
+            scale_x_anim.progress_mode = this._mode;
+            scale_x_anim.duration = this._duration;
         }
 
         const scale_y_anim = actor.get_transition('scale-y');
@@ -178,15 +175,15 @@ export const Animation = GObject.registerClass({
                 this.geometry.orientation === Clutter.Orientation.VERTICAL ? 0.0 : 1.0
             );
 
-            scale_y_anim.progress_mode = this.#mode;
-            scale_y_anim.duration = this.#duration;
+            scale_y_anim.progress_mode = this._mode;
+            scale_y_anim.duration = this._duration;
         }
 
         const opacity_anim = actor.get_transition('opacity');
 
         if (opacity_anim) {
-            opacity_anim.progress_mode = this.#opacity_mode;
-            opacity_anim.duration = this.#duration;
+            opacity_anim.progress_mode = this._opacity_mode;
+            opacity_anim.duration = this._duration;
         }
     }
 
@@ -228,9 +225,13 @@ export const Animation = GObject.registerClass({
     }
 });
 
-export const ReverseAnimation = GObject.registerClass({
+/* exported Animation */
+
+var ReverseAnimation = GObject.registerClass({
 }, class DDTermReverseAnimation extends Animation {
     set_interval(transition, value) {
         transition.set_to(value);
     }
 });
+
+/* exported ReverseAnimation */

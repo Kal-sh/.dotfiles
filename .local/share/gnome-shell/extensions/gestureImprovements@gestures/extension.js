@@ -1,22 +1,22 @@
 /* exported init */
-import GLib from 'gi://GLib';
+const GLib = imports.gi.GLib;
 
-import { PinchGestureType } from './common/settings.js'
-import * as Constants from './constants.js'
-import { AltTabConstants, ExtSettings, TouchpadConstants } from './constants.js'
-import { AltTabGestureExtension } from './src/altTab.js'
-import { ForwardBackGestureExtension } from './src/forwardBack.js'
-import { GestureExtension } from './src/gestures.js'
-import { OverviewRoundTripGestureExtension } from './src/overviewRoundTrip.js'
-import { CloseWindowExtension } from './src/pinchGestures/closeWindow.js'
-import { ShowDesktopExtension } from './src/pinchGestures/showDesktop.js'
-import { SnapWindowExtension } from './src/snapWindow.js'
-import * as DBusUtils from './src/utils/dbus.js'
-import * as VKeyboard from './src/utils/keyboard.js'
-import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
-export default class MyExtension extends Extension {
-	constructor(metadata) {
-		super(metadata);
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+const { PinchGestureType } = Me.imports.common.settings;
+const Constants = Me.imports.constants;
+const { AltTabConstants, ExtSettings, TouchpadConstants } = Me.imports.constants;
+const { AltTabGestureExtension } = Me.imports.src.altTab;
+const { ForwardBackGestureExtension } = Me.imports.src.forwardBack;
+const { GestureExtension } = Me.imports.src.gestures;
+const { OverviewRoundTripGestureExtension } = Me.imports.src.overviewRoundTrip;
+const { CloseWindowExtension } = Me.imports.src.pinchGestures.closeWindow;
+const { ShowDesktopExtension } = Me.imports.src.pinchGestures.showDesktop;
+const { SnapWindowExtension } = Me.imports.src.snapWindow;
+const DBusUtils = Me.imports.src.utils.dbus;
+const VKeyboard = Me.imports.src.utils.keyboard;
+const ExtensionUtils = imports.misc.extensionUtils;
+class Extension {
+	constructor() {
 		this._settingChangedId = 0;
 		this._reloadWaitId = 0;
 		this._extensions = [];
@@ -28,7 +28,7 @@ export default class MyExtension extends Extension {
 	}
 
 	enable() {
-		this.settings = this.getSettings();
+		this.settings = ExtensionUtils.getSettings();
 		this._settingChangedId = this.settings.connect('changed', this.reload.bind(this));
 		this._enable();
 	}
@@ -132,4 +132,8 @@ export default class MyExtension extends Extension {
 
 		return gestureToFingersMap;
 	}
+}
+
+function init() {
+	return new Extension();
 }

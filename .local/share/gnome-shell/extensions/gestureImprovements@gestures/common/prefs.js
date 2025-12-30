@@ -1,10 +1,11 @@
 /* exported buildPrefsWidget */
-import Gio from 'gi://Gio';
-import Gtk from 'gi://Gtk';
-import Gdk from 'gi://Gdk';
-import Adw from 'gi://Adw';
+const Gio = imports.gi.Gio;
+const Gtk = imports.gi.Gtk;
+const Gdk = imports.gi.Gdk;
+const Adw = imports.gi.Adw;
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { getAppKeybindingGesturePrefsPage } from './appGestures.js'
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+const { getAppKeybindingGesturePrefsPage } = Me.imports.common.appGestures;
 
 /**
  * Bind value of setting to {@link Gtk.SpinButton}
@@ -89,7 +90,7 @@ function loadCssProvider(styleManager, uiDir) {
 	}
 }
 
-export function buildPrefsWidget(prefsWindow, settings, uiDir) {
+function buildPrefsWidget(prefsWindow, settings, uiDir) {
 	prefsWindow.set_search_enabled(true);
 	const styleManager = Adw.StyleManager.get_default();
 	styleManager.connect('notify::dark', () => loadCssProvider(styleManager, uiDir));

@@ -1,15 +1,17 @@
 // SPDX-FileCopyrightText: 2023 Aleksandr Mezin <mezin.alexander@gmail.com>
-// SPDX-FileContributor: Timothy J. Aveni
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import GLib from 'gi://GLib';
-import GObject from 'gi://GObject';
-import Gio from 'gi://Gio';
-import Mtk from 'gi://Mtk';
-import Shell from 'gi://Shell';
+'use strict';
 
-import { AppControl } from './appcontrol.js';
+const GLib = imports.gi.GLib;
+const GObject = imports.gi.GObject;
+const Gio = imports.gi.Gio;
+const Mtk = imports.gi.Meta;
+const Shell = imports.gi.Shell;
+
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+const { AppControl } = Me.imports.ddterm.shell.appcontrol;
 
 function report_dbus_error_async(e, invocation) {
     if (e instanceof GLib.Error) {
@@ -35,40 +37,65 @@ function handle_dbus_method_call_async(func, params, invocation) {
     }
 }
 
-export const DBusApi = GObject.registerClass({
+function meta_rect_to_list(meta_rect) {
+    return [
+        meta_rect.x,
+        meta_rect.y,
+        meta_rect.width,
+        meta_rect.height,
+    ];
+}
+
+function meta_rect_to_variant(meta_rect) {
+    return GLib.Variant.new_tuple([
+        GLib.Variant.new_int32(meta_rect.x),
+        GLib.Variant.new_int32(meta_rect.y),
+        GLib.Variant.new_int32(meta_rect.width),
+        GLib.Variant.new_int32(meta_rect.height),
+    ]);
+}
+
+var DBusApi = GObject.registerClass({
     Properties: {
-        'version': GObject.ParamSpec.string(
-            'version',
-            null,
-            null,
+        'xml-file-path': GObject.ParamSpec.string(
+            'xml-file-path',
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
             null
+        ),
+        'version': GObject.ParamSpec.string(
+            'version',
+            '',
+            '',
+            GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
+            ''
         ),
         'revision': GObject.ParamSpec.string(
             'revision',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
-            null
+            ''
         ),
         'app-control': GObject.ParamSpec.object(
             'app-control',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
             AppControl
         ),
         'target-rect': GObject.ParamSpec.boxed(
             'target-rect',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.EXPLICIT_NOTIFY,
             Mtk.Rectangle
         ),
         'target-monitor-scale': GObject.ParamSpec.double(
             'target-monitor-scale',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.EXPLICIT_NOTIFY,
             0,
             100,
@@ -86,30 +113,14 @@ export const DBusApi = GObject.registerClass({
         'update-target-monitor': {},
     },
 }, class DDTermDBusApi extends GObject.Object {
-    #target_rect = null;
-    #target_monitor_scale = GLib.Variant.new_double(1);
-    #version;
-    #revision;
+    _init(params) {
+        super._init(params);
 
-    constructor(params) {
-        super(params);
-
-        if (this.version)
-            this.#version = GLib.Variant.new_string(this.version);
-
-        if (this.revision)
-            this.#revision = GLib.Variant.new_string(this.revision);
-
-        const [xml_file_path] = GLib.filename_from_uri(
-            GLib.Uri.resolve_relative(
-                import.meta.url,
-                '../../data/com.github.amezin.ddterm.Extension.xml',
-                GLib.UriFlags.NONE
-            )
-        );
+        this._target_rect = new Mtk.Rectangle({ x: 0, y: 0, width: 0, height: 0 });
+        this._target_monitor_scale = 1;
 
         this.dbus = Gio.DBusExportedObject.wrapJSObject(
-            Shell.get_file_contents_utf8_sync(xml_file_path),
+            Shell.get_file_contents_utf8_sync(this.xml_file_path),
             this
         );
     }
@@ -144,87 +155,57 @@ export const DBusApi = GObject.registerClass({
 
     GetTargetRect() {
         this.emit('update-target-monitor');
-
-        if (!this.#target_rect) {
-            throw new Gio.DBusError({
-                code: Gio.DBusError.FAILED,
-                message: 'Target rect cannot be calculated right now',
-            });
-        }
-
-        return this.#target_rect;
+        return meta_rect_to_list(this._target_rect);
     }
 
     GetTargetMonitorScale() {
         this.emit('update-target-monitor');
-        return GLib.Variant.new_tuple([this.#target_monitor_scale]);
+        return this._target_monitor_scale;
     }
 
     get TargetRect() {
-        this.emit('update-target-monitor');
-        return this.#target_rect ?? undefined;
+        return this.GetTargetRect();
     }
 
     get TargetMonitorScale() {
-        this.emit('update-target-monitor');
-        return this.#target_monitor_scale;
+        return this.GetTargetMonitorScale();
     }
 
     get Version() {
-        return this.#version;
+        return this.version;
     }
 
     get Revision() {
-        return this.#revision;
+        return this.revision;
     }
 
     get target_rect() {
-        const value = this.#target_rect;
-
-        if (!value)
-            return null;
-
-        return new Mtk.Rectangle({
-            x: value.get_child_value(0).get_int32(),
-            y: value.get_child_value(1).get_int32(),
-            width: value.get_child_value(2).get_int32(),
-            height: value.get_child_value(3).get_int32(),
-        });
+        return this._target_rect;
     }
 
     set target_rect(value) {
-        if (!value && !this.#target_rect)
+        if (this._target_rect.equal(value))
             return;
 
-        if (value) {
-            value = GLib.Variant.new_tuple([
-                GLib.Variant.new_int32(value.x),
-                GLib.Variant.new_int32(value.y),
-                GLib.Variant.new_int32(value.width),
-                GLib.Variant.new_int32(value.height),
-            ]);
-
-            if (this.#target_rect?.equal(value))
-                return;
-        }
-
-        this.#target_rect = value;
+        this._target_rect = value;
         this.notify('target-rect');
-        this.dbus.emit_property_changed('TargetRect', value);
+
+        this.dbus.emit_property_changed('TargetRect', meta_rect_to_variant(value));
     }
 
     get target_monitor_scale() {
-        return this.#target_monitor_scale.get_double();
+        return this._target_monitor_scale;
     }
 
     set target_monitor_scale(value) {
-        value = GLib.Variant.new_double(value);
-
-        if (this.#target_monitor_scale?.equal(value))
+        if (this._target_monitor_scale === value)
             return;
 
-        this.#target_monitor_scale = value;
+        this._target_monitor_scale = value;
         this.notify('target-monitor-scale');
-        this.dbus.emit_property_changed('TargetMonitorScale', value);
+
+        this.dbus.emit_property_changed('TargetMonitorScale', GLib.Variant.new_double(value));
     }
 });
+
+/* exported DBusApi */

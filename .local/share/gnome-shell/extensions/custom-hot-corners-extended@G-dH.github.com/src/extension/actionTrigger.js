@@ -3,39 +3,25 @@
  * ActionTrigger
  *
  * @author     GdH <G-dH@github.com>
- * @copyright  2021-2024
+ * @copyright  2021-2022
  * @license    GPL-3.0
  */
 
 'use strict';
 
-import Clutter from 'gi://Clutter';
-import Cogl from 'gi://Cogl';
-import Meta from 'gi://Meta';
+const { Clutter, Meta } = imports.gi;
 
-import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import * as Settings from '../common/settings.js';
-import * as Actions from './actions.js';
-import * as Keybindings from './keybindings.js';
-
-// Cogl.Color replaces Clutter.Color in GS 47
-const Color = Clutter.Color ? Clutter.Color : Cogl.Color;
+const Main           = imports.ui.main;
+const ExtensionUtils = imports.misc.extensionUtils;
+const Me             = ExtensionUtils.getCurrentExtension();
+const Settings       = Me.imports.src.common.settings;
+const Actions        = Me.imports.src.extension.actions;
+const Keybindings    = Me.imports.src.extension.keybindings;
 
 // gettext
-let _;
-let Me;
+const _ = Settings._;
 
-export function init(extension) {
-    _ = extension.gettext.bind(extension);
-    Me = extension;
-}
-
-export function cleanGlobals() {
-    _ = null;
-    Me = null;
-}
-
-export const ActionTrigger = class ActionTrigger {
+var ActionTrigger = class ActionTrigger {
     constructor(mscOptions) {
         this.actions = new Actions.Actions(mscOptions);
         this._mscOptions = mscOptions;
@@ -294,12 +280,14 @@ export const ActionTrigger = class ActionTrigger {
     }
 
     _getShortcut(action) {
-        const settings = Me.getSettings('org.gnome.shell.extensions.custom-hot-corners-extended.misc');
+        const settings = ExtensionUtils.getSettings(
+            'org.gnome.shell.extensions.custom-hot-corners-extended.misc');
         const shortcuts = settings.get_strv('keyboard-shortcuts');
         const scIndex = shortcuts.findIndex(s => s.includes(`${action} `));
         let sc = null;
         if (scIndex > -1)
             sc = shortcuts[scIndex].split(' ')[1].replace(/<.+>/, '');
+
 
         return sc;
     }
@@ -653,6 +641,10 @@ export const ActionTrigger = class ActionTrigger {
         this.actions.openPanelDateMenu();
     }
 
+    _openPanelAppMenu() {
+        this.actions.openPanelAppMenu();
+    }
+
     _toggleTheme() {
         this.actions.toggleTheme();
     }
@@ -789,7 +781,7 @@ export const ActionTrigger = class ActionTrigger {
 
     _tintRedToggleWin() {
         this.actions.toggleColorTintEffect(
-            new Color({
+            new Clutter.Color({
                 red:    255,
                 green:  200,
                 blue:   146,
@@ -799,7 +791,7 @@ export const ActionTrigger = class ActionTrigger {
 
     _tintRedToggleAll() {
         this.actions.toggleColorTintEffect(
-            new Color({
+            new Clutter.Color({
                 red:    255,
                 green:  200,
                 blue:   146,
@@ -809,7 +801,7 @@ export const ActionTrigger = class ActionTrigger {
 
     _tintGreenToggleWin() {
         this.actions.toggleColorTintEffect(
-            new Color({
+            new Clutter.Color({
                 red:    200,
                 green:  255,
                 blue:   146,
@@ -819,7 +811,7 @@ export const ActionTrigger = class ActionTrigger {
 
     _tintGreenToggleAll() {
         this.actions.toggleColorTintEffect(
-            new Color({
+            new Clutter.Color({
                 red:    200,
                 green:  255,
                 blue:   146,

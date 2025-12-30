@@ -1,16 +1,32 @@
 "use strict";
 
-import GLib from "gi://GLib";
+const { GLib } = imports.gi;
 
-import * as Config from "./config.js";
+const { extensionUtils } = imports.misc;
+
+const Me = extensionUtils.getCurrentExtension();
+const Config = Me.imports.config;
+
+const [major] = imports.misc.config.PACKAGE_VERSION.split(".");
+
+var ShellVersion = Number.parseInt(major);
 
 /**
  * Output a debug message to the console if the debug config is active.
  *
  * @param {string} message The message to log.
  */
-export function logDebug(message) {
-  Config.debug && console.log(`[DEBUG] Bedtime Mode: ${message}`);
+function logDebug(message) {
+  if (Config.debug) log(`[DEBUG] ${Me.metadata.name}: ${message}`);
+}
+
+/**
+ * @returns The proper Preferences Ui File according to the running Gnome Shell version.
+ */
+function getPreferencesUiFile() {
+  const prefsUiFolder = ShellVersion < 40 ? "gtk3" : "gtk4";
+
+  return GLib.build_filenamev([Me.path, "ui", prefsUiFolder, "preferences.ui"]);
 }
 
 /**
@@ -20,11 +36,11 @@ export function logDebug(message) {
  * Otherwise (false/no return/other return value) the loop is stopped.
  *
  * @param {*} func The function to loop at the specified interval
- * @param {*} interval The time in milliseconds at which to call the function
+ * @param {*} interval The time in ms at which to call the function
  * @param  {...any} args Optional arguments to the function
  * @returns The corresponding GLib.Source object which needs be destroyed later on
  */
-export function loopRun(func, interval, ...args) {
+function loopRun(func, interval, ...args) {
   const wrappedFunc = () => {
     return func.apply(this, args);
   };

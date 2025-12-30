@@ -1,25 +1,41 @@
+/* exported init enable disable */
+
+//Local extension imports
+const ExtensionUtils = imports.misc.extensionUtils;
+const Me = ExtensionUtils.getCurrentExtension();
+const { ExtensionHelper } = Me.imports.lib;
+const ShellVersion = parseFloat(imports.misc.config.PACKAGE_VERSION);
+
 //Main imports
-import St from 'gi://St';
-import Gio from 'gi://Gio';
-import GObject from 'gi://GObject';
+const { St, Gio, GObject } = imports.gi;
+const Main = imports.ui.main;
+const PanelMenu = imports.ui.panelMenu;
+const PopupMenu = imports.ui.popupMenu;
 
-import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
-import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
-import {PopupAnimation} from 'resource:///org/gnome/shell/ui/boxpointer.js';
+const QuickSettings = ShellVersion >= 43 ? imports.ui.quickSettings : null;
+const QuickSettingsMenu = ShellVersion >= 43 ? imports.ui.main.panel.statusArea.quickSettings : null;
 
-import * as QuickSettings from 'resource:///org/gnome/shell/ui/quickSettings.js';
-const QuickSettingsMenu = Main.panel.statusArea.quickSettings;
+//Use _() for translations
+const _ = imports.gettext.domain(Me.metadata.uuid).gettext;
 
-//Extension system imports
-import {Extension, gettext as _} from 'resource:///org/gnome/shell/extensions/extension.js';
+function init() {
+  ExtensionUtils.initTranslations();
+}
 
-//Constants for menu display modes
-const DisplayMode = {
-  QuickToggles: 0,
-  QuickGroup: 1,
-  Indicators: 2
-};
+function enable() {
+  //Create new extension
+  privacyMenu = new Extension();
+
+  //Create menu
+  privacyMenu.initMenu();
+}
+
+function disable() {
+  //Disconnect listeners, then destroy the menu and class
+  privacyMenu.disconnectListeners();
+  privacyMenu.destroyMenu();
+  privacyMenu = null;
+}
 
 //Custom PopupMenuItem with an icon, label and switch
 const PrivacySettingImageSwitchItem = GObject.registerClass(
@@ -51,16 +67,6 @@ const PrivacyIndicator = GObject.registerClass(
       //GSettings access
       this._privacySettings = new Gio.Settings({schema: 'org.gnome.desktop.privacy'});
       this._locationSettings = new Gio.Settings({schema: 'org.gnome.system.location'});
-    }
-
-    _resetSettings() {
-      let privacySettings = new Gio.Settings({schema: 'org.gnome.desktop.privacy'});
-      let locationSettings = new Gio.Settings({schema: 'org.gnome.system.location'});
-
-      //Reset the settings
-      locationSettings.reset('enabled');
-      privacySettings.reset('disable-camera');
-      privacySettings.reset('disable-microphone');
     }
 
     addEntries() {
@@ -102,23 +108,31 @@ const PrivacyIndicator = GObject.registerClass(
       //Create a submenu for the reset option, to prevent a misclick
       let subMenu = new PopupMenu.PopupSubMenuMenuItem(_('Reset settings'), true);
       subMenu.icon.icon_name = 'edit-delete-symbolic';
-      subMenu.menu.addAction(_('Reset to defaults'), this._resetSettings, null);
+      subMenu.menu.addAction(_('Reset to defaults'), ExtensionHelper.resetSettings, null);
 
       this.menu.addMenuItem(subMenu);
     }
   }
 );
 
-//Class for individual privacy quick settings toggles
-const PrivacyQuickToggle = GObject.registerClass(
+//On GNOME 43+ create a class for privacy quick settings toggles
+const PrivacyQuickToggle = ShellVersion >= 43 ? GObject.registerClass(
   class PrivacyQuickToggle extends QuickSettings.QuickToggle {
     _init(settingName, settingIcon, settingSchema, settingKey, settingBindFlag) {
       //Set up the quick setting toggle
-      super._init({
-        title: settingName,
-        iconName: settingIcon,
-        toggleMode: true,
-      });
+      if (ShellVersion >= 44) {
+        super._init({
+          title: settingName,
+          iconName: settingIcon,
+          toggleMode: true,
+        });
+      } else {
+        super._init({
+          label: settingName,
+          iconName: settingIcon,
+          toggleMode: true,
+        });
+      }
 
       //GSettings access
       this._settings = new Gio.Settings({schema: settingSchema});
@@ -132,34 +146,33 @@ const PrivacyQuickToggle = GObject.registerClass(
       );
     }
   }
-);
+) : null;
 
-//Class for the privacy quick settings group
-const PrivacyQuickGroup = GObject.registerClass(
+//On GNOME 43+ create a class for the privacy quick settings group
+const PrivacyQuickGroup = ShellVersion >= 43 ? GObject.registerClass(
   class PrivacyQuickGroup extends QuickSettings.QuickMenuToggle {
-    _init(extension, useQuickSubtitle, clickToToggle) {
+    _init(useQuickSubtitle) {
       //Set up the quick setting toggle
-      super._init({
-        title: _('Privacy'),
-        iconName: 'preferences-system-privacy-symbolic',
-        toggleMode: false,
-      });
+      if (ShellVersion >= 44) {
+        super._init({
+          title: _('Privacy'),
+          iconName: 'preferences-system-privacy-symbolic',
+          toggleMode: false,
+        });
+      } else {
+        super._init({
+          label: _('Privacy'),
+          iconName: 'preferences-system-privacy-symbolic',
+          toggleMode: false,
+        });
+      }
 
       //Set a menu header
-      this.menu.setHeader('preferences-system-privacy-symbolic', _('Privacy Settings'));
+      this.menu.setHeader('preferences-system-privacy-symbolic', _('Privacy Settings'))
 
-      //Open the menu or toggle all settings when the body is clicked
+      //Open the menu when the body is clicked
       this.connect('clicked', () => {
-        if (clickToToggle) {
-          //Enable / disable every setting according to its bind flag
-          let targetState = this.checked;
-          this._settingsInfo.forEach((settingInfo) => {
-            let newState = targetState ^ (settingInfo[2] == Gio.SettingsBindFlags.INVERT_BOOLEAN);
-            settingInfo[0].set_boolean(settingInfo[1], newState);
-          });
-        } else {
-          this.menu.open();
-        }
+        this.menu.open();
       });
 
       //GSettings access
@@ -181,6 +194,7 @@ const PrivacyQuickGroup = GObject.registerClass(
       ];
 
       this._toggleItems = [];
+      this._signals = [];
 
       //Create menu entries for each setting toggle
       this._toggleDisplayInfo.forEach((displayInfo, i) => {
@@ -190,9 +204,9 @@ const PrivacyQuickGroup = GObject.registerClass(
 
         //Update subtitle when settings changed
         let event = 'changed::' + this._settingsInfo[i][1];
-        this._settingsInfo[i][0].connectObject(event, () => {
-          this._updateSubtitle(); this._updateVisualState();
-        }, this);
+        this._signals[i] = this._settingsInfo[i][0].connect(event, () => {
+          this._updateSubtitle();
+        });
 
         //Link the setting value and the switch state
         this._settingsInfo[i][0].bind(
@@ -209,39 +223,13 @@ const PrivacyQuickGroup = GObject.registerClass(
       //Set the subtitle
       this._useQuickSubtitle = useQuickSubtitle;
       this._updateSubtitle();
-
-      //Add extension settings entry
-      this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-      let settingsItem = this.menu.addAction(_('Extension Settings'), () => {
-        extension.openPreferences();
-        QuickSettingsMenu.menu.close(PopupAnimation.FADE);
-      });
-
-      //Hide the settings when the screen is locked
-      settingsItem.visible = Main.sessionMode.allowSettings;
-      this.menu._settingsActions[extension.uuid] = settingsItem;
-
-      //Set initial enabled / disabled
-      this._updateVisualState();
-    }
-
-    _updateVisualState() {
-      //If all of the privacy settings are disabled, set enableToggle to true
-      let enableToggle = true;
-      this._settingsInfo.forEach((settingInfo) => {
-        let settingEnabled = settingInfo[0].get_boolean(settingInfo[1]);
-        if (settingEnabled == (settingInfo[2] != Gio.SettingsBindFlags.INVERT_BOOLEAN)) {
-          enableToggle = false;
-        }
-      });
-
-      //Set the state of the menu toggle
-      this.checked = enableToggle;
     }
 
     _updateSubtitle() {
-      //Skip if disabled
-      if (!this._useQuickSubtitle) {
+      //Not supported below GNOME 44
+      if (ShellVersion < 44) {
+        return;
+      } else if (!this._useQuickSubtitle) {
         return;
       }
 
@@ -257,26 +245,27 @@ const PrivacyQuickGroup = GObject.registerClass(
       });
 
       if (enabledSettingsCount == 0) {
-        //If no settings are enabled, display 'Private'
-        this.subtitle = _('Private');
+        //If no settings are enabled, display 'All disabled'
+        this.subtitle = _('All disabled');
       } else if (enabledSettingsCount == 1) {
         //If 1 setting is enabled, mention it by name
         this.subtitle = enabledSettingName;
       } else {
         //If multiple are enabled, display how many
-        //Translators: this displays how many settings are enabled, e.g. '1 allowed'
-        this.subtitle = enabledSettingsCount + _(' allowed');
+        //Translators: this displays which setting is enabled, e.g. 'Location enabled'
+        this.subtitle = enabledSettingsCount + _(' enabled');
       }
     }
 
     clean() {
       //Disconnect from settings
-      this._settingsInfo.forEach((settingInfo) => {
-        settingInfo[0].disconnectObject(this);
+      this._signals.forEach((signalId, i) => {
+        this._settingsInfo[i][0].disconnect(signalId);
       });
     }
+
   }
-);
+) : null;
 
 class QuickSettingsManager {
   constructor() {
@@ -290,19 +279,28 @@ class QuickSettingsManager {
     ];
 
     //Create a quick setting toggle for each privacy setting
-    quickSettingsInfo.forEach((quickSettingInfo, i) => {
+    quickSettingsInfo.forEach((quickSettingInfo) => {
       this._quickSettingToggles.push(
         new PrivacyQuickToggle(
-          quickSettingInfo[0], quickSettingInfo[1],
-          quickSettingInfo[2], quickSettingInfo[3],
+          quickSettingInfo[0],
+          quickSettingInfo[1],
+          quickSettingInfo[2],
+          quickSettingInfo[3],
           quickSettingInfo[4]
         )
       );
-
-      //Add the toggle to the system menu
-      let backgroundApps = QuickSettingsMenu._backgroundApps?.quickSettingsItems?.at(-1) ?? null;
-      QuickSettingsMenu.menu.insertItemBefore(this._quickSettingToggles[i], backgroundApps);
     });
+
+    //Add the toggles to the system menu
+    QuickSettingsMenu._addItems(this._quickSettingToggles);
+
+    //Place the toggles above the background apps entry
+    if (ShellVersion >= 44) {
+      this._quickSettingToggles.forEach((item) => {
+        QuickSettingsMenu.menu._grid.set_child_below_sibling(item,
+          QuickSettingsMenu._backgroundApps.quickSettingsItems[0]);
+      });
+    }
   }
 
   clean() {
@@ -317,11 +315,17 @@ class QuickSettingsManager {
 }
 
 class QuickGroupManager {
-  constructor(extension, useQuickSubtitle, clickToToggle) {
-    //Create quick settings group and add to the system menu
-    this._quickSettingsGroup = new PrivacyQuickGroup(extension, useQuickSubtitle, clickToToggle);
-    let backgroundApps = QuickSettingsMenu._backgroundApps?.quickSettingsItems?.at(-1) ?? null;
-    QuickSettingsMenu.menu.insertItemBefore(this._quickSettingsGroup, backgroundApps);
+  constructor(useQuickSubtitle) {
+    this._quickSettingsGroup = new PrivacyQuickGroup(useQuickSubtitle);
+
+    //Add the toggles to the system menu
+    QuickSettingsMenu._addItems([this._quickSettingsGroup]);
+
+    //Place the toggles above the background apps entry
+    if (ShellVersion >= 44) {
+      QuickSettingsMenu.menu._grid.set_child_below_sibling(this._quickSettingsGroup,
+        QuickSettingsMenu._backgroundApps.quickSettingsItems[0]);
+    }
   }
 
   clean() {
@@ -346,7 +350,7 @@ class IndicatorSettingsManager {
     }
 
     //Add to panel
-    Main.panel.addToStatusArea('privacy-menu', this._indicator, offset);
+    Main.panel.addToStatusArea(Me.metadata.uuid, this._indicator, offset);
   }
 
   clean() {
@@ -357,48 +361,32 @@ class IndicatorSettingsManager {
   }
 }
 
-export default class PrivacyQuickSettingsManager extends Extension {
-  enable() {
-    //Create new extension
-    this._privacyMenu = new PrivacyExtension(this);
-
-    //Create menu
-    this._privacyMenu.initMenu();
-  }
-
-  disable() {
-    //Disconnect listeners, then destroy the menu and class
-    this._privacyMenu.disconnectListeners();
-    this._privacyMenu.destroyMenu();
-    this._privacyMenu = null;
-  }
-}
-
-class PrivacyExtension {
-  constructor(extension) {
+class Extension {
+  constructor() {
     this._privacyManager = null;
-    this._extension = extension;
-    this._extensionSettings = this._extension.getSettings();
+    this._extensionSettings = ExtensionUtils.getSettings();
   }
 
   disconnectListeners() {
-    this._extensionSettings.disconnectObject(this);
+    this._extensionSettings.disconnect(this._settingsChangedSignal);
   }
 
   _decideMenuType() {
     /*
-     - Return DisplayMode.QuickToggles if quick settings are enabled
-       - If quick settings grouping is also enabled, return DisplayMode.QuickGroup instead
-     - Otherwise return DisplayMode.Indicators
+     - Return 'quick-toggles' if running GNOME 43+ and quick settings are enabled
+       - If quick settings grouping is enabled, return 'quick-group' instead
+     - Otherwise return 'indiactors'
     */
     if (this._extensionSettings.get_boolean('use-quick-settings')) {
-      if (this._extensionSettings.get_boolean('group-quick-settings')) {
-        return DisplayMode.QuickGroup;
+      if (ShellVersion >= 43) {
+        if (this._extensionSettings.get_boolean('group-quick-settings')) {
+          return 'quick-group';
+        }
+        return 'quick-toggles';
       }
-      return DisplayMode.QuickToggles;
     }
 
-    return DisplayMode.Indicator;
+    return 'indicator';
   }
 
   initMenu() {
@@ -406,28 +394,24 @@ class PrivacyExtension {
     this._createMenu();
 
     //When settings change, recreate the menu
-    this._extensionSettings.connectObject('changed', () => {
+    this._settingsChangedSignal = this._extensionSettings.connect('changed', () => {
       //Destroy existing menu and create new menu
       this.destroyMenu();
       this._createMenu();
-    }, this);
+    });
   }
 
   _createMenu() {
-    //Create the correct type of menu, from preferences and capabilities
-    switch (this._decideMenuType()) {
-      case DisplayMode.QuickToggles:
-        this._privacyManager = new QuickSettingsManager();
-        break;
-      case DisplayMode.QuickGroup:
-        let useQuickSubtitle = this._extensionSettings.get_boolean('use-quick-subtitle');
-        let clickToToggle = this._extensionSettings.get_boolean('click-to-toggle');
-        this._privacyManager = new QuickGroupManager(this._extension, useQuickSubtitle, clickToToggle);
-        break;
-      case DisplayMode.Indicator:
-        let forceIconRight = this._extensionSettings.get_boolean('move-icon-right');
-        this._privacyManager = new IndicatorSettingsManager(forceIconRight);
-        break;
+    //Create the correct type of menu, from preference and capabilities
+    let menuType = this._decideMenuType();
+    if (menuType == 'quick-toggles') {
+      this._privacyManager = new QuickSettingsManager();
+    } else if (menuType == 'quick-group') {
+      let useQuickSubtitle = this._extensionSettings.get_boolean('use-quick-subtitle')
+      this._privacyManager = new QuickGroupManager(useQuickSubtitle);
+    } else if (menuType == 'indicator') {
+      let forceIconRight = this._extensionSettings.get_boolean('move-icon-right');
+      this._privacyManager = new IndicatorSettingsManager(forceIconRight);
     }
   }
 

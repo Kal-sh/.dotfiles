@@ -1,3 +1,5 @@
+'use strict';
+
 /**
  * Helper classes / enums for the settings.xml used in the extension files
  * *and* prefs files
@@ -6,19 +8,50 @@
 /**
  * A Singleton providing access to the settings.
  */
-export class Settings {
+var Settings = class Settings {
     static _settings;
+    static ENABLE_TILING_POPUP = 'enable-tiling-popup';
+    static POPUP_ALL_WORKSPACES = 'tiling-popup-all-workspace';
+    static RAISE_TILE_GROUPS = 'enable-raise-tile-group';
+    static TILEGROUPS_IN_APP_SWITCHER = 'tilegroups-in-app-switcher';
+    static WINDOW_GAP = 'window-gap';
+    static SCREEN_TOP_GAP = 'screen-top-gap';
+    static SCREEN_LEFT_GAP = 'screen-left-gap';
+    static SCREEN_RIGHT_GAP = 'screen-right-gap';
+    static SCREEN_BOTTOM_GAP = 'screen-bottom-gap';
+    static MAXIMIZE_WITH_GAPS = 'maximize-with-gap';
+    static DYNAMIC_KEYBINDINGS = 'dynamic-keybinding-behaviour';
+    static SHOW_LAYOUT_INDICATOR = 'show-layout-panel-indicator';
+    static ENABLE_ADV_EXP_SETTINGS = 'enable-advanced-experimental-features';
+    static DISABLE_TILE_GROUPS = 'disable-tile-groups';
+    static ENABLE_TILE_ANIMATIONS = 'enable-tile-animations';
+    static ENABLE_UNTILE_ANIMATIONS = 'enable-untile-animations';
+    static FAVORITE_LAYOUTS = 'favorite-layouts';
+    static DEFAULT_MOVE_MODE = 'default-move-mode';
+    static LOW_PERFORMANCE_MOVE_MODE = 'low-performance-move-mode';
+    static MONITOR_SWITCH_GRACE_PERIOD = 'monitor-switch-grace-period';
+    static ADAPT_EDGE_TILING_TO_FAVORITE_LAYOUT = 'adapt-edge-tiling-to-favorite-layout';
+    static ADAPTIVE_TILING_MOD = 'move-adaptive-tiling-mod';
+    static FAVORITE_LAYOUT_MOD = 'move-favorite-layout-mod';
+    static VERTICAL_PREVIEW_AREA = 'vertical-preview-area';
+    static HORIZONTAL_PREVIEW_AREA = 'horizontal-preview-area';
+    static INVERSE_TOP_MAXIMIZE_TIMER = 'toggle-maximize-tophalf-timer';
+    static ENABLE_HOLD_INVERSE_LANDSCAPE = 'enable-hold-maximize-inverse-landscape';
+    static ENABLE_HOLD_INVERSE_PORTRAIT = 'enable-hold-maximize-inverse-portrait';
+    static RESTORE_SIZE_ON = 'restore-window-size-on';
 
-    static initialize(gioSettings) {
-        this._settings = gioSettings;
+    static initialize() {
+        const ExtensionUtils = imports.misc.extensionUtils;
+        const Me = ExtensionUtils.getCurrentExtension();
+        this._settings = ExtensionUtils.getSettings(Me.metadata['settings-schema']);
     }
 
     static destroy() {
-        this._settings = null;
+        this._settings.run_dispose();
     }
 
     /**
-     * @returns {import("./dependencies/gi.js").Gio.Settings} the Gio.Settings object.
+     * @returns {Gio.Settings} the Gio.Settings object.
      */
     static getGioObject() {
         return this._settings;
@@ -31,11 +64,44 @@ export class Settings {
      * @param {*} func function to call when the setting changed.
      */
     static changed(key, func) {
-        return this._settings.connect(`changed::${key}`, func);
+        this._settings.connect(`changed::${key}`, func);
     }
 
-    static disconnect(id) {
-        this._settings.disconnect(id);
+    /**
+     * @returns {string[]} the settings keys except the ones for shortcuts.
+     */
+    static getAllKeys() {
+        return [
+            this.ENABLE_TILING_POPUP,
+            this.POPUP_ALL_WORKSPACES,
+            this.RAISE_TILE_GROUPS,
+            this.TILEGROUPS_IN_APP_SWITCHER,
+            this.WINDOW_GAP,
+            this.SCREEN_TOP_GAP,
+            this.SCREEN_LEFT_GAP,
+            this.SCREEN_RIGHT_GAP,
+            this.SCREEN_BOTTOM_GAP,
+            this.MAXIMIZE_WITH_GAPS,
+            this.DYNAMIC_KEYBINDINGS,
+            this.SHOW_LAYOUT_INDICATOR,
+            this.ENABLE_ADV_EXP_SETTINGS,
+            this.DISABLE_TILE_GROUPS,
+            this.ENABLE_TILE_ANIMATIONS,
+            this.ENABLE_UNTILE_ANIMATIONS,
+            this.FAVORITE_LAYOUTS,
+            this.DEFAULT_MOVE_MODE,
+            this.LOW_PERFORMANCE_MOVE_MODE,
+            this.MONITOR_SWITCH_GRACE_PERIOD,
+            this.ADAPT_EDGE_TILING_TO_FAVORITE_LAYOUT,
+            this.ADAPTIVE_TILING_MOD,
+            this.FAVORITE_LAYOUT_MOD,
+            this.VERTICAL_PREVIEW_AREA,
+            this.HORIZONTAL_PREVIEW_AREA,
+            this.INVERSE_TOP_MAXIMIZE_TIMER,
+            this.ENABLE_HOLD_INVERSE_LANDSCAPE,
+            this.ENABLE_HOLD_INVERSE_PORTRAIT,
+            this.RESTORE_SIZE_ON
+        ];
     }
 
     /**
@@ -62,14 +128,6 @@ export class Settings {
         return this._settings.get_boolean(key);
     }
 
-    static getValue(key) {
-        return this._settings.get_value(key);
-    }
-
-    static getUserValue(key) {
-        return this._settings.get_user_value(key);
-    }
-
     /**
      * Setters
      */
@@ -93,93 +151,90 @@ export class Settings {
     static setBoolean(key, value) {
         this._settings.set_boolean(key, value);
     }
-
-    static setValue(key, value) {
-        return this._settings.set_value(key, value);
-    }
-
-    static reset(key) {
-        this._settings.reset(key);
-    }
-}
+};
 
 /**
  * A Singleton providing access to the shortcut keys except the
  * ones related to the Layouts.
  */
-export class Shortcuts {
+var Shortcuts = class Shortcuts {
+    static TOGGLE_POPUP = 'toggle-tiling-popup';
+    static EDIT_MODE = 'tile-edit-mode';
+    static AUTO_FILL = 'auto-tile';
+    static ALWAYS_ON_TOP = 'toggle-always-on-top';
+    static MAXIMIZE = 'tile-maximize';
+    static MAXIMIZE_V = 'tile-maximize-vertically';
+    static MAXIMIZE_H = 'tile-maximize-horizontally';
+    static RESTORE_WINDOW = 'restore-window';
+    static CENTER_WINDOW = 'center-window';
+    static TOP = 'tile-top-half';
+    static BOTTOM = 'tile-bottom-half';
+    static LEFT = 'tile-left-half';
+    static RIGHT = 'tile-right-half';
+    static TOP_LEFT = 'tile-topleft-quarter';
+    static TOP_RIGHT = 'tile-topright-quarter';
+    static BOTTOM_LEFT = 'tile-bottomleft-quarter';
+    static BOTTOM_RIGHT = 'tile-bottomright-quarter';
+    static DEBUGGING = 'debugging-show-tiled-rects';
+    static DEBUGGING_FREE_RECTS = 'debugging-free-rects';
+
     /**
      * @returns {string[]} the settings keys for the shortcuts in the same
      *      order as they appear in the preference window.
      */
     static getAllKeys() {
         return [
-            'toggle-tiling-popup',
-            'tile-edit-mode',
-            'auto-tile',
-            'toggle-always-on-top',
-            'tile-maximize',
-            'tile-maximize-vertically',
-            'tile-maximize-horizontally',
-            'restore-window',
-            'center-window',
-            'tile-top-half',
-            'tile-bottom-half',
-            'tile-left-half',
-            'tile-right-half',
-            'tile-topleft-quarter',
-            'tile-topright-quarter',
-            'tile-bottomleft-quarter',
-            'tile-bottomright-quarter',
-            'tile-top-half-ignore-ta',
-            'tile-bottom-half-ignore-ta',
-            'tile-left-half-ignore-ta',
-            'tile-right-half-ignore-ta',
-            'tile-topleft-quarter-ignore-ta',
-            'tile-topright-quarter-ignore-ta',
-            'tile-bottomleft-quarter-ignore-ta',
-            'tile-bottomright-quarter-ignore-ta',
-            'debugging-show-tiled-rects',
-            'debugging-free-rects'
+            this.TOGGLE_POPUP,
+            this.EDIT_MODE,
+            this.AUTO_FILL,
+            this.ALWAYS_ON_TOP,
+            this.MAXIMIZE,
+            this.MAXIMIZE_V,
+            this.MAXIMIZE_H,
+            this.RESTORE_WINDOW,
+            this.CENTER_WINDOW,
+            this.TOP,
+            this.BOTTOM,
+            this.LEFT,
+            this.RIGHT,
+            this.TOP_LEFT,
+            this.TOP_RIGHT,
+            this.BOTTOM_LEFT,
+            this.BOTTOM_RIGHT,
+            this.DEBUGGING,
+            this.DEBUGGING_FREE_RECTS
         ];
     }
-}
+};
 
-export class DynamicKeybindings {
+// Enums:
+var RestoreOn = class RestoreWindowSizeBehaviour {
+    static ON_GRAB_START = 0; // Grab Start
+    static ON_GRAB_END = 1; // 'Grab End'
+};
+
+var DynamicKeybindings = class DynamicKeybindingBehaviour {
     // Order comes from prefs
     static DISABLED = 0;
     static FOCUS = 1;
     static TILING_STATE = 2;
     static TILING_STATE_WINDOWS = 3;
     static FAVORITE_LAYOUT = 4;
-}
+};
 
-export const FocusHint = Object.freeze({
-    DISABLED: 0,
-    ANIMATED_OUTLINE: 1,
-    ANIMATED_UPSCALE: 2,
-    STATIC_OUTLINE: 3
-});
-
-export const FocusHintOutlineStyle = Object.freeze({
-    SOLID_BG: 0,
-    BORDER: 1
-});
-
-export class MoveModes {
+var MoveModes = class MoveModes {
     // Order comes from prefs
     static EDGE_TILING = 0;
     static ADAPTIVE_TILING = 1;
     static FAVORITE_LAYOUT = 2;
-    static IGNORE_TA = 3;
-}
+};
 
-export class Orientation {
+var Orientation = class Orientation {
     static H = 1;
     static V = 2;
-}
+};
 
-export class Direction {
+var Direction = class Direction {
     static N = 1;
     static E = 2;
     static S = 4;
@@ -198,11 +253,11 @@ export class Direction {
 
         return opposite;
     }
-}
+};
 
 // Classes for the layouts:
 // See src/prefs/layoutsPrefs.js for details on layouts.
-export class Layout {
+var Layout = class Layout {
     /**
      * @param {object} layout is the parsed object from the layouts file.
      */
@@ -279,7 +334,7 @@ export class Layout {
     }
 
     /**
-     * @returns {[boolean, string, number]} whether the layout has valid rects and
+     * @returns {[boolean, string]} wether the layout has valid rects and
      *      a potential error message.
      */
     validate() {
@@ -312,7 +367,7 @@ export class Layout {
 
         return [true, '', -1];
     }
-}
+};
 
 var LayoutItem = class LayoutItem {
     constructor() {

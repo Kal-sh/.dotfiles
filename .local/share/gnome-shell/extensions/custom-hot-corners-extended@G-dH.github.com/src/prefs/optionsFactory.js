@@ -3,21 +3,32 @@
  * OptionfFactory
  *
  * @author     GdH <G-dH@github.com>
- * @copyright  2021-2024
+ * @copyright  2021-2022
  * @license    GPL-3.0
  */
 
 'use strict';
 
-import GObject from 'gi://GObject';
-import Gio from 'gi://Gio';
-import Gtk from 'gi://Gtk';
-import Adw from 'gi://Adw';
+const { Gtk, GLib, Gio, GObject } = imports.gi;
 
-import * as Settings from '../common/settings.js';
+const ExtensionUtils = imports.misc.extensionUtils;
+const Me             = ExtensionUtils.getCurrentExtension();
+const Utils          = Me.imports.src.common.utils;
+
+// conversion of Gtk3 / Gtk4 widgets add methods
+const append         = Utils.append;
+const setChild      = Utils.setChild;
+
+const Settings       = Me.imports.src.common.settings;
+const shellVersion   = parseFloat(imports.misc.config.PACKAGE_VERSION);
+
+let Adw = null;
+try {
+    Adw = imports.gi.Adw;
+} catch (e) {}
 
 
-export const ItemFactory = class ItemFactory {
+var ItemFactory = class ItemFactory {
     constructor(options) {
         this._options = options;
         this._settings = this._options._gsettings;
@@ -37,7 +48,7 @@ export const ItemFactory = class ItemFactory {
                 halign: Gtk.Align.START,
             });
             option.set_text(text);
-            label.append(option);
+            label[append](option);
 
             if (caption) {
                 const captionLabel = new Gtk.Label({
@@ -50,7 +61,7 @@ export const ItemFactory = class ItemFactory {
                 context.add_class('dim-label');
                 context.add_class('caption');
                 captionLabel.set_text(caption);
-                label.append(captionLabel);
+                label[append](captionLabel);
             }
             label._title = text;
         } else {
@@ -210,7 +221,7 @@ export const ItemFactory = class ItemFactory {
 
     newLinkButton(uri) {
         const linkBtn = new Gtk.LinkButton({
-            label: '',
+            label: shellVersion < 42 ? 'Click Me!' : '',
             uri,
             halign: Gtk.Align.END,
             valign: Gtk.Align.CENTER,
@@ -229,7 +240,11 @@ export const ItemFactory = class ItemFactory {
         const context = btn.get_style_context();
         context.add_class('destructive-action');
 
-        btn.icon_name = 'view-refresh-symbolic';
+        if (shellVersion >= 40)
+            btn.icon_name = 'view-refresh-symbolic';
+        else
+            btn.add(Gtk.Image.new_from_icon_name('view-refresh-symbolic', Gtk.IconSize.BUTTON));
+
 
         btn.connect('clicked', () => {
             this._options.resetAll();
@@ -240,8 +255,8 @@ export const ItemFactory = class ItemFactory {
     }
 };
 
-export const OptionsPageAdw = GObject.registerClass(
-class OptionsPageAdw extends Adw.PreferencesPage {
+var OptionsPageLegacy = GObject.registerClass(
+class OptionsPageLegacy extends Gtk.ScrolledWindow {
     _init(optionList, pageProperties = {}) {
         super._init(pageProperties);
 
@@ -252,28 +267,51 @@ class OptionsPageAdw extends Adw.PreferencesPage {
     buildPage() {
         if (this._alreadyBuilt)
             return;
-            // pageProperties.width_request = 840;
-        let group;
+        const mainBox = new Gtk.Box({
+            orientation: Gtk.Orientation.VERTICAL,
+            spacing: 5,
+            homogeneous: false,
+            margin_start: 30,
+            margin_end: 30,
+            margin_top: 12,
+            margin_bottom: 12,
+        });
+
+        const context = this.get_style_context();
+        context.add_class('background');
+
+        let frame;
+        let frameBox;
         for (let item of this._optionList) {
             // label can be plain text for Section Title
             // or GtkBox for Option
             const option = item[0];
             const widget = item[1];
-            if (!widget) {
-                if (group)
-                    this.add(group);
 
-                group = new Adw.PreferencesGroup({
-                    title: option,
-                    hexpand: true,
-                    // width_request: 700
+            if (!widget) {
+                const lbl = new Gtk.Label({
+                    label: option,
+                    xalign: 0,
+                    margin_bottom: 4,
                 });
+
+                const context = lbl.get_style_context();
+                context.add_class('heading');
+
+                mainBox[append](lbl);
+
+                frame = new Gtk.Frame({
+                    margin_bottom: 16,
+                });
+
+                frameBox = new Gtk.ListBox({
+                    selection_mode: null,
+                });
+
+                mainBox[append](frame);
+                frame[setChild](frameBox);
                 continue;
             }
-
-            const row = new Adw.ActionRow({
-                title: option._title,
-            });
 
             const grid = new Gtk.Grid({
                 column_homogeneous: false,
@@ -284,22 +322,80 @@ class OptionsPageAdw extends Adw.PreferencesPage {
                 margin_bottom: 8,
                 hexpand: true,
             });
-                /* for (let i of item) {
-                    box.append(i);*/
-            grid.attach(option, 0, 0, 1, 1);
+
+            grid.attach(option, 0, 0, 5, 1);
+
             if (widget)
-                grid.attach(widget, 1, 0, 1, 1);
+                grid.attach(widget, 5, 0, 2, 1);
 
-            row.set_child(grid);
-            if (widget._activatable === false)
-                row.activatable = false;
-            else
-                row.activatable_widget = widget;
-
-            group.add(row);
+            frameBox[append](grid);
         }
-        this.add(group);
+        this[setChild](mainBox);
         this._alreadyBuilt = true;
     }
 });
 
+if (Adw) {
+    var OptionsPageAdw = GObject.registerClass(
+    class OptionsPageAdw extends Adw.PreferencesPage {
+        _init(optionList, pageProperties = {}) {
+            super._init(pageProperties);
+
+            this._optionList = optionList;
+            this.buildPage();
+        }
+
+        buildPage() {
+            if (this._alreadyBuilt)
+                return;
+            // pageProperties.width_request = 840;
+            let group;
+            for (let item of this._optionList) {
+                // label can be plain text for Section Title
+                // or GtkBox for Option
+                const option = item[0];
+                const widget = item[1];
+                if (!widget) {
+                    if (group)
+                        this.add(group);
+
+                    group = new Adw.PreferencesGroup({
+                        title: option,
+                        hexpand: true,
+                        // width_request: 700
+                    });
+                    continue;
+                }
+
+                const row = new Adw.ActionRow({
+                    title: option._title,
+                });
+
+                const grid = new Gtk.Grid({
+                    column_homogeneous: false,
+                    column_spacing: 20,
+                    margin_start: 8,
+                    margin_end: 8,
+                    margin_top: 8,
+                    margin_bottom: 8,
+                    hexpand: true,
+                });
+                /* for (let i of item) {
+                    box[append](i);*/
+                grid.attach(option, 0, 0, 1, 1);
+                if (widget)
+                    grid.attach(widget, 1, 0, 1, 1);
+
+                row.set_child(grid);
+                if (widget._activatable === false)
+                    row.activatable = false;
+                else
+                    row.activatable_widget = widget;
+
+                group.add(row);
+            }
+            this.add(group);
+            this._alreadyBuilt = true;
+        }
+    });
+}

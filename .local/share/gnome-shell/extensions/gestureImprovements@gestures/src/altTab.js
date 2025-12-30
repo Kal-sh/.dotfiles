@@ -1,13 +1,14 @@
 /* exported AltTabGestureExtension */
-import Clutter from 'gi://Clutter';
-import GLib from 'gi://GLib';
-import Shell from 'gi://Shell';
-import St from 'gi://St';
+const Clutter = imports.gi.Clutter;
+const GLib = imports.gi.GLib;
+const Shell = imports.gi.Shell;
+const St = imports.gi.St;
 
-import { AltTabConstants, ExtSettings } from '../constants.js'
-import { TouchpadSwipeGesture } from './swipeTracker.js'
-import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import { WindowSwitcherPopup } from 'resource:///org/gnome/shell/ui/altTab.js';
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+const { AltTabConstants, ExtSettings } = Me.imports.constants;
+const { TouchpadSwipeGesture } = Me.imports.src.swipeTracker;
+const Main = imports.ui.main;
+const { WindowSwitcherPopup } = imports.ui.altTab;
 let dummyWinCount = AltTabConstants.DUMMY_WIN_COUNT;
 
 function getIndexForProgress(progress, nelement) {
@@ -24,7 +25,7 @@ function getAvgProgressForIndex(index, nelement) {
 }
 
 // declare enum
-export var AltTabExtState;
+var AltTabExtState;
 (function (AltTabExtState) {
 	AltTabExtState[AltTabExtState['DISABLED'] = 0] = 'DISABLED';
 	AltTabExtState[AltTabExtState['DEFAULT'] = 1] = 'DEFAULT';
@@ -32,7 +33,7 @@ export var AltTabExtState;
 	AltTabExtState[AltTabExtState['ALTTAB'] = 3] = 'ALTTAB';
 })(AltTabExtState || (AltTabExtState = {}));
 
-export var AltTabGestureExtension = class AltTabGestureExtension {
+var AltTabGestureExtension = class AltTabGestureExtension {
 	constructor() {
 		this._extState = AltTabExtState.DISABLED;
 		this._progress = 0;

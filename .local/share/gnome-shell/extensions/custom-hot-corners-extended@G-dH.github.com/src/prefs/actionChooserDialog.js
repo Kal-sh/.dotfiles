@@ -3,38 +3,37 @@
  * ActionChooserDialog
  *
  * @author     GdH <G-dH@github.com>
- * @copyright  2021-2024
+ * @copyright  2021-2022
  * @license    GPL-3.0
  */
 
 'use strict';
 
-import Gtk from 'gi://Gtk';
-import GObject from 'gi://GObject';
+const { Gtk, GObject } = imports.gi;
 
-import * as Settings from '../common/settings.js';
-import * as Utils from '../common/utils.js';
+const Me             = imports.misc.extensionUtils.getCurrentExtension();
 
-let _;
+const Settings       = Me.imports.src.common.settings;
+const shellVersion   = Settings.shellVersion;
+const _              = Settings._;
 
-export function init(extension) {
-    _ = extension.gettext.bind(extension);
-}
+const actionList     = Settings.actionList;
 
-export function cleanGlobals() {
-    _ = null;
-}
+const Utils          = Me.imports.src.common.utils;
+// conversion of Gtk3 / Gtk4 widgets add methods
+const append         = Utils.append;
+const setChild      = Utils.setChild;
 
-export const ActionChooserDialog = GObject.registerClass(
+var ActionChooserDialog = GObject.registerClass(
 class ActionChooserDialog extends Gtk.Box {
     _init(button, corner, trigger, iconName, transitionWidget) {
         // this._transWidget = transitionWidget;
         const margin = 16;
         super._init({
-            margin_top: margin,
-            margin_bottom: margin,
-            margin_start: margin,
-            margin_end: margin,
+            margin_top: shellVersion >= 42 ? margin : 0,
+            margin_bottom: shellVersion >= 42 ? margin : 0,
+            margin_start: shellVersion >= 42 ? margin : 0,
+            margin_end: shellVersion >= 42 ? margin : 0,
         });
 
         // this._button = button;
@@ -70,17 +69,17 @@ class ActionChooserDialog extends Gtk.Box {
             visible: true,
         });
         if (trigger === 6) { // 6 === CTRL_PRESSURE
-            box.append(new Gtk.Label({
+            box[append](new Gtk.Label({
                 label: 'Ctrl +',
                 visible: true,
             }));
         }
-        box.append(trgIcon);
+        box[append](trgIcon);
 
         const headerbar = this.dialog.get_titlebar();
         headerbar.pack_start(box);
 
-        this.dialog.get_content_area().append(this);
+        this.dialog.get_content_area()[append](this);
 
         this.buildPage();
 
@@ -132,7 +131,7 @@ class ActionChooserDialog extends Gtk.Box {
         if (this._alreadyBuilt)
             return;
 
-        const margin = 0;
+        const margin = shellVersion < 42 ? 4 : 0;
         const box = new Gtk.Box({
             orientation: Gtk.Orientation.VERTICAL,
             spacing: 5,
@@ -202,30 +201,28 @@ class ActionChooserDialog extends Gtk.Box {
 
         this.resetButton = new Gtk.Button();
 
-        btnBox.append(expandButton);
-        btnBox.append(collapseButton);
-        btnBox.append(this.resetButton);
+        btnBox[append](expandButton);
+        btnBox[append](collapseButton);
+        btnBox[append](this.resetButton);
 
-        scrolledWindow.set_child(this.treeView);
-        frame.set_child(scrolledWindow);
+        scrolledWindow[setChild](this.treeView);
+        frame[setChild](scrolledWindow);
 
-        box.append(frame);
-        box.append(btnBox);
-        this.append(box);
+        box[append](frame);
+        box[append](btnBox);
+        this[append](box);
     }
 
     _populateTreeview() {
         let iter1, iter2;
         let submenuOnHold = null;
-        const actionList = Settings.actionList;
-        const excludedItems = Settings.excludedItems;
         for (let i = 0; i < actionList.length; i++) {
             const item = actionList[i];
             const itemType = item[0];
             const action = item[1];
             const title = action === 'disabled' ? 'Disable' : item[2];
 
-            if (excludedItems.includes(action))
+            if (Settings.excludedItems.includes(action))
                 continue;
 
             if (itemType === null) {

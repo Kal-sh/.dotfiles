@@ -1,15 +1,18 @@
-import { Clutter, Gio, GObject, Meta, Shell, St } from '../dependencies/gi.js';
-import {
-    _,
-    Extension,
-    Main,
-    PanelMenu,
-    PopupMenu
-} from '../dependencies/shell.js';
+'use strict';
 
-import { Layout, Settings } from '../common.js';
-import { Rect, Util } from './utility.js';
-import { TilingWindowManager as Twm } from './tilingWindowManager.js';
+const { Clutter, Gio, GLib, GObject, Meta, Shell, St } = imports.gi;
+const { main: Main, panelMenu: PanelMenu, popupMenu: PopupMenu } = imports.ui;
+
+const ExtensionUtils = imports.misc.extensionUtils;
+const Me = ExtensionUtils.getCurrentExtension();
+
+const { Layout, Settings } = Me.imports.src.common;
+const { Rect, Util } = Me.imports.src.extension.utility;
+const Twm = Me.imports.src.extension.tilingWindowManager.TilingWindowManager;
+
+const Gettext = imports.gettext;
+const Domain = Gettext.domain(Me.metadata.uuid);
+const _ = Domain.gettext;
 
 /**
  * Here are the classes to handle PopupLayouts on the shell / extension side.
@@ -29,7 +32,7 @@ import { TilingWindowManager as Twm } from './tilingWindowManager.js';
  * the Edge Tiling.
  */
 
-export default class TilingLayoutsManager {
+var LayoutManager = class TilingLayoutsManager {
     constructor() {
         // this._items is an array of LayoutItems (see explanation above).
         // this._currItem is 1 LayoutItem. A LayoutItem's rect only hold ratios
@@ -38,7 +41,7 @@ export default class TilingLayoutsManager {
         this._currItem = null;
         this._currRect = null;
 
-        // Preview to show where the window will tile to, similar
+        // Preview to show where the window will tile to, similiar
         // to the tile preview when dnding to the screen edges
         this._rectPreview = null;
 
@@ -76,18 +79,15 @@ export default class TilingLayoutsManager {
 
         // Add panel indicator
         this._panelIndicator = new PanelIndicator();
-        Main.panel.addToStatusArea(
-            'tiling-assistant@leleat-on-github',
-            this._panelIndicator);
-        this._settingsId = Settings.changed('show-layout-panel-indicator', () => {
-            this._panelIndicator.visible = Settings.getBoolean('show-layout-panel-indicator');
+        Main.panel.addToStatusArea(Me.metadata.uuid, this._panelIndicator);
+        Settings.changed(Settings.SHOW_LAYOUT_INDICATOR, () => {
+            this._panelIndicator.visible = Settings.getBoolean(Settings.SHOW_LAYOUT_INDICATOR);
         });
-        this._panelIndicator.visible = Settings.getBoolean('show-layout-panel-indicator');
+        this._panelIndicator.visible = Settings.getBoolean(Settings.SHOW_LAYOUT_INDICATOR);
         this._panelIndicator.connect('layout-activated', (src, idx) => this.startLayouting(idx));
     }
 
     destroy() {
-        Settings.disconnect(this._settingsId);
         this._finishLayouting();
         this._keyBindings.forEach(key => Main.wm.removeKeybinding(key));
         this._panelIndicator.destroy();
@@ -101,7 +101,6 @@ export default class TilingLayoutsManager {
     openPopupSearch() {
         const layouts = Util.getLayouts();
         if (!layouts.length) {
-            // Translators: This is a notification that pops up when a keyboard shortcut to activate a user-defined tiling layout is activated but no layout was defined by the user.
             Main.notify('Tiling Assistant', _('No valid layouts defined.'));
             return;
         }
@@ -120,7 +119,7 @@ export default class TilingLayoutsManager {
         if (!layout)
             return;
 
-        const allWs = Settings.getBoolean('tiling-popup-all-workspace');
+        const allWs = Settings.getBoolean(Settings.POPUP_ALL_WORKSPACES);
         this._remainingWindows = Twm.getWindows(allWs);
         this._items = new Layout(layout).getItems();
         this._currItem = null;
@@ -193,7 +192,6 @@ export default class TilingLayoutsManager {
     _openAppTiled(appId) {
         const app = Shell.AppSystem.get_default().lookup_app(appId);
         if (!app) {
-            // Translators: This is a notification that pops up when a keyboard shortcut to activate a user-defined tiling layout is activated and the user attached an app to a tile so that a new instance of that app will automatically open in the tile. But that app seems to have been uninstalled since the definition of the layout.
             Main.notify('Tiling Assistant', _('Popup Layouts: App not found.'));
             this._finishLayouting();
             return;
@@ -204,19 +202,15 @@ export default class TilingLayoutsManager {
         const window = this._remainingWindows[idx];
         idx !== -1 && this._remainingWindows.splice(idx, 1);
 
-        if (window) {
-            Twm.tile(window, this._currRect, {
-                openTilingPopup: false,
-                skipAnim: true
-            });
-        } else if (app.can_open_new_window()) {
+        if (window)
+            Twm.tile(window, this._currRect, { openTilingPopup: false });
+        else if (app.can_open_new_window())
             Twm.openAppTiled(app, this._currRect);
-        }
 
         this._step();
     }
 
-    async _openTilingPopup() {
+    _openTilingPopup() {
         // There are no open windows left to tile using the Tiling Popup.
         // However there may be items with appIds, which we want to open.
         // So continue...
@@ -237,15 +231,14 @@ export default class TilingLayoutsManager {
         });
 
         // Create the Tiling Popup
-        const TilingPopup = await import('./tilingPopup.js');
+        const TilingPopup = Me.imports.src.extension.tilingPopup;
         const popup = new TilingPopup.TilingSwitcherPopup(
             this._remainingWindows,
             this._currRect,
             // If this._currItem is the last item and we don't loop over it,
             // allow the Tiling Popup itself to spawn another instance of
             // a Tiling Popup, if there is free screen space.
-            this._currItem === this._items.at(-1) && !this._currItem.loopType,
-            true
+            this._currItem === this._items.at(-1) && !this._currItem.loopType
         );
         const stacked = global.display.sort_windows_by_stacking(this._tiledWithLayout);
         const tileGroup = stacked.reverse();
@@ -291,7 +284,7 @@ export default class TilingLayoutsManager {
             this._step(this._currItem.loopType);
         }
     }
-}
+};
 
 /**
  * The GUI class for the Layout search.
@@ -301,12 +294,13 @@ const LayoutSearch = GObject.registerClass({
 }, class TilingLayoutsSearch extends St.Widget {
     _init(layouts) {
         const activeWs = global.workspace_manager.get_active_workspace();
+        const allWorkArea = activeWs.get_work_area_all_monitors();
         super._init({
             reactive: true,
-            x: Main.uiGroup.x,
-            y: Main.uiGroup.y,
-            width: Main.uiGroup.width,
-            height: Main.uiGroup.height
+            x: allWorkArea.x,
+            y: allWorkArea.y,
+            width: allWorkArea.width,
+            height: allWorkArea.height
         });
         Main.uiGroup.add_child(this);
 
@@ -336,7 +330,7 @@ const LayoutSearch = GObject.registerClass({
             style: `font-size: ${fontSize}px;\
                     border-radius: 16px;
                     margin-bottom: 12px;`,
-            // Translators: This is the placeholder text for a search field.
+            // The cursor overlaps the text, so add some spaces at the beginning
             hint_text: ` ${_('Type to search...')}`
         });
         const entryClutterText = entry.get_clutter_text();
@@ -441,7 +435,8 @@ const SearchItem = GObject.registerClass(
 class TilingLayoutsSearchItem extends St.Label {
     _init(text, fontSize) {
         super._init({
-            // Translators: This is the text that will be displayed as the name of the user-defined tiling layout if it hasn't been given a name.
+            // Add some spaces to the beginning to align it better
+            // with the rounded corners
             text: `   ${text || _('Nameless layout...')}`,
             style: `font-size: ${fontSize}px;\
                 text-align: left;\
@@ -461,10 +456,7 @@ const PanelIndicator = GObject.registerClass({
     _init() {
         super._init(0.0, 'Layout Indicator (Tiling Assistant)');
 
-        const path = Extension.lookupByURL(import.meta.url)
-            .dir
-            .get_child('media/preferences-desktop-apps-symbolic.svg')
-            .get_path();
+        const path = Me.dir.get_child('media/preferences-desktop-apps-symbolic.svg').get_path();
         const gicon = new Gio.FileIcon({ file: Gio.File.new_for_path(path) });
         this.add_child(new St.Icon({
             gicon,
@@ -492,18 +484,17 @@ const PanelIndicator = GObject.registerClass({
 
         const layouts = Util.getLayouts();
         if (!layouts.length) {
-            // Translators: This is a placeholder text within a popup, if the user didn't define a tiling layout.
             const item = new PopupMenu.PopupMenuItem(_('No valid layouts defined.'));
             item.setSensitive(false);
             this.menu.addMenuItem(item);
         } else {
             // Update favorites with monitor count and fill with '-1', if necessary
-            const tmp = Settings.getStrv('favorite-layouts');
+            const tmp = Settings.getStrv(Settings.FAVORITE_LAYOUTS);
             const count = Math.max(Main.layoutManager.monitors.length, tmp.length);
             const favorites = [...new Array(count)].map((m, monitorIndex) => {
                 return tmp[monitorIndex] ?? '-1';
             });
-            Settings.setStrv('favorite-layouts', favorites);
+            Settings.setStrv(Settings.FAVORITE_LAYOUTS, favorites);
 
             // Create popup menu items
             layouts.forEach((layout, idx) => {
@@ -520,12 +511,19 @@ const PanelIndicator = GObject.registerClass({
 
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
-        const settingsButton = new PopupMenu.PopupImageMenuItem(_('Preferences'), 'emblem-system-symbolic');
+        const settingsButton = new PopupMenu.PopupImageMenuItem('Preferences', 'emblem-system-symbolic');
         // Center button without changing the size (for the hover highlight)
         settingsButton._icon.set_x_expand(true);
         settingsButton.label.set_x_expand(true);
-        settingsButton.connect('activate',
-            () => Extension.lookupByURL(import.meta.url).openPreferences());
+        settingsButton.connect('activate', () => {
+            try {
+                Main.overview.hide();
+                const cmd = `gnome-extensions prefs ${Me.metadata.uuid}`;
+                GLib.spawn_command_line_async(cmd);
+            } catch (e) {
+                logError(e);
+            }
+        });
         this.menu.addMenuItem(settingsButton);
     }
 });
@@ -544,7 +542,7 @@ const PopupFavoriteMenuItem = GObject.registerClass({
             x_expand: true
         }));
 
-        const favorites = Settings.getStrv('favorite-layouts');
+        const favorites = Settings.getStrv(Settings.FAVORITE_LAYOUTS);
         Main.layoutManager.monitors.forEach((m, monitorIndex) => {
             const favoriteButton = new St.Button({
                 child: new St.Icon({
@@ -556,9 +554,9 @@ const PopupFavoriteMenuItem = GObject.registerClass({
 
             // Update gSetting with new Favorite (act as a toggle button)
             favoriteButton.connect('clicked', () => {
-                const currFavorites = Settings.getStrv('favorite-layouts');
+                const currFavorites = Settings.getStrv(Settings.FAVORITE_LAYOUTS);
                 currFavorites[monitorIndex] = currFavorites[monitorIndex] === `${layoutIndex}` ? '-1' : `${layoutIndex}`;
-                Settings.setStrv('favorite-layouts', currFavorites);
+                Settings.setStrv(Settings.FAVORITE_LAYOUTS, currFavorites);
                 this.emit('favorite-changed', monitorIndex);
             });
         });

@@ -1,11 +1,12 @@
 "use strict";
 
-import St from "gi://St";
-import Gio from "gi://Gio";
-import GObject from "gi://GObject";
-import { PopupSubMenuMenuItem } from "resource:///org/gnome/shell/ui/popupMenu.js";
-import { DockerMenuItem } from "./dockerMenuItem.js";
-import { getExtensionObject } from "../extension.js";
+const St = imports.gi.St;
+const Gio = imports.gi.Gio; // For custom icons
+const { PopupSubMenuMenuItem } = imports.ui.popupMenu;
+const extensionUtils = imports.misc.extensionUtils;
+const Me = extensionUtils.getCurrentExtension();
+const { DockerMenuItem } = Me.imports.src.dockerMenuItem;
+const GObject = imports.gi.GObject;
 
 /**
  * Create Gio.icon based St.Icon
@@ -16,9 +17,7 @@ import { getExtensionObject } from "../extension.js";
  * @return {Object} an St.Icon instance
  */
 const gioIcon = (name = "docker-container-unavailable-symbolic") =>
-  Gio.icon_new_for_string(
-    getExtensionObject().path + "/icons/" + name + ".svg"
-  );
+  Gio.icon_new_for_string(Me.path + "/icons/" + name + ".svg");
 const menuIcon = (
   name = "docker-container-unavailable-symbolic",
   styleClass = "system-status-icon"
@@ -45,29 +44,10 @@ const getStatus = (statusMessage) => {
 };
 
 // Menu entry representing a Docker container
-export const DockerSubMenu = GObject.registerClass(
+var DockerSubMenu = GObject.registerClass(
   class DockerSubMenu extends PopupSubMenuMenuItem {
-    _init(
-      compose,
-      containerName,
-      containerStatusMessage,
-      parentMenu,
-      closePopup
-    ) {
-      super._init(
-        compose ? `${compose.project} ∘ ${compose.service}` : containerName
-      );
-      this._parentMenu = parentMenu;
-      const composeParams = compose
-        ? [
-            "-f",
-            `${compose.configFiles}`,
-            "--project-directory",
-            `${compose.workingDir}`,
-            "-p",
-            `${compose.project}`,
-          ]
-        : [];
+    _init(projectName, containerName, containerStatusMessage) {
+      super._init(`${projectName}${projectName?' ∘ ': ''}${containerName}`);
 
       switch (getStatus(containerStatusMessage)) {
         case "stopped":
@@ -76,30 +56,13 @@ export const DockerSubMenu = GObject.registerClass(
             1
           );
 
-          if (compose) {
-            this.menu.addMenuItem(
-              new DockerMenuItem(
-                containerName,
-                ["compose start", ...composeParams],
-                menuIcon("docker-container-start-symbolic"),
-                closePopup
-              )
-            );
-          }
-
           this.menu.addMenuItem(
             new DockerMenuItem(
               containerName,
-              ["start"],
-              menuIcon(
-                compose
-                  ? "docker-container-start-symbolic-alt"
-                  : "docker-container-start-symbolic"
-              ),
-              closePopup
+              "start",
+              menuIcon("docker-container-start-symbolic")
             )
           );
-
           break;
 
         case "running":
@@ -108,80 +71,35 @@ export const DockerSubMenu = GObject.registerClass(
             1
           );
 
-          if (compose) {
-            this.menu.addMenuItem(
-              new DockerMenuItem(
-                containerName,
-                ["compose pause", ...composeParams],
-                menuIcon("docker-container-pause-symbolic"),
-                closePopup
-              )
-            );
-
-            this.menu.addMenuItem(
-              new DockerMenuItem(
-                containerName,
-                ["compose stop", ...composeParams],
-                menuIcon("docker-container-stop-symbolic"),
-                closePopup
-              )
-            );
-
-            this.menu.addMenuItem(
-              new DockerMenuItem(
-                containerName,
-                ["compose restart", ...composeParams],
-                menuIcon("docker-container-restart-symbolic"),
-                closePopup
-              )
-            );
-          }
-
           this.menu.addMenuItem(
             new DockerMenuItem(
               containerName,
-              ["pause"],
-              menuIcon(
-                compose
-                  ? "docker-container-pause-symbolic-alt"
-                  : "docker-container-pause-symbolic"
-              ),
-              closePopup
+              "pause",
+              menuIcon("docker-container-pause-symbolic")
             )
           );
 
           this.menu.addMenuItem(
             new DockerMenuItem(
               containerName,
-              ["stop"],
-              menuIcon(
-                compose
-                  ? "docker-container-stop-symbolic-alt"
-                  : "docker-container-stop-symbolic"
-              ),
-              closePopup
+              "stop",
+              menuIcon("docker-container-stop-symbolic")
             )
           );
 
           this.menu.addMenuItem(
             new DockerMenuItem(
               containerName,
-              ["restart"],
-              menuIcon(
-                compose
-                  ? "docker-container-restart-symbolic-alt"
-                  : "docker-container-restart-symbolic"
-              ),
-              closePopup
+              "restart",
+              menuIcon("docker-container-restart-symbolic")
             )
           );
 
           this.menu.addMenuItem(
             new DockerMenuItem(
               containerName,
-              ["exec"],
-              menuIcon("docker-container-exec-symbolic"),
-              closePopup
+              "exec",
+              menuIcon("docker-container-exec-symbolic")
             )
           );
           break;
@@ -192,30 +110,13 @@ export const DockerSubMenu = GObject.registerClass(
             1
           );
 
-          if (compose) {
-            this.menu.addMenuItem(
-              new DockerMenuItem(
-                containerName,
-                ["compose unpause"],
-                menuIcon("docker-container-start-symbolic"),
-                closePopup
-              )
-            );
-          }
-
           this.menu.addMenuItem(
             new DockerMenuItem(
               containerName,
-              ["unpause"],
-              menuIcon(
-                compose
-                  ? "docker-container-start-symbolic-alt"
-                  : "docker-container-start-symbolic"
-              ),
-              closePopup
+              "unpause",
+              menuIcon("docker-container-start-symbolic")
             )
           );
-
           break;
 
         default:
@@ -232,14 +133,10 @@ export const DockerSubMenu = GObject.registerClass(
       this.menu.addMenuItem(
         new DockerMenuItem(
           containerName,
-          ["logs"],
-          menuIcon("docker-container-logs-symbolic"),
-          closePopup
+          "logs",
+          menuIcon("docker-container-logs-symbolic")
         )
       );
-    }
-    _getTopMenu() {
-      return this._parentMenu?._getTopMenu() || super._getTopMenu();
     }
   }
 );

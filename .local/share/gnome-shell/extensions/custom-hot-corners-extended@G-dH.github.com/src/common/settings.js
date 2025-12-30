@@ -3,18 +3,28 @@
  * Settings
  *
  * @author     GdH <G-dH@github.com>
- * @copyright  2021-2024
+ * @copyright  2021-2022
  * @license    GPL-3.0
  */
 
 'use strict';
 
-import Gio from 'gi://Gio';
-import GLib from 'gi://GLib';
+const { GLib, Gio }    = imports.gi;
 
-import * as ActionList from '../prefs/actionList.js';
+const ExtensionUtils = imports.misc.extensionUtils;
+const Me             = ExtensionUtils.getCurrentExtension();
 
-export const Triggers = {
+const Utils          = Me.imports.src.common.utils;
+
+const Config         = imports.misc.config;
+var shellVersion     = parseFloat(Config.PACKAGE_VERSION);
+
+var _                = imports.gettext.domain(Me.metadata['gettext-domain']).gettext;
+
+var actionList       = Me.imports.src.prefs.actionList.actionList;
+var excludedItems    = Me.imports.src.prefs.actionList.excludedItems;
+
+var Triggers = {
     PRESSURE:         0,
     BUTTON_PRIMARY:   1,
     BUTTON_SECONDARY: 2,
@@ -24,40 +34,45 @@ export const Triggers = {
     CTRL_PRESSURE:    6,
 };
 
-export function listTriggers() {
+var TriggerLabels = [
+    _('Hot Corner'),
+    _('Primary Button'),
+    _('Secondary Button'),
+    _('Middle Button'),
+    _('Scroll Up'),
+    _('Scroll Down'),
+    _('Ctrl + Hot Corner'),
+];
+
+var TRANSITION_TIME = 200;
+
+var MONITOR_TITLE = _('Monitor');
+var MONITOR_ICON = 'video-display-symbolic';
+var KEYBOARD_TITLE = _('Keyboard');
+var KEYBOARD_ICON = 'input-keyboard-symbolic';
+var MENUS_TITLE = _('Custom Menus');
+var MENUS_ICON = 'open-menu-symbolic';
+var OPTIONS_TITLE = _('Options');
+var OPTIONS_ICON = 'preferences-other-symbolic';
+
+const colorAccents = ['red', 'bark', 'sage', 'olive', 'viridian', 'prussiangreen', 'blue', 'purple', 'magenta'];
+
+var actionDict = {};
+actionList.forEach(act => {
+    actionDict[act[1]] = { title: act[2], icon: act[4] };
+});
+
+var _schema = 'org.gnome.shell.extensions.custom-hot-corners-extended';
+var _path = '/org/gnome/shell/extensions/custom-hot-corners-extended';
+
+const winSwitcherPopup = Utils.extensionEnabled('advanced-alt-tab');
+
+function listTriggers() {
     return Object.values(Triggers);
 }
 
-export const TRANSITION_TIME = 200;
 
-export const colorAccents = ['red', 'bark', 'sage', 'olive', 'viridian', 'prussiangreen', 'blue', 'purple', 'magenta'];
-
-export let actionList;
-export let excludedItems;
-export let actionDict;
-
-export const _schema = 'org.gnome.shell.extensions.custom-hot-corners-extended';
-export const _path = '/org/gnome/shell/extensions/custom-hot-corners-extended';
-
-// const winSwitcherPopup = Utils.extensionEnabled('advanced-alt-tab');
-
-let Me;
-
-export function init(extension) {
-    Me = extension;
-    actionDict = {};
-    actionList = ActionList.actionList;
-    excludedItems  = ActionList.excludedItems;
-    actionList.forEach(act => {
-        actionDict[act[1]] = { title: act[2], icon: act[4] };
-    });
-}
-
-export function cleanGlobals() {
-    Me = null;
-}
-
-export const MscOptions = class {
+var MscOptions = class MscOptions {
     constructor() {
         this._gsettings = this._loadSettings('misc');
         this._gsettings.delay();
@@ -87,6 +102,7 @@ export const MscOptions = class {
             winSwitchWrap:          { type: 'boolean', key: 'win-switch-wrap' },
             winSkipMinimized:       { type: 'boolean', key: 'win-switch-skip-minimized' },
             winStableSequence:      { type: 'boolean', key: 'win-switch-stable-sequence' },
+            winThumbnailScale:      { type: 'int',     key: 'win-thumbnail-scale' },
             actionEventDelay:       { type: 'int',     key: 'action-event-delay' },
             rippleAnimation:        { type: 'boolean', key: 'ripple-animation' },
             barrierFallback:        { type: 'boolean', key: 'barrier-fallback' },
@@ -162,7 +178,7 @@ export const MscOptions = class {
     }
 };
 
-export function resetAllCorners() {
+function resetAllCorners() {
     // since we can't find all created monitor directories in gsettings without using dconf,
     // we assume that max monitor count of 6 is enough for all users
     for (const monitor of [0, 1, 2, 3, 4, 5]) {
@@ -171,7 +187,7 @@ export function resetAllCorners() {
     }
 }
 
-export function resetCorner(monitorIndex, corner) {
+function resetCorner(monitorIndex, corner) {
     const schema = `${_schema}.corner`;
     for (const trigger of [0, 1, 2, 3, 4, 5, 6]) {
         const path = `${_path}/monitor-${monitorIndex}-${corner}-${trigger}/`;
@@ -187,7 +203,7 @@ export function resetCorner(monitorIndex, corner) {
     }
 }
 
-export const Corner = class Corner {
+var Corner = class Corner {
     constructor(loadIndex, monitorIndex, top, left, x, y) {
         this.monitorIndex = monitorIndex;
         this._loadIndex = loadIndex;
@@ -339,7 +355,7 @@ export const Corner = class Corner {
  * Copied from Gnome Shells extensionUtils.js and adapted to allow
  * loading the setting with a specific path.
  */
-export function getSettings(schema, path) {
+function getSettings(schema, path) {
     const schemaDir = Me.dir.get_child('schemas');
     let schemaSource;
     if (schemaDir.query_exists(null)) {
@@ -369,3 +385,4 @@ export function getSettings(schema, path) {
 
     return new Gio.Settings(args);
 }
+

@@ -5,7 +5,7 @@
  *
  * SignalManager.js
  *
- * Copyright (c) 2021-2025 Gianni Lerro {glerro} ~ <glerro@pm.me>
+ * Copyright (c) 2021-2023 Gianni Lerro {glerro} ~ <glerro@pm.me>
  *
  * Wifi QR Code is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by the
@@ -25,10 +25,12 @@
  *****************************************************************************
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
- * SPDX-FileCopyrightText: 2021-2025 Gianni Lerro <glerro@pm.me>
+ * SPDX-FileCopyrightText: 2021-2023 Gianni Lerro <glerro@pm.me>
  */
 
-import GObject from 'gi://GObject';
+/* exported SignalManager */
+
+const GObject = imports.gi.GObject;
 
 let Signal =  class Signal {
     constructor(signalSource, signalName, callback) {
@@ -49,7 +51,7 @@ let Signal =  class Signal {
     }
 };
 
-export class SignalManager {
+var SignalManager = class SignalManager {
     constructor() {
         this._signals = [];
         this._signalsBySource = {};
@@ -83,5 +85,5 @@ export class SignalManager {
             });
         }
     }
-}
+};
 

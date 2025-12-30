@@ -1,27 +1,29 @@
 // SPDX-FileCopyrightText: 2023 Aleksandr Mezin <mezin.alexander@gmail.com>
-// SPDX-FileContributor: k-c13
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import GLib from 'gi://GLib';
-import GObject from 'gi://GObject';
-import Meta from 'gi://Meta';
+'use strict';
 
-import { Service } from './service.js';
+const GLib = imports.gi.GLib;
+const GObject = imports.gi.GObject;
+const Meta = imports.gi.Meta;
 
-export const WindowMatchGeneric = GObject.registerClass({
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+const { Subprocess } = Me.imports.ddterm.shell.subprocess;
+
+var WindowMatchGeneric = GObject.registerClass({
     Properties: {
         'display': GObject.ParamSpec.object(
             'display',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
             Meta.Display
         ),
         'track-signals': GObject.ParamSpec.boxed(
             'track-signals',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
             GObject.type_from_name('GStrv')
         ),
@@ -44,8 +46,9 @@ export const WindowMatchGeneric = GObject.registerClass({
             }
         });
 
-        for (const win of this.display.list_all_windows())
-            this._watch_window(win);
+        Meta.get_window_actors(this.display).forEach(actor => {
+            this._watch_window(actor.meta_window);
+        });
     }
 
     disable() {
@@ -78,33 +81,35 @@ export const WindowMatchGeneric = GObject.registerClass({
     }
 });
 
-export const WindowMatch = GObject.registerClass({
+/* exported WindowMatchGeneric */
+
+var WindowMatch = GObject.registerClass({
     Properties: {
-        'service': GObject.ParamSpec.object(
-            'service',
-            null,
-            null,
+        'subprocess': GObject.ParamSpec.object(
+            'subprocess',
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.EXPLICIT_NOTIFY,
-            Service
+            Subprocess
         ),
         'current-window': GObject.ParamSpec.object(
             'current-window',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READABLE,
             Meta.Window
         ),
         'gtk-application-id': GObject.ParamSpec.string(
             'gtk-application-id',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
             null
         ),
         'gtk-window-object-path-prefix': GObject.ParamSpec.string(
             'gtk-window-object-path-prefix',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
             null
         ),
@@ -134,7 +139,7 @@ export const WindowMatch = GObject.registerClass({
         if (win === this._window)
             return GLib.SOURCE_REMOVE;
 
-        if (!this.service.owns_window(win)) {
+        if (!this.subprocess?.owns_window(win)) {
             /*
                 With X11 window:
                 - Shell can be restarted without logging out
@@ -143,7 +148,7 @@ export const WindowMatch = GObject.registerClass({
                 So if we did not launch the app, allow this check to be skipped
                 on X11.
             */
-            if (this.service.is_running)
+            if (this.subprocess?.is_running())
                 return GLib.SOURCE_REMOVE;
 
             if (win.get_client_type() === Meta.WindowClientType.WAYLAND)
@@ -192,3 +197,5 @@ export const WindowMatch = GObject.registerClass({
         this.notify('current-window');
     }
 });
+
+/* exported WindowMatch */

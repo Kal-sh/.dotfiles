@@ -3,12 +3,19 @@
     <requires lib="gtk" version="4.0" />
     <requires lib="libadwaita" version="1.0" />
     <object class="AdwPreferencesPage" id="freqBoostDebugTab">
+        <property name="margin-top">16</property>
+        <property name="margin-end">16</property>
+        <property name="margin-bottom">16</property>
+        <property name="margin-start">16</property>
         <property name="name">freqBoostDebugTab</property>
         <property name="title" translatable="yes">Debug</property>
         <property name="icon-name">weather-showers-symbolic</property>
         <child>
-            <object class="AdwPreferencesGroup">
+            <object class="GtkBox">
+                <property name="orientation">vertical</property>
                 <property name="halign">center</property>
+                <property name="width-request">640</property>
+                <property name="spacing">24</property>
                 <child>
                     <object class="AdwPreferencesGroup">
                         <child>
@@ -128,7 +135,6 @@
                         <property name="label" translatable="yes">Still having problems? You can open an issue on &lt;a href=&quot;https://gitlab.com/metal03326/gnome-frequency-boost-switch/-/issues&quot;&gt;GitLab&lt;/a&gt;.</property>
                         <property name="halign">start</property>
                         <property name="use_markup">1</property>
-                        <property name="margin-top">24</property>
                     </object>
                 </child>
             </object>

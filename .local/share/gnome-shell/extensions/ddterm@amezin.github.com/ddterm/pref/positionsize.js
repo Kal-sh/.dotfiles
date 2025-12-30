@@ -2,18 +2,21 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import GObject from 'gi://GObject';
-import Gio from 'gi://Gio';
-import Gtk from 'gi://Gtk';
+'use strict';
 
-import {
+const GObject = imports.gi.GObject;
+const Gio = imports.gi.Gio;
+const Gtk = imports.gi.Gtk;
+
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+const {
     bind_widget,
     insert_settings_actions,
     set_scale_value_format,
     ui_file_uri,
-} from './util.js';
+} = Me.imports.ddterm.pref.util;
 
-export const PositionSizeWidget = GObject.registerClass({
+var PositionSizeWidget = GObject.registerClass({
     GTypeName: 'DDTermPrefsPositionSize',
     Template: ui_file_uri('prefs-position-size.ui'),
     Children: [
@@ -24,56 +27,72 @@ export const PositionSizeWidget = GObject.registerClass({
     Properties: {
         'settings': GObject.ParamSpec.object(
             'settings',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
             Gio.Settings
         ),
         'monitors': GObject.ParamSpec.object(
             'monitors',
-            null,
-            null,
-            GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
+            '',
+            '',
+            GObject.ParamFlags.READWRITE | GObject.ParamFlags.EXPLICIT_NOTIFY,
             Gio.ListModel
         ),
-        'gettext-domain': GObject.ParamSpec.jsobject(
-            'gettext-domain',
-            null,
-            null,
+        'gettext-context': GObject.ParamSpec.jsobject(
+            'gettext-context',
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY
         ),
     },
 }, class PrefsPositionSize extends Gtk.Grid {
-    constructor(params) {
-        super(params);
+    _init(params) {
+        super._init(params);
 
-        const percent_format = new Intl.NumberFormat(undefined, { style: 'percent' });
-        set_scale_value_format(this.window_size_scale, percent_format);
+        insert_settings_actions(this, this.settings, ['window-monitor']);
 
         bind_widget(this.settings, 'window-monitor-connector', this.monitor_combo);
+
+        const window_monitor_handler = this.settings.connect(
+            'changed::window-monitor',
+            this.enable_monitor_combo.bind(this)
+        );
+        this.connect('destroy', () => this.settings.disconnect(window_monitor_handler));
+        this.enable_monitor_combo();
+
         bind_widget(this.settings, 'window-position', this.window_pos_combo);
         bind_widget(this.settings, 'window-size', this.window_size_scale);
 
-        this.monitors.connect('items-changed', this.#update_monitors.bind(this));
-        this.#update_monitors(this.monitors, 0, 0, this.monitors.get_n_items());
-
-        const actions = insert_settings_actions(this, this.settings, ['window-monitor']);
-
-        actions.lookup('window-monitor').bind_property_full(
-            'state',
-            this.monitor_combo.parent,
-            'sensitive',
-            GObject.BindingFlags.SYNC_CREATE,
-            (binding, state) => [true, state?.unpack() === 'connector'],
-            null
-        );
+        const percent_format = new Intl.NumberFormat(undefined, { style: 'percent' });
+        set_scale_value_format(this.window_size_scale, percent_format);
     }
 
     get title() {
-        return this.gettext_domain.gettext('Position and Size');
+        return this.gettext_context.gettext('Position and Size');
     }
 
-    #update_monitors(model, position, removed, added) {
+    get monitors() {
+        return this._monitors;
+    }
+
+    set monitors(value) {
+        const prev_count = this._monitors?.get_n_items() ?? 0;
+
+        this._monitors?.disconnect(this._monitors_handler);
+
+        this._monitors = value;
+        this._monitors_handler = value?.connect('items-changed', this.update_monitors.bind(this));
+
+        this.update_monitors(value, 0, prev_count, value?.get_n_items() ?? 0);
+    }
+
+    enable_monitor_combo() {
+        this.monitor_combo.sensitive =
+            this.settings.get_string('window-monitor') === 'connector';
+    }
+
+    update_monitors(model, position, removed, added) {
         this.monitor_combo.freeze_notify();
 
         try {
@@ -92,3 +111,5 @@ export const PositionSizeWidget = GObject.registerClass({
         }
     }
 });
+
+/* exported PositionSizeWidget */

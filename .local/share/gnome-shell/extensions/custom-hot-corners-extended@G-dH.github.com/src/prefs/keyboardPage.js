@@ -3,38 +3,32 @@
  * KeayboardPage
  *
  * @author     GdH <G-dH@github.com>
- * @copyright  2021-2024
+ * @copyright  2021-2022
  * @license    GPL-3.0
  */
 
 'use strict';
 
-import Gtk from 'gi://Gtk';
-import GObject from 'gi://GObject';
+const { Gtk, GObject } = imports.gi;
 
-import * as TreeViewPage from './treeViewPage.js';
-import * as Settings from '../common/settings.js';
+const ExtensionUtils = imports.misc.extensionUtils;
+const Me             = ExtensionUtils.getCurrentExtension();
+const TreeViewPage   = Me.imports.src.prefs.treeViewPage.TreeViewPage;
 
-import * as Utils from '../common/utils.js';
+const Settings       = Me.imports.src.common.settings;
+const _actionList    = Settings.actionList;
+const _excludedItems = Settings.excludedItems;
 
 // gettext
-let _;
-let Me;
+const _  = Settings._;
+const shellVersion = Settings.shellVersion;
+
+const Utils          = Me.imports.src.common.utils;
 
 const _bold = Utils.bold;
 
-export function init(extension) {
-    _ = extension.gettext.bind(extension);
-    Me = extension;
-}
-
-export function cleanGlobals() {
-    _ = null;
-    Me = null;
-}
-
-export const KeyboardPage = GObject.registerClass(
-class KeyboardPage extends TreeViewPage.TreeViewPage {
+var KeyboardPage = GObject.registerClass(
+class KeyboardPage extends TreeViewPage {
     _init(mscOptions) {
         super._init();
         this._mscOptions = mscOptions;
@@ -165,7 +159,7 @@ class KeyboardPage extends TreeViewPage.TreeViewPage {
     }
 
     _updateTitle() {
-        this.lbl.set_markup(`${_bold(_('Keyboard Shortcuts'))}    (${_('active')}: ${Object.keys(this.keybindings).length})`);
+        this.lbl.set_markup(`${_bold(_('Keyboard Shortcuts'))}    (active: ${Object.keys(this.keybindings).length})`);
     }
 
     _loadShortcuts() {
@@ -198,16 +192,14 @@ class KeyboardPage extends TreeViewPage.TreeViewPage {
     _populateTreeview() {
         let iter1, iter2;
         let submenuOnHold = null;
-        const actionList = Settings.actionList;
-        const excludedItems = Settings.excludedItems;
-        for (let i = 0; i < actionList.length; i++) {
-            const item = actionList[i];
+        for (let i = 0; i < _actionList.length; i++) {
+            const item = _actionList[i];
             const itemMeaning = item[0];
             const action = item[1];
             const title = item[2];
             const shortcutAllowed = item[3];
 
-            if (excludedItems.includes(action) || !shortcutAllowed)
+            if (_excludedItems.includes(action) || !shortcutAllowed)
                 continue;
             if (this.showActiveBtn.active && !(action in this.keybindings) && itemMeaning !== null)
                 continue;

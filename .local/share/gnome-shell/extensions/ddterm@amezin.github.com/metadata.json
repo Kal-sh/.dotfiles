@@ -5,14 +5,11 @@
   "name": "ddterm",
   "settings-schema": "com.github.amezin.ddterm",
   "shell-version": [
-    "45",
-    "46",
-    "47",
-    "48",
-    "49"
+    "42",
+    "43",
+    "44"
   ],
   "url": "https://github.com/ddterm/gnome-shell-extension-ddterm",
   "uuid": "ddterm@amezin.github.com",
-  "version": 64,
-  "version-name": "62.0.2 402c0b438"
+  "version": 58
 }

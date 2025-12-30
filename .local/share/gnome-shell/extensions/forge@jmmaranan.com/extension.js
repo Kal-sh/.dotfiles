@@ -16,88 +16,93 @@
  *
  */
 
-// Gnome imports
-import * as Main from "resource:///org/gnome/shell/ui/main.js";
-import { Extension, gettext as _ } from "resource:///org/gnome/shell/extensions/extension.js";
+"use strict";
 
-// Shared state
-import { Logger } from "./lib/shared/logger.js";
-import { ConfigManager } from "./lib/shared/settings.js";
+// Gnome imports
+const SessionMode = imports.ui.main.sessionMode;
+const Panel = imports.ui.main.panel;
+
+// Extension imports
+const ExtensionUtils = imports.misc.extensionUtils;
+const Me = ExtensionUtils.getCurrentExtension();
 
 // Application imports
-import { Keybindings } from "./lib/extension/keybindings.js";
-import { WindowManager } from "./lib/extension/window.js";
-import { FeatureIndicator, FeatureMenuToggle } from "./lib/extension/indicator.js";
-import { ExtensionThemeManager } from "./lib/extension/extension-theme-manager.js";
+const Keybindings = Me.imports.keybindings;
+const Logger = Me.imports.logger;
+const PanelExt = Me.imports.panel;
+const Settings = Me.imports.settings;
+const Theme = Me.imports.theme;
+const Window = Me.imports.window;
+const Utils = Me.imports.utils;
 
-export default class ForgeExtension extends Extension {
+function init() {
+  Logger.info("init");
+  ExtensionUtils.initTranslations();
+  return new Extension();
+}
+
+class Extension {
+  constructor() {
+    this.indicator = null;
+  }
+
   enable() {
-    this.settings = this.getSettings();
-    this.kbdSettings = this.getSettings("org.gnome.shell.extensions.forge.keybindings");
-    Logger.init(this.settings);
     Logger.info("enable");
-
-    this.configMgr = new ConfigManager(this);
-    this.theme = new ExtensionThemeManager(this);
-    this.extWm = new WindowManager(this);
-    this.keybindings = new Keybindings(this);
-
-    this._onSessionModeChanged(Main.sessionMode);
-    this._sessionId = Main.sessionMode.connect("updated", this._onSessionModeChanged.bind(this));
-
+    this.settings = Settings.getSettings();
+    this.kbdSettings = Settings.getSettings("org.gnome.shell.extensions.forge.keybindings");
+    this.configMgr = new Settings.ConfigManager();
+    this.theme = new Theme.ThemeManager(this.settings, this.configMgr);
     this.theme.patchCss();
     this.theme.reloadStylesheet();
+
+    if (this.sameSession) {
+      Logger.debug(`enable: still in same session`);
+      this.sameSession = false;
+      return;
+    }
+
+    if (!this.extWm) {
+      this.extWm = new Window.WindowManager(this);
+    }
+
+    if (!this.keybindings) {
+      this.keybindings = new Keybindings.Keybindings(this);
+    }
+
+    if (!this.indicator) {
+      this.indicator = new PanelExt.PanelIndicator(this.settings, this.extWm);
+      Panel.addToStatusArea("ForgeExt", this.indicator);
+    }
+
     this.extWm.enable();
+    this.keybindings.enable();
     Logger.info(`enable: finalized vars`);
   }
 
   disable() {
     Logger.info("disable");
 
-    // See session mode unlock-dialog explanation on _onSessionModeChanged()
-    if (this._sessionId) {
-      Main.sessionMode.disconnect(this._sessionId);
-      this._sessionId = null;
+    if (SessionMode.isLocked) {
+      this.sameSession = true;
+      Logger.debug(`disable: still in same session`);
+      return;
     }
 
-    this._removeIndicator();
-    this.extWm?.disable();
-    this.keybindings?.disable();
-    this.keybindings = null;
+    if (this.extWm) this.extWm.disable();
+
+    if (this.keybindings) this.keybindings.disable();
+
+    if (this.indicator) {
+      this.indicator.destroy();
+      this.indicator = null;
+    }
+
+    Logger.info(`disable: cleaning up vars`);
     this.extWm = null;
-    this.themeWm = null;
-    this.configMgr = null;
+    this.keybindings = null;
     this.settings = null;
-    this.kbdSettings = null;
-  }
-
-  _onSessionModeChanged(session) {
-    if (session.currentMode === "user" || session.parentMode === "user") {
-      Logger.info("user on session change");
-      this._addIndicator();
-      this.keybindings?.enable();
-    } else if (session.currentMode === "unlock-dialog") {
-      // To the reviewer and maintainer: this extension needs to persist the window data structure in memory so it has to keep running on lock screen.
-      // This is previous feature but was removed during GNOME 45 update due to the session-mode rule review.
-      // The argument is that users will keep re-arranging windows when it times out or locks up.
-      // Intent to serialize/deserialize to disk but that will take a longer time or probably a longer argument during review.
-      // To keep following, added to only disable keybindings() and re-enable them during user session.
-      // https://gjs.guide/extensions/review-guidelines/review-guidelines.html#session-modes
-      Logger.info("lock-screen on session change");
-      this.keybindings?.disable();
-      this._removeIndicator();
-    }
-  }
-
-  _addIndicator() {
-    this.indicator ??= new FeatureIndicator(this);
-    this.indicator.quickSettingsItems.push(new FeatureMenuToggle(this));
-    Main.panel.statusArea.quickSettings.addExternalIndicator(this.indicator);
-  }
-
-  _removeIndicator() {
-    this.indicator?.quickSettingsItems.forEach((item) => item.destroy());
-    this.indicator?.destroy();
     this.indicator = null;
+    this.configMgr = null;
+    this.theme = null;
   }
 }

@@ -1,6 +1,6 @@
 // define enum
 /* exported PinchGestureType, OverviewNavigationState, ForwardBackKeyBinds */
-export var PinchGestureType;
+var PinchGestureType;
 (function (PinchGestureType) {
 	PinchGestureType[PinchGestureType['NONE'] = 0] = 'NONE';
 	PinchGestureType[PinchGestureType['SHOW_DESKTOP'] = 1] = 'SHOW_DESKTOP';
@@ -9,14 +9,14 @@ export var PinchGestureType;
 })(PinchGestureType || (PinchGestureType = {}));
 
 // define enum
-export var OverviewNavigationState;
+var OverviewNavigationState;
 (function (OverviewNavigationState) {
 	OverviewNavigationState[OverviewNavigationState['CYCLIC'] = 0] = 'CYCLIC';
 	OverviewNavigationState[OverviewNavigationState['GNOME'] = 1] = 'GNOME';
 	OverviewNavigationState[OverviewNavigationState['WINDOW_PICKER_ONLY'] = 2] = 'WINDOW_PICKER_ONLY';
 })(OverviewNavigationState || (OverviewNavigationState = {}));
 
-export var ForwardBackKeyBinds;
+var ForwardBackKeyBinds;
 (function (ForwardBackKeyBinds) {
 	ForwardBackKeyBinds[ForwardBackKeyBinds['Default'] = 0] = 'Default';
 	ForwardBackKeyBinds[ForwardBackKeyBinds['Forward/Backward'] = 1] = 'Forward/Backward';

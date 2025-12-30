@@ -1,0 +1,105 @@
+2025-12-30 22:06:29,891 | INFO | ulauncher: main() | Ulauncher version 5.15.15
+2025-12-30 22:06:29,891 | INFO | ulauncher: main() | Extension API version 2.0.0
+2025-12-30 22:06:29,891 | INFO | ulauncher: main() | GTK+ 3.24.33
+2025-12-30 22:06:29,891 | INFO | ulauncher: main() | Is Wayland: True
+2025-12-30 22:06:29,891 | INFO | ulauncher: main() | Wayland compatibility: off
+2025-12-30 22:06:29,924 | DEBUG | ulauncher.ui.windows.Builder: __init__() | consider using a pythonic name instead of design name 'input-box'
+2025-12-30 22:06:29,928 | DEBUG | ulauncher.ui.windows.Builder: do_connect() | connect builder by name 'ulauncher_window','destroy', 'on_destroy'
+2025-12-30 22:06:29,928 | DEBUG | ulauncher.ui.windows.Builder: do_connect() | connect builder by name 'ulauncher_window','focus_in_event', 'on_focus_in_event'
+2025-12-30 22:06:29,928 | DEBUG | ulauncher.ui.windows.Builder: do_connect() | connect builder by name 'ulauncher_window','focus_out_event', 'on_focus_out_event'
+2025-12-30 22:06:29,930 | DEBUG | ulauncher.ui.windows.Builder: do_connect() | connect builder by name 'input','key_press_event', 'on_input_key_press_event'
+2025-12-30 22:06:29,931 | DEBUG | ulauncher.ui.windows.Builder: log_unconnected_functions() | Not connected to builder 'on_input_changed'
+2025-12-30 22:06:29,931 | DEBUG | ulauncher.ui.windows.Builder: log_unconnected_functions() | Not connected to builder 'on_mnu_about_activate'
+2025-12-30 22:06:29,931 | DEBUG | ulauncher.ui.windows.Builder: log_unconnected_functions() | Not connected to builder 'on_mnu_close_activate'
+2025-12-30 22:06:29,931 | DEBUG | ulauncher.ui.windows.Builder: log_unconnected_functions() | Not connected to builder 'on_mnu_preferences_activate'
+2025-12-30 22:06:29,931 | DEBUG | ulauncher.ui.windows.Builder: log_unconnected_functions() | Not connected to builder 'on_preferences_dialog_destroyed'
+2025-12-30 22:06:29,933 | DEBUG | ulauncher.utils.display: get_screens() | Found 2 monitor(s)
+2025-12-30 22:06:29,933 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 2560, H: 1440
+2025-12-30 22:06:29,933 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 1 - X: 363, Y: 1440, W: 1920, H: 1080
+2025-12-30 22:06:29,954 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
+2025-12-30 22:06:29,957 | INFO | ulauncher.search.apps.app_watcher: start() | Started scanning desktop dirs
+2025-12-30 22:06:29,958 | INFO | ulauncher.api.server.ExtensionServer: _start_thread() | Starting WS server on port 5054
+2025-12-30 22:06:29,975 | INFO | ulauncher.api.server.ExtensionRunner: _run_process() | Extension "com.github.barathbheeman.vsw-extension" started. PID 2204
+2025-12-30 22:06:29,987 | INFO | ulauncher.api.server.ExtensionRunner: _run_process() | Extension "com.github.katacarbix.ulauncher-dict-en" started. PID 2206
+2025-12-30 22:06:29,990 | INFO | ulauncher.api.server.ExtensionRunner: _run_process() | Extension "com.github.kcoovi.ulauncher-link-opener" started. PID 2208
+2025-12-30 22:06:30,005 | INFO | ulauncher.api.server.ExtensionRunner: _run_process() | Extension "com.github.ulauncher.ulauncher-emoji" started. PID 2210
+2025-12-30 22:06:30,011 | INFO | ulauncher.api.server.ExtensionRunner: _run_process() | Extension "com.github.friday.ulauncher-gnome-settings" started. PID 2212
+2025-12-30 22:06:30,020 | INFO | ulauncher.api.server.ExtensionRunner: _run_process() | Extension "com.github.iboyperson.ulauncher-system" started. PID 2215
+2025-12-30 22:06:30,029 | INFO | ulauncher.api.server.ExtensionRunner: _run_process() | Extension "com.github.andr3slelouch.ulauncher-gnome-extensions-prefs" started. PID 2216
+2025-12-30 22:06:30,043 | INFO | ulauncher.utils.desktop.reader: find_apps_cached() | Found 49 apps in cache
+2025-12-30 22:06:30,046 | INFO | ulauncher.api.server.ExtensionRunner: _run_process() | Extension "com.github.zensoup.ulauncher-unicode" started. PID 2218
+2025-12-30 22:06:30,058 | INFO | ulauncher.api.server.ExtensionRunner: _run_process() | Extension "com.github.ulauncher.ulauncher-kill" started. PID 2221
+2025-12-30 22:06:30,073 | INFO | ulauncher.api.server.ExtensionRunner: _run_process() | Extension "com.github.hillaryychan.ulauncher-fzf" started. PID 2229
+2025-12-30 22:06:30,080 | INFO | ulauncher.api.server.ExtensionRunner: _run_process() | Extension "com.github.dhelmr.ulauncher-tldr" started. PID 2230
+2025-12-30 22:06:30,175 | INFO | ulauncher.ui.windows.UlauncherWindow: bind_show_app_hotkey() | Trying to bind app hotkey: <Primary>space
+2025-12-30 22:06:30,262 | INFO | ulauncher.utils.desktop.reader: read_desktop_file() | Could not read "/usr/share/applications/evolution-calendar.desktop": constructor returned NULL
+2025-12-30 22:06:30,300 | INFO | ulauncher.utils.desktop.reader: read_desktop_file() | Could not read "/var/lib/snapd/desktop/applications/snapd-desktop-integration_snapd-desktop-integration.desktop": constructor returned NULL
+2025-12-30 22:06:30,334 | INFO | ulauncher.utils.desktop.reader: find_apps_cached() | Found 49 apps in the system
+2025-12-30 22:06:30,334 | INFO | ulauncher.search.apps.app_watcher: start() | Scanned desktop dirs in 0.38 seconds
+2025-12-30 22:06:30,363 | DEBUG | ulauncher.search.apps.app_watcher: start() | Start watching desktop files...
+2025-12-30 22:06:30,499 | INFO | ulauncher.api.server.ExtensionController: handleConnected() | Extension "com.github.friday.ulauncher-gnome-settings" connected
+2025-12-30 22:06:30,507 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event PreferencesEvent to "com.github.friday.ulauncher-gnome-settings"
+2025-12-30 22:06:30,864 | INFO | ulauncher.api.server.ExtensionController: handleConnected() | Extension "com.github.hillaryychan.ulauncher-fzf" connected
+2025-12-30 22:06:30,864 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event PreferencesEvent to "com.github.hillaryychan.ulauncher-fzf"
+2025-12-30 22:06:30,981 | INFO | ulauncher.api.server.ExtensionController: handleConnected() | Extension "com.github.dhelmr.ulauncher-tldr" connected
+2025-12-30 22:06:30,982 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event PreferencesEvent to "com.github.dhelmr.ulauncher-tldr"
+2025-12-30 22:06:31,022 | INFO | ulauncher.api.server.ExtensionController: handleConnected() | Extension "com.github.kcoovi.ulauncher-link-opener" connected
+2025-12-30 22:06:31,023 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event PreferencesEvent to "com.github.kcoovi.ulauncher-link-opener"
+2025-12-30 22:06:31,037 | INFO | ulauncher.api.server.ExtensionController: handleConnected() | Extension "com.github.barathbheeman.vsw-extension" connected
+2025-12-30 22:06:31,038 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event PreferencesEvent to "com.github.barathbheeman.vsw-extension"
+2025-12-30 22:06:31,048 | INFO | ulauncher.api.server.ExtensionController: handleConnected() | Extension "com.github.iboyperson.ulauncher-system" connected
+2025-12-30 22:06:31,049 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event PreferencesEvent to "com.github.iboyperson.ulauncher-system"
+2025-12-30 22:06:31,074 | INFO | ulauncher.api.server.ExtensionController: handleConnected() | Extension "com.github.andr3slelouch.ulauncher-gnome-extensions-prefs" connected
+2025-12-30 22:06:31,077 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event PreferencesEvent to "com.github.andr3slelouch.ulauncher-gnome-extensions-prefs"
+2025-12-30 22:06:31,117 | INFO | ulauncher.api.server.ExtensionController: handleConnected() | Extension "com.github.zensoup.ulauncher-unicode" connected
+2025-12-30 22:06:31,118 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event PreferencesEvent to "com.github.zensoup.ulauncher-unicode"
+2025-12-30 22:06:31,123 | INFO | ulauncher.api.server.ExtensionController: handleConnected() | Extension "com.github.ulauncher.ulauncher-emoji" connected
+2025-12-30 22:06:31,123 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event PreferencesEvent to "com.github.ulauncher.ulauncher-emoji"
+2025-12-30 22:06:31,138 | INFO | ulauncher.api.server.ExtensionController: handleConnected() | Extension "com.github.ulauncher.ulauncher-kill" connected
+2025-12-30 22:06:31,139 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event PreferencesEvent to "com.github.ulauncher.ulauncher-kill"
+2025-12-30 22:06:31,300 | INFO | ulauncher.api.server.ExtensionController: handleConnected() | Extension "com.github.katacarbix.ulauncher-dict-en" connected
+2025-12-30 22:06:31,301 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event PreferencesEvent to "com.github.katacarbix.ulauncher-dict-en"
+2025-12-30 22:19:22,782 | DEBUG | ulauncher.utils.display: get_screens() | Found 2 monitor(s)
+2025-12-30 22:19:22,782 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 2560, H: 1440
+2025-12-30 22:19:22,782 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 1 - X: 363, Y: 1440, W: 1920, H: 1080
+2025-12-30 22:19:22,783 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
+2025-12-30 22:19:23,163 | WARNING | ulauncher.utils.image_loader: check_icon_name() | Icon theme is broken or incomplete. Substituting "utilities-terminal" for "utilities-terminal-symbolic"
+2025-12-30 22:19:23,289 | WARNING | ulauncher.utils.image_loader: check_icon_name() | Icon "jockey" completely missing from icon theme. Consider switching icon theme.
+2025-12-30 22:19:23,289 | INFO | ulauncher.utils.image_loader: check_icon_name() | Falling back on default icon "application-x-executable"
+2025-12-30 22:19:23,384 | WARNING | ulauncher.utils.image_loader: load_image() | Could not load image /home/kalu/Pictures/Wallpapers/PNG/brave-browser-logo.png. E: gdk-pixbuf-error-quark: Couldn’t recognize the image file format for file “/home/kalu/Pictures/Wallpapers/PNG/brave-browser-logo.png” (3)
+2025-12-30 22:19:23,393 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 9 results
+2025-12-30 22:19:23,428 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 5 results
+2025-12-30 22:19:23,602 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event KeywordQueryEvent to "com.github.andr3slelouch.ulauncher-gnome-extensions-prefs"
+2025-12-30 22:19:23,697 | DEBUG | ulauncher.api.server.ExtensionController: handleMessage() | Incoming response (KeywordQueryEvent, RenderResultListAction) from "com.github.andr3slelouch.ulauncher-gnome-extensions-prefs"
+2025-12-30 22:19:23,717 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 10 results
+2025-12-30 22:19:24,330 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 5 results
+2025-12-30 22:19:24,841 | INFO | ulauncher.api.shared.action.LaunchAppAction: run() | Run application Extension Manager (/var/lib/flatpak/exports/share/applications/com.mattjakeman.ExtensionManager.desktop) Exec ['/usr/bin/flatpak', 'run', '--branch=stable', '--arch=x86_64', '--command=extension-manager', '--file-forwarding', 'com.mattjakeman.ExtensionManager', '@@u', '@@']
+2025-12-30 22:19:24,862 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
+2025-12-30 22:32:18,615 | INFO | ulauncher.search.apps.app_watcher: _remove_file() | App was removed (/home/kalu/.local/share/applications/com.github.amezin.ddterm.desktop)
+2025-12-30 22:32:23,995 | INFO | ulauncher.search.apps.app_watcher: _add_file_sync() | New app was added "ddterm" (/home/kalu/.local/share/applications/com.github.amezin.ddterm.desktop)
+2025-12-30 22:32:53,218 | DEBUG | ulauncher.utils.display: get_screens() | Found 2 monitor(s)
+2025-12-30 22:32:53,219 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 2560, H: 1440
+2025-12-30 22:32:53,219 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 1 - X: 363, Y: 1440, W: 1920, H: 1080
+2025-12-30 22:32:53,220 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
+2025-12-30 22:32:53,994 | WARNING | ulauncher.utils.image_loader: check_icon_name() | Icon theme is broken or incomplete. Substituting "utilities-terminal" for "utilities-terminal-symbolic"
+2025-12-30 22:32:54,031 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 9 results
+2025-12-30 22:32:54,110 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 6 results
+2025-12-30 22:32:54,330 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 6 results
+2025-12-30 22:32:54,859 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 3 results
+2025-12-30 22:32:55,377 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 6 results
+2025-12-30 22:32:55,544 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 6 results
+2025-12-30 22:32:55,701 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 9 results
+2025-12-30 22:32:56,444 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
+2025-12-30 22:32:57,771 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 9 results
+2025-12-30 22:32:57,973 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 5 results
+2025-12-30 22:32:58,509 | INFO | ulauncher.api.shared.action.LaunchAppAction: run() | Run application Extension Manager (/var/lib/flatpak/exports/share/applications/com.mattjakeman.ExtensionManager.desktop) Exec ['/usr/bin/flatpak', 'run', '--branch=stable', '--arch=x86_64', '--command=extension-manager', '--file-forwarding', 'com.mattjakeman.ExtensionManager', '@@u', '@@']
+2025-12-30 22:32:58,542 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
+2025-12-30 23:05:32,800 | DEBUG | ulauncher.utils.display: get_screens() | Found 2 monitor(s)
+2025-12-30 23:05:32,801 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 2560, H: 1440
+2025-12-30 23:05:32,801 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 1 - X: 363, Y: 1440, W: 1920, H: 1080
+2025-12-30 23:05:32,801 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
+2025-12-30 23:05:33,313 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 9 results
+2025-12-30 23:05:33,442 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 9 results
+2025-12-30 23:05:33,673 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 4 results
+2025-12-30 23:05:34,986 | INFO | ulauncher.api.shared.action.LaunchAppAction: run() | Run application Spotify (/var/lib/flatpak/exports/share/applications/com.spotify.Client.desktop) Exec ['/usr/bin/flatpak', 'run', '--branch=stable', '--arch=x86_64', '--command=spotify', '--file-forwarding', 'com.spotify.Client', '@@u', '@@']
+2025-12-30 23:05:35,001 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results

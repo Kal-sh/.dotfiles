@@ -1,8 +1,16 @@
-import { Gdk, Gtk, GObject } from '../dependencies/prefs/gi.js';
-import { _ } from '../dependencies/prefs.js';
+'use strict';
 
-import { Layout } from '../common.js';
-import { LayoutRowEntry } from './layoutRowEntry.js';
+const { Gdk, Gio, Gtk, GObject } = imports.gi;
+
+const ExtensionUtils = imports.misc.extensionUtils;
+const Me = ExtensionUtils.getCurrentExtension();
+
+const Layout = Me.imports.src.common.Layout;
+const LayoutRowEntry = Me.imports.src.prefs.layoutRowEntry.LayoutRowEntry;
+
+const Gettext = imports.gettext;
+const Domain = Gettext.domain(Me.metadata.uuid);
+const _ = Domain.gettext;
 
 /**
  * 1 LayoutRow represents 1 Layout in the preference window. It's just instanced
@@ -12,9 +20,9 @@ import { LayoutRowEntry } from './layoutRowEntry.js';
  * { rect, appId, loopType }. The rect is mandatory, the rest not.
  */
 
-export const LayoutRow = GObject.registerClass({
+var LayoutRow = GObject.registerClass({
     GTypeName: 'TilingLayoutRow',
-    Template: import.meta.url.replace(/prefs\/(.*)\.js$/, 'ui/$1.ui'),
+    Template: Gio.File.new_for_path(`${Me.path}/src/ui/layoutRow.ui`).get_uri(),
     InternalChildren: [
         'addRowEntryButton',
         'deleteButton',
@@ -95,7 +103,7 @@ export const LayoutRow = GObject.registerClass({
     }
 
     /**
-     * toggles whether the layout's rects are visible.
+     * toggles wether the layout's rects are visible.
      */
     toggleReveal() {
         this._revealer.reveal_child = !this._revealer.reveal_child;
@@ -131,7 +139,7 @@ export const LayoutRow = GObject.registerClass({
     }
 
     /**
-     * @returns {[boolean, string]} whether the preview was successful and a
+     * @returns {[boolean, string]} wether the preview was successful and a
      *      potential error message.
      */
     _updatePreview() {
@@ -141,7 +149,7 @@ export const LayoutRow = GObject.registerClass({
             this._errorLabel.set_label(errMsg);
             this._drawingArea.set_draw_func(() => {});
         } else {
-            // Draw the actual preview for the rects
+            // Draw the acual preview for the rects
             this._errorLabel.set_label('');
             this._drawingArea.set_draw_func((drawingArea, cr) => {
                 const color = new Gdk.RGBA();
@@ -208,13 +216,13 @@ export const LayoutRow = GObject.registerClass({
 
     _onRowEntryChanged(entry, ok) {
         // ok only is about the change being ok for the *individual* entry
-        // i. e. whether their format is correct
+        // i. e. wether their format is correct
         if (!ok) {
             this.emit('changed', ok);
             return;
         }
 
-        // allOk is about whether the guiEntries are also valid as a whole
+        // allOk is about wether the guiEntries are also valid as a whole
         const [allOk] = this._updatePreview();
         this.emit('changed', allOk);
     }

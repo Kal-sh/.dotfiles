@@ -1,12 +1,13 @@
 /* exported getAppKeybindingGesturePrefsPage */
-import Gtk from 'gi://Gtk';
-import Gio from 'gi://Gio';
-import GLib from 'gi://GLib';
-import GObject from 'gi://GObject';
-import Adw from 'gi://Adw';
-import { ForwardBackKeyBinds } from './settings.js'
-import { registerClass } from './utils/gobject.js'
-import { printStack } from './utils/logging.js'
+const Gtk = imports.gi.Gtk;
+const Gio = imports.gi.Gio;
+const GLib = imports.gi.GLib;
+const GObject = imports.gi.GObject;
+const Adw = imports.gi.Adw;
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+const { ForwardBackKeyBinds } = Me.imports.common.settings;
+const { registerClass } = Me.imports.common.utils.gobject;
+const { printStack } = Me.imports.common.utils.logging;
 
 /** return icon image for give app */
 function getAppIconImage(app) {
@@ -333,7 +334,7 @@ const AppKeybindingGesturePrefsGroup = registerClass(class GIE_AppKeybindingGest
 /**
  * @returns preference page for application gestures
  */
-export function getAppKeybindingGesturePrefsPage(prefsWindow, settings) {
+function getAppKeybindingGesturePrefsPage(prefsWindow, settings) {
 	const page = new Adw.PreferencesPage({
 		title: 'App Gestures',
 		iconName: 'org.gnome.Settings-applications-symbolic',

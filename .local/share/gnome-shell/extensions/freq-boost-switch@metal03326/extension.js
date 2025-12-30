@@ -1,32 +1,57 @@
-import GLib from 'gi://GLib';
-import Clutter from 'gi://Clutter';
-import St from 'gi://St';
-import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import { QuickMenuToggle } from 'resource:///org/gnome/shell/ui/quickSettings.js';
-import { formatTime } from 'resource:///org/gnome/shell/misc/dateUtils.js';
-import { Extension, gettext as _, ngettext } from 'resource:///org/gnome/shell/extensions/extension.js';
-import { asyncCommand, CPU_NOT_SUPPORTED, getBoostState, getMyCpuType, pkexecCommand } from './common.js';
+const {
+	      gi  : { GLib },
+	      ui  : {
+		      main     : {
+			      sessionMode,
+			      panel: { statusArea: { aggregateMenu } }
+		      },
+		      popupMenu: { PopupSeparatorMenuItem, PopupSwitchMenuItem }
+	      },
+	      misc: { extensionUtils }
+      } = imports;
 
-export default class FrequencyBoostSwitch extends Extension {
-	enable()
+const { common } = extensionUtils.getCurrentExtension().imports;
+
+let mySeparator;
+let mySwitch;
+let myMenuConnection;
+let mySwitchConnection;
+let myTimeout;
+let myCpuType = common.CPU_NOT_SUPPORTED;
+let initial   = true;
+let menu;
+
+function init()
+{
+	extensionUtils.initTranslations();
+}
+
+function enable()
+{
+	// GNOME calls enable on every unlock. This code here needs to run only the first time, on user log-in
+	if ( initial )
 	{
-		// GNOME calls enable on every unlock. This code here needs to run only the first time, on user log-in
-		if ( typeof this.cpuType === 'undefined' )
+		// Give time for Power Profiles menu to appear. Also, the same timeout is used for persistent boost set
+		myTimeout = GLib.timeout_add( GLib.PRIORITY_DEFAULT, 5000, _ =>
 		{
+			// Support systems without power-profiles-daemon. Good example is Pop!_OS 22.04 which introduced its own
+			// power profiles switcher, located inside the Power menu
+			menu      = aggregateMenu._powerProfiles?._item.visible ? aggregateMenu._powerProfiles._item.menu : aggregateMenu._power._item.menu;
 			// Things depend on CPU type, so get it before everything else
-			this.cpuType = getMyCpuType();
+			myCpuType = common.getMyCpuType();
 
-			// Proceed only if CPU is supported.
-			if ( this.cpuType !== CPU_NOT_SUPPORTED )
+			if ( myCpuType !== common.CPU_NOT_SUPPORTED )
 			{
-				const state    = getBoostState( this.cpuType );
-				const settings = this.getSettings();
+				const state    = common.getBoostState( myCpuType );
+				const settings = extensionUtils.getSettings();
+
+				// Make sure we do not come here this session
+				initial = false;
 
 				// Turn off if it is on now, user has opted-in for persistence and the last time he turned off Boost
 				if ( state && settings.get_boolean( 'persist' ) && !settings.get_boolean( 'boost' ) )
 				{
-					// Use existing labeling to indicated to the user that boost will be switched any moment now
-					this.setNext( 5000, false );
+					setBoostState( false );
 				}
 				else
 				{
@@ -34,254 +59,107 @@ export default class FrequencyBoostSwitch extends Extension {
 					// 1. Disable Boost
 					// 2. Reboot (this will enable Boost)
 					// 3. Enable Persist (while Boost is on)
-					// User will be prompted to disable Boost since setting is remembered from the last time he
-					// clicked the switch. Clear it here, so that doesn't happen.
+					// 4. Reboot
+					// User will be prompted to disable Boost since setting is remembered from the last time he clicked
+					// the switch. Clear it here, so that doesn't happen.
 					settings.set_boolean( 'boost', state );
 				}
 			}
-			// Otherwise alert the user this extension will not work.
+
+			setupMenu();
+		} );
+	}
+
+	setupMenu();
+}
+
+function disable()
+{
+	// Redundancy. Items are destroyed when menu closes, but still...
+	destroyMyItems();
+
+	if ( myMenuConnection )
+	{
+		menu.disconnect( myMenuConnection );
+	}
+
+	GLib.Source.remove( myTimeout );
+
+	myMenuConnection = myTimeout = null;
+
+	// If user disabled the extension, bring back Boost to on (and save boolean)
+	if ( myCpuType !== common.CPU_NOT_SUPPORTED && sessionMode.currentMode === 'user' && !common.getBoostState( myCpuType ) )
+	{
+		setBoostState( true );
+	}
+}
+
+function setBoostState( state )
+{
+	const settings = extensionUtils.getSettings();
+	// Moved to the set_boost file. Reason - more meaningful pkexec message
+	/*const [ setting, value ] = [
+	 [ 'intel_pstate/no_turbo', Number( !state ) ],
+	 [ 'cpufreq/boost', Number( state ) ]
+	 ][ myCpuType ];
+
+	 GLib.spawn_command_line_async( `pkexec bash -c "echo ${value} > /sys/devices/system/cpu/${setting}"` );*/
+
+	common.pkexecCommand(
+		[
+			extensionUtils.getCurrentExtension().dir.get_child( 'set_boost' ).get_path(),
+			// Subprocess is not happy if we leave those as numbers
+			myCpuType.toString(),
+			Number( state ).toString(),
+			settings.get_string( `epp-${state ? 'on' : 'off'}` ),
+			settings.get_int( `epb-${state ? 'on' : 'off'}` ).toString()
+		] )
+		.then( _ => settings.set_boolean( 'boost', state ) )
+		// We come here if something goes wrong inside the set_boost - we now have 3 things going on there
+		// for Intel CPUs. Setting the Boost is actually last, so if any error occurs, boost will not be changed.
+		// Reflect that on the UI (which is still visible if Polkit rules are added and no dialog appeared)
+		.catch( _ => mySwitch?.setToggleState( !mySwitch.state ) );
+
+	// Destroy init timeout
+	return false;
+}
+
+function setupMenu()
+{
+	if ( myCpuType !== common.CPU_NOT_SUPPORTED )
+	{
+		myMenuConnection = menu.connect( 'open-state-changed', ( { box }, open ) =>
+		{
+			if ( open )
+			{
+				const state = common.getBoostState( myCpuType );
+
+				// Do not add switch if CPU not supported
+				if ( state !== null )
+				{
+					mySeparator = new PopupSeparatorMenuItem;
+					mySwitch    = new PopupSwitchMenuItem( extensionUtils.gettext( 'Frequency Boost' ), state );
+
+					mySwitchConnection = mySwitch.connect( 'toggled', ( { _switch: { state } } ) => setBoostState( state ) );
+
+					box.insert_child_at_index( mySeparator, 0 );
+					box.insert_child_at_index( mySwitch, 0 );
+				}
+			}
 			else
 			{
-				Main.notify( this.metadata.name, _( 'Sorry, your CPU is NOT supported!' ) );
+				destroyMyItems();
 			}
-		}
-		// Timed switch was in progress when user locked the PC - resume
-		else if ( typeof this.nextState !== 'undefined' && this.nextState !== getBoostState( this.cpuType ) )
-		{
-			const now = Date.now();
-
-			// Time hasn't passed
-			if ( now < this.nextIn )
-			{
-				this.setNext( this.nextIn - now, this.nextState );
-			}
-			// Time has finished while the extension was disabled
-			else
-			{
-				this.setBoostState( this.nextState );
-			}
-		}
-
-		if ( this.cpuType !== CPU_NOT_SUPPORTED )
-		{
-			this.toggle = new QuickMenuToggle( {
-				title     : _( 'GHz Boost' ),
-				toggleMode: true
-			} );
-
-			this.toggleClickedConnection = this.toggle.connect( 'clicked', item =>
-			{
-				// Ensure we do not show Until:
-				this.nextState = item.get_checked();
-
-				if ( this.changeBoostTimeout )
-				{
-					// Do not waste CPU time if user manually clicked to toggle the state - remove existing timeout, it
-					// is no longer needed
-					GLib.Source.remove( this.changeBoostTimeout );
-				}
-
-				// If manual toggling, we will not set a new changeBoostTimeout, but next time we come here, we will
-				// try to clear non-existent timeout.
-				this.changeBoostTimeout = null;
-
-				this.setBoostState( this.nextState );
-			} );
-
-			// Get boost state every time user opens the quick menu, to ensure we are in sync
-			this.menuConnection = Main.panel.statusArea.quickSettings.menu.connect( 'open-state-changed', ( menu, isOpen ) => isOpen && this.setToggleState( getBoostState( this.cpuType ) ) );
-
-			Main.panel.statusArea.quickSettings.menu.addItem( this.toggle, 1 );
-
-			// Ensure we are above the background apps menu, if available. Typically, it is not available on login, but
-			// then on unlock it might be, if there is an actual background app.
-			Main.panel.statusArea.quickSettings.menu._grid.set_child_below_sibling(
-				this.toggle,
-				Main.panel.statusArea.quickSettings._backgroundApps?.quickSettingsItems[ 0 ] ?? null
-			);
-		}
-	}
-
-	disable()
-	{
-		this.toggle?.disconnect( this.toggleClickedConnection );
-		this.toggle?.destroy();
-
-		if ( this.menuConnection )
-		{
-			Main.panel.statusArea.quickSettings.menu.disconnect( this.menuConnection );
-		}
-
-		GLib.Source.remove( this.changeBoostTimeout );
-
-		this.toggle = this.menuConnection = this.changeBoostTimeout = this.toggleClickedConnection = null;
-
-		// If user disabled the extension, bring back Boost to on (and save boolean)
-		if ( this.cpuType !== CPU_NOT_SUPPORTED && Main.sessionMode.currentMode === 'user' && !getBoostState( this.cpuType ) )
-		{
-			this.setBoostState( true );
-		}
-	}
-
-	setToggleState( state )
-	{
-		if ( this.toggle )
-		{
-			const settings = this.getSettings();
-
-			this.toggle.iconName = {
-				true : 'power-profile-performance-symbolic',
-				false: 'power-profile-power-saver-symbolic'
-			}[ state ];
-
-			this.toggle.set_checked( state );
-
-			this.toggle[ 'menu-enabled' ] = !settings.get_boolean( 'clean' );
-
-			// Populate the submenu and subtitle only if the user hasn't disabled that
-			if ( this.toggle[ 'menu-enabled' ] )
-			{
-				const onOff = state ? _( 'ON' ) : _( 'OFF' );
-				const STATE = typeof this.nextState === 'undefined' || state === this.nextState ? onOff : _( '{{STATE}}, until {{TIME}}' ).replace( '{{STATE}}', onOff ).replace( '{{TIME}}', formatTime( this.nextIn, { timeOnly: true } ).trim() );
-
-				this.toggle.subtitle = STATE;
-
-				this.toggle.menu.setHeader(
-					this.toggle.iconName,
-					_( 'Frequency Boost' ),
-					_( 'CPU boost is currently {{STATE}}' ).replace( '{{STATE}}', STATE )
-				);
-
-				// Remove all items, since new items can be different
-				this.toggle.menu.removeAll();
-
-				// Add 3 items for timed boost ON/OFF
-				[ 1, 2, 5, 12, 24 ].forEach( hours => this
-					.toggle
-					.menu
-					.addAction(
-						ngettext( 'Turn {{STATE}} for {{HOURS}} hour', 'Turn {{STATE}} for {{HOURS}} hours', hours )
-							.replace( '{{STATE}}', state ? _( 'OFF' ) : _( 'ON' ) )
-							.replace( '{{HOURS}}', hours )
-							.replace( '{{HOURS}}', hours )
-						, _ =>
-						{
-							this.setNext( hours * 60 * 60 * 1000, state );
-
-							this.setBoostState( !state );
-						}
-					) );
-
-				// Add Preferences shortcut icon button
-				this.prefButton = new St.Button( {
-					// Fill all the space after the title
-					x_expand: true,
-					// Unfortunately, this button will be added on the same row as the title element, above the
-					// subtitle element, so even if we set CENTER here, it will not look centered when there is a
-					// subtitle (which is in our case)
-					y_align: Clutter.ActorAlign.CENTER,
-					// At the end of the whole occupied space
-					x_align    : Clutter.ActorAlign.END,
-					style_class: 'fbs-pref-btn'
-				} );
-				this.prefButton.set_child( new St.Icon( {
-					icon_name: 'emblem-system-symbolic',
-					// Do not overshoot, as this will expand the title row, making a gap between title and subtitle
-					icon_size: 16
-				} ) );
-				this.prefButton.connectObject( 'clicked', () =>
-				{
-					// Close the quick settings menu
-					Main.panel.toggleQuickSettings();
-
-					this.openPreferences();
-				}, this );
-				this.toggle.menu.addHeaderSuffix( this.prefButton );
-
-				// Stop the spacer (after our newly added suffix) from expanding. This should be the default after
-				// addHeaderSuffix, IMHO
-				this.toggle.menu._headerSpacer.x_expand = false;
-			}
-		}
-	}
-
-	setBoostState( state )
-	{
-		const settings = this.getSettings();
-		// Moved to the set_boost file. Reason - more meaningful pkexec message
-		/*const [ setting, value ] = [
-		 [ 'intel_pstate/no_turbo', Number( !state ) ],
-		 [ 'cpufreq/boost', Number( state ) ]
-		 ][ cpuType ];
-
-		 GLib.spawn_command_line_async( `pkexec bash -c "echo ${value} > /sys/devices/system/cpu/${setting}"` );*/
-
-		pkexecCommand(
-			[
-				this.dir.get_child( 'set_boost' ).get_path(),
-				// Subprocess is not happy if we leave those as numbers
-				this.cpuType.toString(),
-				Number( state ).toString(),
-				settings.get_string( `epp-${state ? 'on' : 'off'}` ),
-				settings.get_int( `epb-${state ? 'on' : 'off'}` ).toString()
-			] )
-			.then( _ =>
-			{
-				const nextPowerProfile = settings.get_string( `ppd-${state ? 'on' : 'off'}` );
-				const nextTunedProfile = settings.get_string( `tuned-${state ? 'on' : 'off'}` );
-
-				this.setToggleState( state );
-
-				// Do not save the state if it is going to be only temporary
-				if ( typeof this.nextState === 'undefined' || state === this.nextState )
-				{
-					settings.set_boolean( 'boost', state );
-				}
-
-				if ( nextPowerProfile )
-				{
-					asyncCommand( [ 'powerprofilesctl', 'set', nextPowerProfile ] );
-				}
-
-				if ( nextTunedProfile )
-				{
-					asyncCommand( [ 'tuned-adm', 'profile', nextTunedProfile ] );
-				}
-			} )
-			// We come here if something goes wrong inside the set_boost - we now have 3 things going on there
-			// for Intel CPUs. Setting the Boost is actually last, so if any error occurs, boost will not be changed.
-			// Reflect that on the UI (which is still visible if Polkit rules are added and no dialog appeared)
-			.catch( _ => this.toggle?.set_checked( !this.toggle.get_checked() ) );
-	}
-
-	setNext( nextIn, nextState )
-	{
-		// Save nextIn so we can display calculated ", until " to the user
-		this.nextIn = new Date( Date.now() + nextIn );
-		// Save nextState for 2 reasons:
-		// 1. Remove the closure here, which makes future code refactoring easier and garbage collection better.
-		// 2. This controls if we are going to show the ", until " text to the user or not.
-		this.nextState = nextState;
-
-		this.changeBoostTimeout = GLib.timeout_add( GLib.PRIORITY_DEFAULT, nextIn, _ =>
-		{
-			const state = getBoostState( this.cpuType );
-
-			// If something (like an external tool) changed the state, do not toggle it again
-			if ( state !== this.nextState )
-			{
-				this.setBoostState( this.nextState );
-			}
-
-			this.changeBoostTimeout = null;
-
-			// Destroy timeout
-			return false;
 		} );
 	}
 }
 
-function init()
+function destroyMyItems()
 {
-	return new BoostExtension();
+	mySwitch?.disconnect( mySwitchConnection );
+
+	mySeparator?.destroy();
+	mySwitch?.destroy();
+
+	mySeparator = mySwitch = mySwitchConnection = null;
 }

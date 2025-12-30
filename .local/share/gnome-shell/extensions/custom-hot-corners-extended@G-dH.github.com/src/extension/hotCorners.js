@@ -3,44 +3,353 @@
  * Hot Corners
  *
  * @author     GdH <G-dH@github.com>
- * @copyright  2021-2024
+ * @copyright  2021-2023
  * @license    GPL-3.0
  */
 
 'use strict';
 
-import Clutter from 'gi://Clutter';
-import Cogl from 'gi://Cogl';
-import Meta from 'gi://Meta';
-import Shell from 'gi://Shell';
-import GObject from 'gi://GObject';
+const { GObject, GLib, Clutter, Meta, Shell } = imports.gi;
 
-import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import * as Layout from 'resource:///org/gnome/shell/ui/layout.js';
+const Main                   = imports.ui.main;
+const Layout                 = imports.ui.layout;
 
-import * as Settings from '../common/settings.js';
-
-// Cogl.Color replaces Clutter.Color in GS 47
-const Color = Clutter.Color ? Clutter.Color : Cogl.Color;
+const ExtensionUtils         = imports.misc.extensionUtils;
+const Me                     = ExtensionUtils.getCurrentExtension();
+const Utils                  = Me.imports.src.common.utils;
+const Settings               = Me.imports.src.common.settings;
+const ActionTrigger          = Me.imports.src.extension.actionTrigger;
+const PanelButton            = Me.imports.src.extension.panelButton;
 
 const Triggers               = Settings.Triggers;
+const shellVersion           = Settings.shellVersion;
 
-const HOT_CORNER_PRESSURE_TIMEOUT = 1000; // ms
+let chce;
 
-let _chce;
 
-export function init(chce) {
-    _chce = chce;
-}
+var CustomHotCornersExtended = class CustomHotCornersExtended {
+    constructor() {
+        // this._originalHotCornerEnabled;
+        this._mscOptions           = null;
+        this.CORNERS_VISIBLE       = false;
+        this.RIPPLE_ANIMATION      = true;
+        this.BARRIER_FALLBACK      = false;
+        this._myCorners            = [null, null];
+        this._delayId              = 0;
+        this._timeoutsCollector    = [];
+        this._cornersCollector     = [];
+        this._actorsCollector      = [];
+        this._actionTimeoutId      = null;
+        this._extensionEnabled     = false;
+        this._watch                = {};
+        this._origUpdateHotCorners = Main.layoutManager._updateHotCorners;
+        this._listTriggers         = Settings.listTriggers();
+    }
 
-export function cleanGlobals() {
-    _chce = null;
-}
+    enable() {
+        chce = this;
+        this._extensionEnabled = true;
+        this._mscOptions = new Settings.MscOptions();
 
-export const CustomHotCorner = GObject.registerClass(
+        if (!this.actionTrigger)
+            this.actionTrigger = new ActionTrigger.ActionTrigger(this._mscOptions);
+        else
+            this.actionTrigger.actions.resume();
+        this._updateMscOptions(null, true);
+        this._replace_updateHotCornersFunc();
+        this._updateWatch();
+        this._updateSupportedExtensionsAvailability();
+        this._mscOptions.set('showOsdMonitorIndexes', false);
+        this._mscOptions.connect('changed', (settings, key) => this._updateMscOptions(key));
+
+        // this._originalHotCornerEnabled = Main.layoutManager._interfaceSettings.get_boolean('enable-hot-corners');
+
+        let enableDelay;
+        if (this.actionTrigger)
+            enableDelay = 1;
+        else
+            enableDelay = 4;
+
+        // delay shortcuts binding that slows down unlock animation and rebasing extensions
+        // also reset hot corners to be sure they weren't overridden by another extension
+        this._delayId = GLib.timeout_add_seconds(
+            GLib.PRIORITY_DEFAULT,
+            enableDelay,
+            () => {
+                this.actionTrigger._bindShortcuts();
+                this._replace_updateHotCornersFunc();
+                this._delayId = 0;
+                return GLib.SOURCE_REMOVE;
+            }
+        );
+    }
+
+    disable() {
+        if (this._delayId) {
+            GLib.source_remove(this._delayId);
+            this._delayId = 0;
+        }
+        this._timeoutsCollector.forEach(c => GLib.Source.remove(c));
+        this._timeoutsCollector = [];
+        this._watch.timeout = 0;
+
+        this._removeHotCorners();
+        if (this._mscOptions) {
+            this._mscOptions.destroy();
+            this._updateSupportedExtensionsAvailability(true);
+            this._mscOptions = null;
+        }
+
+        // effects and thumbnails should survive screen lock
+        let fullDisable = !(Main.sessionMode.isLocked && Utils.extensionEnabled());
+        if (fullDisable) {
+            if (this.actionTrigger)
+                this.actionTrigger.clean(true);
+            this.actionTrigger = null;
+        } else if (this.actionTrigger) {
+            this.actionTrigger.clean(false);
+        }
+
+        this._extensionEnabled = false;
+
+        // restore original hot corners
+        Main.layoutManager._updateHotCorners = this._origUpdateHotCorners;
+        Main.layoutManager._updateHotCorners();
+
+        this._myCorners = [null, null];
+
+        if (this._panelButton) {
+            this._panelButton.destroy();
+            this._panelButton = null;
+        }
+
+        chce = null;
+    }
+
+    _replace_updateHotCornersFunc() {
+        Main.layoutManager._updateHotCorners = this._updateHotCorners;
+        Main.layoutManager._updateHotCorners();
+    }
+
+    _getEnabledExtensions(uuid = Me.metadata.uuid) {
+        let extensions = [];
+        Main.extensionManager._extensions.forEach(e => {
+            if (e.state === 1 && e.uuid.includes(uuid))
+                extensions.push(e);
+        });
+        return !!extensions.length;
+    }
+
+    _updateSupportedExtensionsAvailability(reset = false) {
+        let supportedExtensions = [];
+        if (!reset) {
+            // test ArcMenu
+            if (global.toggleArcMenu)
+                supportedExtensions.push('arcmenu');
+            // test AATWS
+            const aatws = imports.ui.altTab.WindowSwitcherPopup.prototype;
+            if (aatws._showPopup || aatws.showOrig)
+                supportedExtensions.push('aatws');
+
+            let windowSearchProviderEnabled = false;
+            if (shellVersion >= 40 && Main.overview._overview._controls.layoutManager._searchController._searchResults._providers) {
+                Main.overview._overview._controls.layoutManager._searchController._searchResults._providers.forEach(p => {
+                    if (p.id.includes('open-windows'))
+                        windowSearchProviderEnabled = true;
+                });
+            }
+            if (windowSearchProviderEnabled)
+                supportedExtensions.push('window-search-provider');
+        }
+        this._mscOptions.set('supportedExtensions', supportedExtensions);
+    }
+
+    _updateMscOptions(key, doNotUpdateHC = false) {
+        const actions = this.actionTrigger.actions;
+        if (key === 'show-osd-monitor-indexes')
+            this._updateOsdMonitorIndexes();
+
+        actions.WIN_WRAPAROUND = this._mscOptions.get('winSwitchWrap');
+        actions.WIN_SKIP_MINIMIZED  = this._mscOptions.get('winSkipMinimized');
+        actions.WIN_STABLE_SEQUENCE = this._mscOptions.get('winStableSequence');
+        this.RIPPLE_ANIMATION  = this._mscOptions.get('rippleAnimation');
+
+        if (this.CORNERS_VISIBLE !== this._mscOptions.get('cornersVisible')) {
+            this.CORNERS_VISIBLE = this._mscOptions.get('cornersVisible');
+
+            if (!doNotUpdateHC)
+                this._updateHotCorners();
+        }
+
+        if (this.BARRIER_FALLBACK !==  this._mscOptions.get('barrierFallback')) {
+            this.BARRIER_FALLBACK = this._mscOptions.get('barrierFallback');
+            if (!doNotUpdateHC)
+                this._updateHotCorners();
+        }
+        this._updateWatch();
+
+        if (key === 'buttons-trigger-on-press')
+            this._updateHotCorners();
+
+        if (this._mscOptions.get('enablePanelMenu')) {
+            if (!this._panelButton) {
+                this._panelButton = new PanelButton.MenuButton(this._mscOptions);
+                Main.panel.addToStatusArea('CustomHotCorners', this._panelButton, 0, 'right');
+            }
+        } else if (this._panelButton) {
+            this._panelButton.destroy();
+            this._panelButton = null;
+        }
+    }
+
+    _updateOsdMonitorIndexes() {
+        if (this._mscOptions.get('showOsdMonitorIndexes'))
+            this.actionTrigger.actions._showMonitorIndexesOsd();
+    }
+
+    _removePanelBarrier() {
+        if (Main.layoutManager._rightPanelBarrier) {
+            Main.layoutManager._rightPanelBarrier.destroy();
+            Main.layoutManager._rightPanelBarrier = null;
+        }
+    }
+
+    _updateHotCorners() {
+        // when the layout manager calls this function as a callback with its own 'this', we need to override it by chce
+        chce._removeHotCorners();
+        Main.layoutManager.hotCorners = [];
+        chce._updateWatchedCorners();
+
+        // corners can be temporarily disabled from panel menu
+        const cornersDisabled = !chce._mscOptions.get('hotCornersEnabled', true);
+        if (cornersDisabled)
+            return;
+
+        let primaryIndex = Main.layoutManager.primaryIndex;
+        // avoid creating new corners if this extension is disabled...
+        // ...since this method overrides the original one in GS and something can call it
+        if (!chce._extensionEnabled)
+            return;
+
+        let monIndexes = [...Main.layoutManager.monitors.keys()];
+        // index of the primary monitor to the first position
+        monIndexes.splice(0, 0, monIndexes.splice(primaryIndex, 1)[0]);
+
+        for (let i = 0; i < Main.layoutManager.monitors.length; ++i) {
+            // Monitor 1 in preferences will always refer to the primary monitor
+            const corners = Settings.Corner.forMonitor(i, monIndexes[i], global.display.get_monitor_geometry(monIndexes[i]));
+            chce._setExpansionLimits(corners);
+
+            for (let corner of corners) {
+                chce._cornersCollector.push(corner);
+
+                for (let trigger of chce._listTriggers) {
+                    // Update hot corner if something changes
+                    // corner has it's own connect method defined in settings, this is not direct gsettings connect
+                    // corner.connect('changed', (settings, key) => chce._updateCorner(corner, key, trigger), trigger);
+                    corner.connect('changed', chce._updateHotCorners, trigger);
+                }
+                if (chce._shouldExistHotCorner(corner)) {
+                    Main.layoutManager.hotCorners.push(new CustomHotCorner(corner, chce));
+                    chce._updateWatchedCorners();
+                    if (i === 0 && corner.top && !corner.left)
+                        chce._removePanelBarrier();
+                }
+            }
+        }
+    }
+
+    _removeHotCorners() {
+        this._cornersCollector.forEach(c => c.destroy());
+        this._cornersCollector = [];
+
+        Main.layoutManager.hotCorners.forEach(c => c && c.destroy());
+        Main.layoutManager.hotCorners = [];
+        this._updateWatchedCorners();
+
+        // when some other extension steal my hot corners I still need to be able to destroy all actors I made
+        this._actorsCollector.filter(a => a).forEach(a => a.destroy());
+        this._actorsCollector = [];
+    }
+
+    _setExpansionLimits(corners) {
+        const cornerOrder = [0, 1, 3, 2];
+        for (let i = 0; i < corners.length; i++) {
+            let prevCorner = (i + corners.length - 1) % corners.length;
+            let nextCorner = (i + 1) % corners.length;
+            prevCorner = corners[cornerOrder[prevCorner]];
+            nextCorner = corners[cornerOrder[nextCorner]];
+            let corner = corners[cornerOrder[i]];
+
+            if ((corner.left && prevCorner.left) || (!corner.left && !prevCorner.left)) {
+                corner.fullExpandVertical   = !prevCorner.get('vExpand');
+                corner.fullExpandHorizontal = !nextCorner.get('hExpand');
+            } else if ((corner.top && prevCorner.top) || (!corner.top && !prevCorner.top)) {
+                corner.fullExpandVertical   = !nextCorner.get('vExpand');
+                corner.fullExpandHorizontal = !prevCorner.get('hExpand');
+            }
+        }
+    }
+
+    _shouldExistHotCorner(corner) {
+        let answer = false;
+        for (let trigger of chce._listTriggers)
+            answer = answer || (corner.action[trigger] !== 'disabled');
+
+        return answer;
+    }
+
+    _updateWatch() {
+        this._watch.active = this._mscOptions.get('watchCorners');
+        if (this._watch.active && !this._watch.timeout) {
+            this._watch.timeout = GLib.timeout_add(
+                GLib.PRIORITY_DEFAULT,
+                3000,
+                () => {
+                    // some extensions can replace the function (Dash to Panel)
+                    if (Main.layoutManager._updateHotCorners !== this._updateHotCorners) {
+                        Main.layoutManager._updateHotCorners = this._updateHotCorners;
+                        this._updateHotCorners();
+                        log('_updateWatch: updateHotCorners function had to be updated because of external override');
+                    }
+
+                    let cornersChanged = false;
+                    this._myCorners[0].forEach(c => {
+                        cornersChanged = cornersChanged || !Main.layoutManager.hotCorners.includes(c);
+                    });
+                    if (cornersChanged) {
+                        this._updateHotCorners();
+                        log(Me.metadata.name, 'Hot Corners had to be updated because of external override');
+                        return this._watch.active;
+                    }
+                    // some extensions (ArcMenu) can modify pressure barrier triggers, which normally just emits a triggered event
+                    if (this._myCorners[1] && Main.layoutManager.hotCorners[0] && Main.layoutManager.hotCorners[0]._pressureBarrier._trigger !== this._myCorners[1]) {
+                        this._updateHotCorners();
+                        log(Me.metadata.name, 'Hot Corners had to be updated because of external override');
+                    }
+                    if (!this._watch.active) {
+                        this._timeoutsCollector.splice(this._timeoutsCollector.indexOf(this._watch.timeout), 1);
+                        this._watch.timeout = null;
+                    }
+
+                    return this._watch.active;
+                }
+            );
+            this._timeoutsCollector.push(this._watch.timeout);
+        }
+    }
+
+    _updateWatchedCorners() {
+        this._myCorners[0] = [...Main.layoutManager.hotCorners];
+        this._myCorners[1] = Main.layoutManager.hotCorners[0] ? Main.layoutManager.hotCorners[0]._pressureBarrier._trigger : null;
+    }
+};
+
+const CustomHotCorner = GObject.registerClass(
 class CustomHotCorner extends Layout.HotCorner {
     _init(corner) {
-        this._chce = _chce;
+        this._chce = chce;
+        this._listTriggers = Settings.listTriggers();
         this._lastActionTime = 0;
         this._mscOptions = this._chce._mscOptions;
         let monitor = Main.layoutManager.monitors[corner.monitorIndex];
@@ -50,12 +359,11 @@ class CustomHotCorner extends Layout.HotCorner {
         this._monitor = monitor;
         this._actors  = [];
         this._corner.hotCornerExists = true;
-        this._listTriggers = Settings.listTriggers();
 
         if (this._hotCornerEnabled() && !this._chce.BARRIER_FALLBACK) {
             this._pressureBarrier = new Layout.PressureBarrier(
                 corner.get('pressureThreshold'),
-                HOT_CORNER_PRESSURE_TIMEOUT,
+                Layout.HOT_CORNER_PRESSURE_TIMEOUT,
                 Shell.ActionMode.NORMAL | Shell.ActionMode.OVERVIEW
             );
             this.setBarrierSize([corner.get('barrierSizeH'), corner.get('barrierSizeV')], false);
@@ -79,7 +387,7 @@ class CustomHotCorner extends Layout.HotCorner {
     _onDestroy() {
         this.setBarrierSize([0, 0], false);
         this._actors.forEach(actor => {
-            _chce._actorsCollector.splice(_chce._actorsCollector.indexOf(actor), 1);
+            chce._actorsCollector.splice(chce._actorsCollector.indexOf(actor), 1);
             actor.destroy();
         });
 
@@ -110,50 +418,25 @@ class CustomHotCorner extends Layout.HotCorner {
             let x = this._corner.x;
             if (!Meta.is_wayland_compositor() && !this._corner.left && !this._barrierCollision()['x'])
                 x += 1;
-
-            // GS 46+ replaced the Meta.Barrier.display property with backend
-            if (Meta.Barrier.prototype.backend) {
-                this._verticalBarrier = new Meta.Barrier({
-                    backend: global.backend,
-                    x1: x,
-                    x2: x,
-                    y1: this._corner.y,
-                    y2: this._corner.top ? this._corner.y + sizeV : this._corner.y - sizeV,
-                    directions: this._corner.left ? BD.POSITIVE_X : BD.NEGATIVE_X,
-                });
-            } else {
-                this._verticalBarrier = new Meta.Barrier({
-                    display: global.display,
-                    x1: x,
-                    x2: x,
-                    y1: this._corner.y,
-                    y2: this._corner.top ? this._corner.y + sizeV : this._corner.y - sizeV,
-                    directions: this._corner.left ? BD.POSITIVE_X : BD.NEGATIVE_X,
-                });
-            }
+            this._verticalBarrier = new Meta.Barrier({
+                display: global.display,
+                x1: x,
+                x2: x,
+                y1: this._corner.y,
+                y2: this._corner.top ? this._corner.y + sizeV : this._corner.y - sizeV,
+                directions: this._corner.left ? BD.POSITIVE_X : BD.NEGATIVE_X,
+            });
             let y = this._corner.y;
             if (!Meta.is_wayland_compositor() && !this._corner.top && !this._barrierCollision()['y'])
                 y += 1;
-
-            if (Meta.Barrier.prototype.backend) {
-                this._horizontalBarrier = new Meta.Barrier({
-                    backend: global.backend,
-                    x1: this._corner.x,
-                    x2: this._corner.left ? this._corner.x + sizeH : this._corner.x - sizeH,
-                    y1: y,
-                    y2: y,
-                    directions: this._corner.top ? BD.POSITIVE_Y : BD.NEGATIVE_Y,
-                });
-            } else {
-                this._horizontalBarrier = new Meta.Barrier({
-                    display: global.display,
-                    x1: this._corner.x,
-                    x2: this._corner.left ? this._corner.x + sizeH : this._corner.x - sizeH,
-                    y1: y,
-                    y2: y,
-                    directions: this._corner.top ? BD.POSITIVE_Y : BD.NEGATIVE_Y,
-                });
-            }
+            this._horizontalBarrier = new Meta.Barrier({
+                display: global.display,
+                x1: this._corner.x,
+                x2: this._corner.left ? this._corner.x + sizeH : this._corner.x - sizeH,
+                y1: y,
+                y2: y,
+                directions: this._corner.top ? BD.POSITIVE_Y : BD.NEGATIVE_Y,
+            });
 
             this._pressureBarrier.addBarrier(this._verticalBarrier);
             this._pressureBarrier.addBarrier(this._horizontalBarrier);
@@ -190,7 +473,7 @@ class CustomHotCorner extends Layout.HotCorner {
             width: sizeH,
             height: 1,
             reactive: false,
-            background_color: new Color({
+            background_color: new Clutter.Color({
                 red:   0,
                 green: 255,
                 blue:  0,
@@ -204,7 +487,7 @@ class CustomHotCorner extends Layout.HotCorner {
             actorH = null;
         });
 
-        Main.layoutManager.addTopChrome(actorH);
+        Main.layoutManager.addChrome(actorH);
         this._chce._actorsCollector.push(actorH);
         this._actors.push(actorH);
 
@@ -216,7 +499,7 @@ class CustomHotCorner extends Layout.HotCorner {
             width: 1,
             height: sizeV,
             reactive: false,
-            background_color: new Color({
+            background_color: new Clutter.Color({
                 red:   0,
                 green: 255,
                 blue:  0,
@@ -229,7 +512,7 @@ class CustomHotCorner extends Layout.HotCorner {
             actorV = null;
         });
 
-        Main.layoutManager.addTopChrome(actorV);
+        Main.layoutManager.addChrome(actorV);
         this._chce._actorsCollector.push(actorV);
         this._actors.push(actorV);
     }
@@ -265,7 +548,7 @@ class CustomHotCorner extends Layout.HotCorner {
             width: hSize,
             height: aSize,
             reactive: true,
-            background_color: new Color({
+            background_color: new Clutter.Color({
                 red:   255,
                 green: 120,
                 blue:  0,
@@ -278,7 +561,7 @@ class CustomHotCorner extends Layout.HotCorner {
         this._actor.connect('destroy', () => {
             this._actor = null;
         });
-        layoutManager.addTopChrome(this._actor);
+        layoutManager.addChrome(this._actor);
         this._chce._actorsCollector.push(this._actor);
         this._actors.push(this._actor);
 
@@ -292,7 +575,7 @@ class CustomHotCorner extends Layout.HotCorner {
                 width: aSize,
                 height: vSize,
                 reactive: true,
-                background_color: new Color({
+                background_color: new Clutter.Color({
                     red:   255,
                     green: 120,
                     blue:  0,
@@ -304,12 +587,13 @@ class CustomHotCorner extends Layout.HotCorner {
             this._actorV.connect('destroy', () => {
                 this._actorV = null;
             });
-            layoutManager.addTopChrome(this._actorV);
+            layoutManager.addChrome(this._actorV);
             this._chce._actorsCollector.push(this._actorV);
             this._actors.push(this._actorV);
         }
         // Fallback hot corners as a part of base actor
-        if (this._corner.get('action', Triggers.PRESSURE) !== 'disabled' && this._chce.BARRIER_FALLBACK) {
+        if (this._corner.get('action', Triggers.PRESSURE) !== 'disabled' &&
+            (!global.display.supports_extended_barriers() || this._chce.BARRIER_FALLBACK)) {
             let fSize = 3;
             this._cornerActor = new Clutter.Actor({
                 name:     'hot-corner',
@@ -319,7 +603,7 @@ class CustomHotCorner extends Layout.HotCorner {
                 height:   fSize,
                 reactive: true,
                 visible:  true,
-                background_color: new Color({
+                background_color: new Clutter.Color({
                     red:   0,
                     green: 255,
                     blue:  0,
@@ -343,7 +627,7 @@ class CustomHotCorner extends Layout.HotCorner {
 
     _shouldCreateActor() {
         for (let trigger of this._listTriggers) {
-            if (trigger === Triggers.PRESSURE && !this._chce.BARRIER_FALLBACK)
+            if (trigger === Triggers.PRESSURE && (global.display.supports_extended_barriers() && !this._chce.BARRIER_FALLBACK))
                 continue;
             if (this._corner.get('action', trigger) !== 'disabled')
                 return true;

@@ -1,11 +1,12 @@
 /* exported subscribe, unsubscribeAll, drop_proxy */
-import Clutter from 'gi://Clutter';
-import Gio from 'gi://Gio';
-import GObject from 'gi://GObject';
+const Clutter = imports.gi.Clutter;
+const Gio = imports.gi.Gio;
+const GObject = imports.gi.GObject;
 
-import { registerClass } from '../../common/utils/gobject.js'
-import { printStack } from '../../common/utils/logging.js'
-import * as Util from 'resource:///org/gnome/shell/misc/util.js';
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+const { registerClass } = Me.imports.common.utils.gobject;
+const { printStack } = Me.imports.common.utils.logging;
+const Util = imports.misc.util;
 const X11GestureDaemonXml = `<node>
 	<interface name="org.gestureImprovements.gestures">
 		<signal name="TouchpadSwipe">
@@ -125,7 +126,7 @@ function GenerateEvent(typ, sphase, fingers, time, params) {
 let proxy;
 let connectedSignalIds = [];
 
-export function subscribe(callback) {
+function subscribe(callback) {
 	if (!proxy) {
 		printStack('starting dbus service \'gesture_improvements_gesture_daemon.service\' via spawn');
 		Util.spawn(['systemctl', '--user', 'start', 'gesture_improvements_gesture_daemon.service']);
@@ -149,14 +150,14 @@ export function subscribe(callback) {
 	}));
 }
 
-export function unsubscribeAll() {
+function unsubscribeAll() {
 	if (proxy) {
 		connectedSignalIds.forEach(id => proxy === null || proxy === void 0 ? void 0 : proxy.disconnect(id));
 		connectedSignalIds = [];
 	}
 }
 
-export function drop_proxy() {
+function drop_proxy() {
 	if (proxy) {
 		unsubscribeAll();
 		proxy.dropProxy();

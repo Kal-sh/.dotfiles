@@ -1,17 +1,18 @@
 /* exported TouchpadSwipeGesture, createSwipeTracker */
-import Clutter from 'gi://Clutter';
-import GObject from 'gi://GObject';
-import Meta from 'gi://Meta';
-import Shell from 'gi://Shell';
+const Clutter = imports.gi.Clutter;
+const GObject = imports.gi.GObject;
+const Meta = imports.gi.Meta;
+const Shell = imports.gi.Shell;
 
-import { registerClass } from '../common/utils/gobject.js'
-import { TouchpadConstants } from '../constants.js'
-import * as DBusUtils from './utils/dbus.js'
-import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import { SwipeTracker } from 'resource:///org/gnome/shell/ui/swipeTracker.js';
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+const { registerClass } = Me.imports.common.utils.gobject;
+const { TouchpadConstants } = Me.imports.constants;
+const DBusUtils = Me.imports.src.utils.dbus;
+const Main = imports.ui.main;
+const { SwipeTracker } = imports.ui.swipeTracker;
 
 // define enum
-export var TouchpadState;
+var TouchpadState;
 (function (TouchpadState) {
 	TouchpadState[TouchpadState['NONE'] = 0] = 'NONE';
 	TouchpadState[TouchpadState['PENDING'] = 1] = 'PENDING';
@@ -19,7 +20,7 @@ export var TouchpadState;
 	TouchpadState[TouchpadState['IGNORED'] = 3] = 'IGNORED';
 })(TouchpadState || (TouchpadState = {}));
 
-export var TouchpadSwipeGesture = registerClass({
+var TouchpadSwipeGesture = registerClass({
 	Properties: {
 		'enabled': GObject.ParamSpec.boolean('enabled', 'enabled', 'enabled', GObject.ParamFlags.READWRITE, true),
 		'orientation': GObject.ParamSpec.enum('orientation', 'orientation', 'orientation', GObject.ParamFlags.READWRITE, Clutter.Orientation, Clutter.Orientation.HORIZONTAL),
@@ -208,7 +209,7 @@ export var TouchpadSwipeGesture = registerClass({
 	}
 });
 
-export function createSwipeTracker(actor, nfingers, allowedModes, orientation, followNaturalScroll = true, gestureSpeed = 1, params) {
+function createSwipeTracker(actor, nfingers, allowedModes, orientation, followNaturalScroll = true, gestureSpeed = 1, params) {
 	var _a, _b, _c;
 	params = params !== null && params !== void 0 ? params : {};
 	params.allowDrag = (_a = params.allowDrag) !== null && _a !== void 0 ? _a : false;

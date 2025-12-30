@@ -1,46 +1,49 @@
 "use strict";
 
 const Signals = imports.signals;
+const ExtensionUtils = imports.misc.extensionUtils;
 
-import { ModuleBase } from "./ModuleBase.js";
-import { logDebug } from "../utils.js";
+const Me = ExtensionUtils.getCurrentExtension();
 
-export class Settings extends ModuleBase {
-  constructor(extension) {
-    super(extension);
+const { logDebug } = Me.imports.utils;
 
-    this.gSettings = this.extension.getSettings();
+var Settings = class {
+  constructor(signalManager) {
+    this._signalManager = signalManager;
+
+    this.gSettings = ExtensionUtils.getSettings();
   }
 
   enable() {
-    this.#createConnections();
+    this._createConnections();
+  }
+
+  _createConnections() {
+    logDebug("Creating connections for Settings...");
+
+    this._createConnection("bedtime-mode-active", this._onBedtimeModeActiveChanged.name);
+    this._createConnection("automatic-schedule", this._onAutomaticScheduleChanged.name);
+    this._createConnection("ondemand-button-visibility", this._onButtonVisibilityChanged.name);
+    this._createConnection("ondemand-button-location", this._onButtonLocationChanged.name);
+    this._createConnection("ondemand-button-bar-manual-position", this._onButtonBarManualPositionChanged.name);
+    this._createConnection("ondemand-button-bar-position-value", this._onButtonBarPositionValueChanged.name);
+    this._createConnection("ondemand-button-bar-onoff-indicator", this._onButtonBarOnOffIndicatorChanged.name);
+    this._createConnection("ondemand-button-bar-scroll-enabled", this._onButtonBarScrollEnabledChanged.name);
+    this._createConnection("schedule-start-hours", this._onScheduleTimesChanged.name);
+    this._createConnection("schedule-start-minutes", this._onScheduleTimesChanged.name);
+    this._createConnection("schedule-end-hours", this._onScheduleTimesChanged.name);
+    this._createConnection("schedule-end-minutes", this._onScheduleTimesChanged.name);
+    this._createConnection("color-tone-preset", this._onColorTonePresetChanged.name);
+    this._createConnection("color-tone-factor", this._onColorToneFactorChanged.name);
+  }
+
+  _createConnection(settingsKey, handlerName) {
+    this._signalManager.connect(this, this.gSettings, `changed::${settingsKey}`, handlerName);
   }
 
   disable() {
+    this._signalManager = null;
     this.gSettings = null;
-  }
-
-  #createConnections() {
-    logDebug("Creating connections for Settings...");
-
-    this.#createConnection("bedtime-mode-active", this.onBedtimeModeActiveChanged.name);
-    this.#createConnection("automatic-schedule", this.onAutomaticScheduleChanged.name);
-    this.#createConnection("ondemand-button-visibility", this.onButtonVisibilityChanged.name);
-    this.#createConnection("ondemand-button-location", this.onButtonLocationChanged.name);
-    this.#createConnection("ondemand-button-bar-manual-position", this.onButtonBarManualPositionChanged.name);
-    this.#createConnection("ondemand-button-bar-position-value", this.onButtonBarPositionValueChanged.name);
-    this.#createConnection("ondemand-button-bar-onoff-indicator", this.onButtonBarOnOffIndicatorChanged.name);
-    this.#createConnection("ondemand-button-bar-scroll-enabled", this.onButtonBarScrollEnabledChanged.name);
-    this.#createConnection("schedule-start-hours", this.onScheduleTimesChanged.name);
-    this.#createConnection("schedule-start-minutes", this.onScheduleTimesChanged.name);
-    this.#createConnection("schedule-end-hours", this.onScheduleTimesChanged.name);
-    this.#createConnection("schedule-end-minutes", this.onScheduleTimesChanged.name);
-    this.#createConnection("color-tone-preset", this.onColorTonePresetChanged.name);
-    this.#createConnection("color-tone-factor", this.onColorToneFactorChanged.name);
-  }
-
-  #createConnection(settingsKey, handlerName) {
-    this.createConnection(this.gSettings, `changed::${settingsKey}`, handlerName);
   }
 
   get bedtimeModeActive() {
@@ -111,47 +114,47 @@ export class Settings extends ModuleBase {
     value !== this.colorToneFactor && this.gSettings.set_int("color-tone-factor", value);
   }
 
-  onBedtimeModeActiveChanged() {
+  _onBedtimeModeActiveChanged() {
     logDebug(`Bedtime Mode Active changed to '${this.bedtimeModeActive}'`);
     this.emit("bedtime-mode-active-changed", this.bedtimeModeActive);
   }
 
-  onAutomaticScheduleChanged() {
+  _onAutomaticScheduleChanged() {
     logDebug(`Automatic Schedule changed to '${this.automaticSchedule}'`);
     this.emit("automatic-schedule-changed", this.automaticSchedule);
   }
 
-  onButtonLocationChanged() {
+  _onButtonLocationChanged() {
     logDebug(`Button Location changed to '${this.buttonLocation}'`);
     this.emit("button-location-changed", this.buttonLocation);
   }
 
-  onButtonVisibilityChanged() {
+  _onButtonVisibilityChanged() {
     logDebug(`Button Visibility changed to '${this.buttonVisibility}'`);
     this.emit("button-visibility-changed", this.buttonVisibility);
   }
 
-  onButtonBarManualPositionChanged() {
+  _onButtonBarManualPositionChanged() {
     logDebug(`Button Bar Manual Position changed to '${this.buttonBarManualPosition}'`);
     this.emit("button-bar-manual-position-changed", this.buttonBarManualPosition);
   }
 
-  onButtonBarPositionValueChanged() {
+  _onButtonBarPositionValueChanged() {
     logDebug(`Button Bar Position Value changed to '${this.buttonBarPositionValue}'`);
     this.emit("button-bar-position-value-changed", this.buttonBarPositionValue);
   }
 
-  onButtonBarOnOffIndicatorChanged() {
+  _onButtonBarOnOffIndicatorChanged() {
     logDebug(`Button Bar On/Off Indicator changed to '${this.buttonBarOnOffIndicator}'`);
     this.emit("button-bar-onoff-indicator-changed", this.buttonBarOnOffIndicator);
   }
 
-  onButtonBarScrollEnabledChanged() {
+  _onButtonBarScrollEnabledChanged() {
     logDebug(`Button Bar Scroll Enabled changed to '${this.buttonBarScrollEnabled}'`);
     this.emit("button-bar-scroll-enabled-changed", this.buttonBarScrollEnabled);
   }
 
-  onScheduleTimesChanged() {
+  _onScheduleTimesChanged() {
     const start = `Start=${this.scheduleStartHours}:${this.scheduleStartMinutes}`;
     const end = `End=${this.scheduleEndHours}:${this.scheduleEndMinutes}`;
     logDebug(`Schedule Times changed to: ${start} ${end}`);
@@ -159,15 +162,15 @@ export class Settings extends ModuleBase {
     this.emit("schedule-times-changed", {});
   }
 
-  onColorTonePresetChanged() {
+  _onColorTonePresetChanged() {
     logDebug(`Color Tone Preset changed to '${this.colorTonePreset}'`);
     this.emit("color-tone-preset-changed", this.colorTonePreset);
   }
 
-  onColorToneFactorChanged() {
+  _onColorToneFactorChanged() {
     logDebug(`Color Tone Factor changed to '${this.colorToneFactor}'`);
     this.emit("color-tone-factor-changed", this.colorToneFactor);
   }
-}
+};
 
 Signals.addSignalMethods(Settings.prototype);

@@ -3,27 +3,45 @@
  * Utils
  *
  * @author     GdH <G-dH@github.com>
- * @copyright  2021-2024
+ * @copyright  2021-2022
  * @license    GPL-3.0
  */
 
 'use strict';
 
-import Gio from 'gi://Gio';
+const { Gio } = imports.gi;
 
-let Me;
+const ExtensionUtils = imports.misc.extensionUtils;
+const Me             = ExtensionUtils.getCurrentExtension();
 
-export function init(extension) {
-    Me = extension;
+const Config         = imports.misc.config;
+const shellVersion   = parseFloat(Config.PACKAGE_VERSION);
+
+
+// conversion of Gtk3 / Gtk4 widgets add methods
+var append = shellVersion < 40 ? 'add' : 'append';
+var setChild = shellVersion < 40 ? 'add' : 'set_child';
+
+function newImageFromIconName(Gtk, name, size = null) {
+    const args = shellVersion >= 40 ? [name] : [name, size];
+    return Gtk.Image.new_from_icon_name(...args);
 }
 
-export function cleanGlobals() {
-    Me = null;
+function setImageFromIconName(widget, name, size = null) {
+    const args = shellVersion >= 40 ? [name] : [name, size];
+    widget.set_from_icon_name(...args);
+}
+
+function setBtnFromIconName(Gtk, btnWidget, iconName, size) {
+    if (btnWidget.set_icon_name)
+        btnWidget.set_icon_name(iconName);
+    else
+        btnWidget.add(Gtk.Image.new_from_icon_name(iconName, size));
 }
 
 // this module must be compatible with prefs, so Main.extensionManager is not usable
 // This function is only needed when prefs window is opened while extension is disabled
-export function extensionEnabled(uuid = Me.metadata.uuid) {
+function extensionEnabled(uuid = Me.metadata.uuid) {
     const settings = new Gio.Settings({ schema_id: 'org.gnome.shell' });
 
     let enabled = false;
@@ -40,16 +58,16 @@ export function extensionEnabled(uuid = Me.metadata.uuid) {
     return enabled/* && !disabled*/ && !disableUser;
 }
 
-export function isSupportedExtensionDetected(extensionName) {
-    const settings = Me.getSettings('org.gnome.shell.extensions.custom-hot-corners-extended.misc');
+function isSupportedExtensionDetected(extensionName) {
+    const settings = ExtensionUtils.getSettings('org.gnome.shell.extensions.custom-hot-corners-extended.misc');
     return settings.get_strv('supported-active-extensions').includes(extensionName);
 }
 
-export function bold(label) {
+function bold(label) {
     return `<b>${label}</b>`;
 }
 
-export function getIconPath() {
+function getIconPath() {
     const colorAccents = ['red', 'bark', 'sage', 'olive', 'viridian', 'prussiangreen', 'blue', 'purple', 'magenta'];
     const theme = new Gio.Settings({ schema_id: 'org.gnome.desktop.interface' }).get_string('gtk-theme');
     const themeSplit = theme.split('-');

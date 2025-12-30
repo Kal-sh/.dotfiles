@@ -2,39 +2,41 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import GObject from 'gi://GObject';
-import Gio from 'gi://Gio';
-import Gtk from 'gi://Gtk';
+'use strict';
 
-import { bind_widgets, ui_file_uri } from './util.js';
+const GObject = imports.gi.GObject;
+const Gio = imports.gi.Gio;
+const Gtk = imports.gi.Gtk;
 
-export const CompatibilityWidget = GObject.registerClass({
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+const { bind_widgets, ui_file_uri } = Me.imports.ddterm.pref.util;
+
+var CompatibilityWidget = GObject.registerClass({
     GTypeName: 'DDTermPrefsCompatibility',
     Template: ui_file_uri('prefs-compatibility.ui'),
     Children: [
-        'ambiguous_width_combo',
         'backspace_binding_combo',
         'delete_binding_combo',
-        'reset_button',
+        'ambiguous_width_combo',
     ],
     Properties: {
         'settings': GObject.ParamSpec.object(
             'settings',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
             Gio.Settings
         ),
-        'gettext-domain': GObject.ParamSpec.jsobject(
-            'gettext-domain',
-            null,
-            null,
+        'gettext-context': GObject.ParamSpec.jsobject(
+            'gettext-context',
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY
         ),
     },
 }, class PrefsCompatibility extends Gtk.Grid {
-    constructor(params) {
-        super(params);
+    _init(params) {
+        super._init(params);
 
         bind_widgets(this.settings, {
             'backspace-binding': this.backspace_binding_combo,
@@ -42,21 +44,24 @@ export const CompatibilityWidget = GObject.registerClass({
             'cjk-utf8-ambiguous-width': this.ambiguous_width_combo,
         });
 
-        this.connect('realize', () => {
-            const reset_handler = this.reset_button.connect('clicked', () => {
-                this.settings.reset('backspace-binding');
-                this.settings.reset('delete-binding');
-                this.settings.reset('cjk-utf8-ambiguous-width');
-            });
-
-            const unrealize_handler = this.connect('unrealize', () => {
-                this.disconnect(unrealize_handler);
-                this.reset_button.disconnect(reset_handler);
-            });
+        const reset_action = new Gio.SimpleAction({
+            name: 'reset-compatibility-options',
         });
+
+        reset_action.connect('activate', () => {
+            this.settings.reset('backspace-binding');
+            this.settings.reset('delete-binding');
+            this.settings.reset('cjk-utf8-ambiguous-width');
+        });
+
+        const aux_actions = new Gio.SimpleActionGroup();
+        aux_actions.add_action(reset_action);
+        this.insert_action_group('aux', aux_actions);
     }
 
     get title() {
-        return this.gettext_domain.gettext('Compatibility');
+        return this.gettext_context.gettext('Compatibility');
     }
 });
+
+/* exported CompatibilityWidget */

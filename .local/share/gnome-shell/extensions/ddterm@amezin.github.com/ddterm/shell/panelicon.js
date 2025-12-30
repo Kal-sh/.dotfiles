@@ -1,24 +1,24 @@
 // SPDX-FileCopyrightText: 2021 Aleksandr Mezin <mezin.alexander@gmail.com>
-// SPDX-FileContributor: Pedro Sader Azevedo
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import GObject from 'gi://GObject';
-import Gio from 'gi://Gio';
-import Atk from 'gi://Atk';
-import Clutter from 'gi://Clutter';
-import St from 'gi://St';
+'use strict';
 
-import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
-import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
+const GObject = imports.gi.GObject;
+const Atk = imports.gi.Atk;
+const Clutter = imports.gi.Clutter;
+const St = imports.gi.St;
+
+const Main = imports.ui.main;
+const PanelMenu = imports.ui.panelMenu;
+const PopupMenu = imports.ui.popupMenu;
 
 const PanelIconBase = GObject.registerClass({
     Properties: {
         'active': GObject.ParamSpec.boolean(
             'active',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.EXPLICIT_NOTIFY,
             false
         ),
@@ -27,13 +27,13 @@ const PanelIconBase = GObject.registerClass({
         'open-preferences': {},
     },
 }, class DDTermPanelIconBase extends PanelMenu.Button {
-    _init(dontCreateMenu, icon, gettext_domain) {
-        super._init(0.5, gettext_domain.gettext('ddterm'), dontCreateMenu);
+    _init(dontCreateMenu, gettext_context) {
+        super._init(null, gettext_context.gettext('ddterm'), dontCreateMenu);
 
         this.name = 'ddterm-panel-icon';
 
         this.add_child(new St.Icon({
-            gicon: icon,
+            icon_name: 'utilities-terminal',
             style_class: 'system-status-icon',
         }));
     }
@@ -41,11 +41,11 @@ const PanelIconBase = GObject.registerClass({
 
 const PanelIconPopupMenu = GObject.registerClass({
 }, class DDTermPanelIconPopupMenu extends PanelIconBase {
-    _init(icon, gettext_domain) {
-        super._init(false, icon, gettext_domain);
+    _init(gettext_context) {
+        super._init(false, gettext_context);
 
         this.toggle_item = new PopupMenu.PopupSwitchMenuItem(
-            gettext_domain.gettext('Show'),
+            gettext_context.gettext('Show'),
             false
         );
         this.menu.addMenuItem(this.toggle_item);
@@ -60,7 +60,7 @@ const PanelIconPopupMenu = GObject.registerClass({
         });
 
         this.preferences_item = new PopupMenu.PopupMenuItem(
-            gettext_domain.gettext('Preferences…')
+            gettext_context.gettext('Preferences…')
         );
         this.menu.addMenuItem(this.preferences_item);
         this.preferences_item.connect('activate', () => {
@@ -75,8 +75,8 @@ const PanelIconPopupMenu = GObject.registerClass({
 
 const PanelIconToggleButton = GObject.registerClass({
 }, class DDTermPanelIconToggleButton extends PanelIconBase {
-    _init(icon, gettext_domain) {
-        super._init(true, icon, gettext_domain);
+    _init(gettext_context) {
+        super._init(true, gettext_context);
 
         this.accessible_role = Atk.Role.TOGGLE_BUTTON;
 
@@ -114,8 +114,8 @@ const PanelIconToggleButton = GObject.registerClass({
 
 const PanelIconToggleAndMenu = GObject.registerClass({
 }, class DDTermPanelIconToggleAndMenu extends PanelIconPopupMenu {
-    _init(icon, gettext_domain) {
-        super._init(icon, gettext_domain);
+    _init(gettext_context) {
+        super._init(gettext_context);
 
         this.connect('notify::active', () => {
             this._update();
@@ -161,33 +161,26 @@ const TYPE_BY_NAME = {
     ].map(t => [t.type_name(), t])),
 };
 
-export const PanelIconProxy = GObject.registerClass({
+var PanelIconProxy = GObject.registerClass({
     Properties: {
         'active': GObject.ParamSpec.boolean(
             'active',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.EXPLICIT_NOTIFY,
             false
         ),
         'type-name': GObject.ParamSpec.string(
             'type-name',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.EXPLICIT_NOTIFY,
             'none'
         ),
-        'gicon': GObject.ParamSpec.object(
-            'gicon',
-            null,
-            null,
-            GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
-            Gio.Icon
-        ),
-        'gettext-domain': GObject.ParamSpec.jsobject(
-            'gettext-domain',
-            null,
-            null,
+        'gettext-context': GObject.ParamSpec.jsobject(
+            'gettext-context',
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY
         ),
     },
@@ -229,7 +222,7 @@ export const PanelIconProxy = GObject.registerClass({
             if (!type_resolved)
                 return;
 
-            this.icon = new type_resolved(this.gicon, this.gettext_domain);
+            this.icon = new type_resolved(this.gettext_context);
             Main.panel.addToStatusArea('ddterm', this.icon);
 
             this.bind_property(
@@ -253,3 +246,5 @@ export const PanelIconProxy = GObject.registerClass({
         this.notify('type-name');
     }
 });
+
+/* exported PanelIconProxy */

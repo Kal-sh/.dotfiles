@@ -3,37 +3,27 @@
  * panelButton.js
  *
  * @author     GdH <G-dH@github.com>
- * @copyright  2021 - 2024
+ * @copyright  2021 - 2023
  * @license    GPL-3.0
  */
 'use strict';
 
-import GObject from 'gi://GObject';
-import Gio from 'gi://Gio';
-import St from 'gi://St';
+const { Gio, GObject, St } = imports.gi;
 
-import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
-import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
+const Main = imports.ui.main;
+const PopupMenu = imports.ui.popupMenu;
+const PanelMenu = imports.ui.panelMenu;
+const PANEL_ICON_SIZE = imports.ui.panel.PANEL_ICON_SIZE + 2;
 
-import * as Actions from './actions.js';
+const ExtensionSystem = imports.ui.extensionSystem;
+const ExtensionUtils = imports.misc.extensionUtils;
+const Me = ExtensionUtils.getCurrentExtension();
+const Actions = Me.imports.src.extension.actions;
 
-const PANEL_ICON_SIZE = 16;
+const Gettext = imports.gettext.domain(Me.metadata['gettext-domain']);
+const _ = Gettext.gettext;
 
-let _;
-let Me;
-
-export function init(extension) {
-    Me = extension;
-    _ = extension.gettext.bind(Me);
-}
-
-export function cleanGlobals() {
-    _ = null;
-    Me = null;
-}
-
-export const MenuButton = GObject.registerClass({ GTypeName: 'CHCEMenuButton' }, class MenuButton extends PanelMenu.Button {
+var MenuButton = GObject.registerClass({ GTypeName: 'CHCEMenuButton' }, class MenuButton extends PanelMenu.Button {
     _init(mscOptions) {
         super._init(0.5, 'CHCE-Menu', false);
 
@@ -94,7 +84,7 @@ export const MenuButton = GObject.registerClass({ GTypeName: 'CHCEMenuButton' },
             ? `${Me.path}/hot-corners-shift-symbolic.svg`
             : iconPath;
         const gicon = Gio.icon_new_for_string(iconPath);
-        const icon = new St.Icon({ gicon, icon_size: PANEL_ICON_SIZE + 2 });
+        const icon = new St.Icon({ gicon, icon_size: PANEL_ICON_SIZE });
 
         this._panelBin.add_child(icon);
         this._icon = icon;

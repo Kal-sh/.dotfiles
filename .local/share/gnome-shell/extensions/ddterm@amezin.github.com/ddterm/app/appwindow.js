@@ -1,6 +1,4 @@
 // SPDX-FileCopyrightText: 2020 Aleksandr Mezin <mezin.alexander@gmail.com>
-// SPDX-FileContributor: Juan M. Cruz-Martinez
-// SPDX-FileContributor: Jackson Goode
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -15,13 +13,6 @@ import Gettext from 'gettext';
 import { TerminalSettings } from './terminalsettings.js';
 import { Notebook } from './notebook.js';
 import { DisplayConfig, LayoutMode } from '../util/displayconfig.js';
-
-const WINDOW_POS_TO_RESIZE_EDGE = {
-    top: Gdk.WindowEdge.SOUTH,
-    bottom: Gdk.WindowEdge.NORTH,
-    left: Gdk.WindowEdge.EAST,
-    right: Gdk.WindowEdge.WEST,
-};
 
 function make_resizer(orientation) {
     const box = new Gtk.EventBox({ visible: true });
@@ -46,55 +37,62 @@ function make_resizer(orientation) {
     return box;
 }
 
+const WINDOW_POS_TO_RESIZE_EDGE = {
+    top: Gdk.WindowEdge.SOUTH,
+    bottom: Gdk.WindowEdge.NORTH,
+    left: Gdk.WindowEdge.EAST,
+    right: Gdk.WindowEdge.WEST,
+};
+
 export const AppWindow = GObject.registerClass({
     Properties: {
         'settings': GObject.ParamSpec.object(
             'settings',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
             Gio.Settings
         ),
         'terminal-settings': GObject.ParamSpec.object(
             'terminal-settings',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
             TerminalSettings
         ),
         'extension-dbus': GObject.ParamSpec.object(
             'extension-dbus',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
             Gio.DBusProxy
         ),
         'display-config': GObject.ParamSpec.object(
             'display-config',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
             DisplayConfig
         ),
         'resize-handle': GObject.ParamSpec.boolean(
             'resize-handle',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.EXPLICIT_NOTIFY,
             true
         ),
         'resize-edge': GObject.ParamSpec.enum(
             'resize-edge',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.EXPLICIT_NOTIFY,
             Gdk.WindowEdge,
             Gdk.WindowEdge.SOUTH
         ),
         'tab-label-width': GObject.ParamSpec.double(
             'tab-label-width',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.EXPLICIT_NOTIFY,
             0.0,
             0.5,
@@ -102,42 +100,39 @@ export const AppWindow = GObject.registerClass({
         ),
         'tab-show-shortcuts': GObject.ParamSpec.boolean(
             'tab-show-shortcuts',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.EXPLICIT_NOTIFY,
             true
         ),
         'active-notebook': GObject.ParamSpec.object(
             'active-notebook',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READABLE,
             Notebook
         ),
         'is-empty': GObject.ParamSpec.boolean(
             'is-empty',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READABLE,
             false
         ),
         'is-split': GObject.ParamSpec.boolean(
             'is-split',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READABLE,
             false
         ),
         'split-layout': GObject.ParamSpec.string(
             'split-layout',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READABLE,
             'no-split'
         ),
-    },
-    Signals: {
-        'session-update': {},
     },
 },
 class DDTermAppWindow extends Gtk.ApplicationWindow {
@@ -149,12 +144,7 @@ class DDTermAppWindow extends Gtk.ApplicationWindow {
             ...params,
         });
 
-        const menu_url =
-            GLib.Uri.resolve_relative(import.meta.url, './ui/menus.ui', GLib.UriFlags.NONE);
-
-        const [menu_path] = GLib.filename_from_uri(menu_url);
-
-        this.menus = Gtk.Builder.new_from_file(menu_path);
+        this.__heapgraph_name = this.constructor.$gtype.name;
 
         const grid = new Gtk.Grid({
             parent: this,
@@ -269,7 +259,7 @@ class DDTermAppWindow extends Gtk.ApplicationWindow {
 
         const actions = {
             'toggle': this.toggle.bind(this),
-            'show': () => this.present(),
+            'show': () => this.present_with_time(Gdk.CURRENT_TIME),
             'hide': () => this.hide(),
             'window-size-dec': () => {
                 if (this.settings.get_boolean('window-maximize'))
@@ -340,20 +330,6 @@ class DDTermAppWindow extends Gtk.ApplicationWindow {
         this.connect('notify::active-notebook', () => this.update_show_shortcuts());
         this.update_show_shortcuts();
 
-        this.connect('notify::is-empty', () => {
-            if (this.is_empty)
-                this.close();
-        });
-
-        this.connect('notify::split-orientation', () => {
-            this.emit('session-update');
-        });
-
-        this._hide_on_close();
-        this._setup_size_sync();
-    }
-
-    _hide_on_close() {
         this.connect('delete-event', () => {
             if (this.is_empty)
                 return false;
@@ -361,6 +337,13 @@ class DDTermAppWindow extends Gtk.ApplicationWindow {
             this.hide();
             return true;
         });
+
+        this.connect('notify::is-empty', () => {
+            if (this.is_empty)
+                this.close();
+        });
+
+        this._setup_size_sync();
     }
 
     _setup_size_sync() {
@@ -369,23 +352,22 @@ class DDTermAppWindow extends Gtk.ApplicationWindow {
         if (display.constructor.$gtype.name !== 'GdkWaylandDisplay')
             return;
 
-        const sync_if_hidden = () => {
-            if (!this.is_visible())
+        const display_config_handler = this.display_config.connect('notify::layout-mode', () => {
+            if (!this.visible)
                 this.sync_size_with_extension();
-        };
-
-        const display_config_handler =
-            this.display_config.connect('notify::layout-mode', sync_if_hidden);
+        });
 
         this.connect('destroy', () => this.display_config.disconnect(display_config_handler));
 
-        const dbus_handler = this.extension_dbus.connect('g-properties-changed', sync_if_hidden);
+        const dbus_handler = this.extension_dbus.connect(
+            'g-properties-changed',
+            () => {
+                if (!this.visible)
+                    this.sync_size_with_extension();
+            }
+        );
+
         this.connect('destroy', () => this.extension_dbus.disconnect(dbus_handler));
-
-        const settings_handler = this.settings.connect('changed::window-maximize', sync_if_hidden);
-        this.connect('destroy', () => this.settings.disconnect(settings_handler));
-
-        this.connect('notify::is-maximized', sync_if_hidden);
 
         this.connect('unmap-event', () => {
             this.sync_size_with_extension();
@@ -399,13 +381,12 @@ class DDTermAppWindow extends Gtk.ApplicationWindow {
             terminal_settings: this.terminal_settings,
             scrollable: true,
             group_name: 'ddtermnotebook',
-            menus: this.menus,
         });
 
         const update_notebook_visibility = () => {
             notebook.visible = notebook.get_n_pages() > 0;
 
-            if (!notebook.get_visible())
+            if (!notebook.visible)
                 this.grab_focus();
         };
 
@@ -510,10 +491,6 @@ class DDTermAppWindow extends Gtk.ApplicationWindow {
             Gio.SettingsBindFlags.GET
         );
 
-        notebook.connect('session-update', () => {
-            this.emit('session-update');
-        });
-
         return notebook;
     }
 
@@ -536,10 +513,10 @@ class DDTermAppWindow extends Gtk.ApplicationWindow {
     }
 
     toggle() {
-        if (this.is_visible())
+        if (this.visible)
             this.hide();
         else
-            this.present();
+            this.present_with_time(Gdk.CURRENT_TIME);
     }
 
     start_resizing(edge, source, event) {
@@ -592,12 +569,8 @@ class DDTermAppWindow extends Gtk.ApplicationWindow {
     }
 
     sync_size_with_extension() {
-        if (this.is_maximized) {
-            if (this.settings.get_boolean('window-maximize'))
-                return;
-
-            this.unmaximize();
-        }
+        if (this.is_maximized)
+            return;
 
         const rect = this.extension_dbus.TargetRect;
 
@@ -634,11 +607,11 @@ class DDTermAppWindow extends Gtk.ApplicationWindow {
     }
 
     get is_empty() {
-        return this.paned.get_children().every(nb => !nb.get_visible());
+        return this.paned.get_children().every(nb => !nb.visible);
     }
 
     get is_split() {
-        return this.paned.get_children().every(nb => nb.get_visible());
+        return this.paned.get_children().every(nb => nb.visible);
     }
 
     get split_layout() {
@@ -689,13 +662,13 @@ class DDTermAppWindow extends Gtk.ApplicationWindow {
     }
 
     vfunc_grab_focus() {
-        if (this.active_notebook?.get_visible()) {
+        if (this.active_notebook?.visible) {
             this.active_notebook.grab_focus();
             return;
         }
 
         for (const notebook of this.paned.get_children()) {
-            if (notebook.get_visible()) {
+            if (notebook.visible) {
                 notebook.grab_focus();
                 return;
             }

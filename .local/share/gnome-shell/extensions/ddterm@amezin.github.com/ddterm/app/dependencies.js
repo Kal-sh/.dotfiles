@@ -6,21 +6,12 @@ import GLib from 'gi://GLib';
 
 import Gettext from 'gettext';
 import Gi from 'gi';
-import System from 'system';
 
 import { create_extension_dbus_proxy_oneshot } from './extensiondbus.js';
+import { get_resource_file, get_resource_text } from './resources.js';
 
-export const [manifest_file] = GLib.filename_from_uri(
-    GLib.Uri.resolve_relative(import.meta.url, 'dependencies.json', GLib.UriFlags.NONE)
-);
-
-function load_manifest() {
-    const [, bytes] = GLib.file_get_contents(manifest_file);
-
-    return JSON.parse(new TextDecoder().decode(bytes));
-}
-
-export const manifest = load_manifest();
+export const manifest_file = get_resource_file('dependencies.json');
+export const manifest = JSON.parse(get_resource_text(manifest_file));
 
 export function get_os_ids() {
     const res = [GLib.get_os_info('ID')];
@@ -106,12 +97,20 @@ export function gi_require_optional(imports_versions) {
     return loaded;
 }
 
+class MissingDependenciesError extends Error {
+    constructor(message) {
+        super(message);
+
+        this.name = 'MissingDependenciesError';
+    }
+}
+
 export function gi_require(imports_versions) {
     const loaded = gi_require_optional(imports_versions);
 
     if (Object.getOwnPropertyNames(loaded).length !==
         Object.getOwnPropertyNames(imports_versions).length)
-        System.exit(1);
+        throw new MissingDependenciesError();
 
     return loaded;
 }

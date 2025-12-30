@@ -1,65 +1,60 @@
 "use strict";
 
-import GLib from "gi://GLib";
-import Gio from "gi://Gio";
+const ExtensionUtils = imports.misc.extensionUtils;
+const Me = ExtensionUtils.getCurrentExtension();
 
-import { Extension } from "resource:///org/gnome/shell/extensions/extension.js";
+const { logDebug } = Me.imports.utils;
 
-import { SignalManager } from "./events/SignalManager.js";
-import { Settings } from "./modules/Settings.js";
-import { Scheduler } from "./modules/Scheduler.js";
-import { Decorator } from "./modules/Decorator.js";
-import { Colorizer } from "./modules/Colorizer.js";
+const { SignalManager } = Me.imports.modules.SignalManager;
+const { Settings } = Me.imports.modules.Settings;
+const { Scheduler } = Me.imports.modules.Scheduler;
+const { Decorator } = Me.imports.modules.Decorator;
+const { Colorizer } = Me.imports.modules.Colorizer;
 
-import { logDebug } from "./utils.js";
+var signalManager = null;
+var settings = null;
+var scheduler = null;
+var decorator = null;
+var colorizer = null;
 
-export default class BedtimeMode extends Extension {
-  constructor(metadata) {
-    super(metadata);
+function enable() {
+  logDebug("Enabling extension...");
 
-    this.signalManager = null;
-    this.settings = null;
-    this.scheduler = null;
-    this.decorator = null;
-    this.colorizer = null;
-  }
+  signalManager = new SignalManager();
+  settings = new Settings(signalManager);
+  scheduler = new Scheduler();
+  decorator = new Decorator();
+  colorizer = new Colorizer();
 
-  enable() {
-    logDebug("Enabling extension...");
+  signalManager.enable();
+  settings.enable();
+  scheduler.enable();
+  decorator.enable();
+  colorizer.enable();
 
-    this.signalManager = new SignalManager();
-    this.settings = new Settings(this);
-    this.scheduler = new Scheduler(this);
-    this.decorator = new Decorator(this);
-    this.colorizer = new Colorizer(this);
+  logDebug("Extension enabled");
+}
 
-    this.settings.enable();
-    this.scheduler.enable();
-    this.decorator.enable();
-    this.colorizer.enable();
+function disable() {
+  logDebug("Disabling extension...");
 
-    logDebug("Extension enabled");
-  }
+  decorator.disable();
+  colorizer.disable();
+  scheduler.disable();
+  settings.disable();
+  signalManager.disable();
 
-  disable() {
-    logDebug("Disabling extension...");
+  decorator = null;
+  colorizer = null;
+  scheduler = null;
+  settings = null;
+  signalManager = null;
 
-    this.decorator.disable();
-    this.colorizer.disable();
-    this.scheduler.disable();
-    this.settings.disable();
-    this.signalManager.disable();
+  logDebug("Extension disabled");
+}
 
-    this.decorator = null;
-    this.colorizer = null;
-    this.scheduler = null;
-    this.settings = null;
-    this.signalManager = null;
+function init() {
+  logDebug("Initializing extension...");
 
-    logDebug("Extension disabled");
-  }
-
-  get icon() {
-    return Gio.icon_new_for_string(GLib.build_filenamev([this.path, "icons", "status", "bedtime-mode-symbolic.svg"]));
-  }
+  ExtensionUtils.initTranslations();
 }

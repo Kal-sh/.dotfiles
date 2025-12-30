@@ -18,36 +18,24 @@
                 </child>
 
                 <child>
-                    <object class="AdwComboRow" id="bat_profile">
-                        <property name="title" translatable="yes">On Battery</property>
-                        <property name="subtitle" translatable="yes">Select the default profile when running on battery</property>
-                        <property name="model">platform_profile_model</property>
+                    <object class="AdwActionRow" id="row_lap_mode">
+                        <property name="title" translatable="yes">Handle lap-mode on AC</property>
+                        <property name="subtitle" translatable="yes">Try to maintain performance mode on unstable surfaces. Disable if you are experiencing thermal issues</property>
+                        <property name="activatable-widget">lap_mode</property>
+                        <property name="visible">False</property>
+                        <child>
+                            <object class="GtkSwitch" id="lap_mode">
+                                <property name="valign">center</property>
+                            </object>
+                        </child>
                     </object>
                 </child>
 
                 <child>
-                    <object class="AdwExpanderRow" id="row_low_battery">
-                        <property name="title" translatable="yes">Low Battery Threshold</property>
-                        <property name="subtitle" translatable="yes">Automatic power-saver on low battery</property>
-                        <property name="show-enable-switch">False</property>
-                        <child type="suffix">
-                            <object class="GtkLabel" id="low_battery_value">
-                                <property name="valign">center</property>
-                                <style>
-                                    <class name="dim-label"/>
-                                </style>
-                            </object>
-                        </child>
-                        <child>
-                            <object class="AdwActionRow">
-                                <property name="title" translatable="yes">Enable/disable in GNOME Settings → Power → Power Saving Options. The percentage threshold value is configured in the UPower config file (/etc/UPower/UPower.conf)</property>
-                                <property name="title-lines">0</property>
-                                <property name="title-selectable">True</property>
-                                <style>
-                                    <class name="property"/>
-                                </style>
-                            </object>
-                        </child>
+                    <object class="AdwComboRow" id="bat_profile">
+                        <property name="title" translatable="yes">On Battery</property>
+                        <property name="subtitle" translatable="yes">Select the default profile when running on battery</property>
+                        <property name="model">platform_profile_model</property>
                     </object>
                 </child>
             </object>
@@ -56,26 +44,17 @@
         <child>
             <object class="AdwPreferencesGroup">
                 <child>
-                    <object class="AdwActionRow" id="row_remember_user_profile">
-                        <property name="title" translatable="yes">Remember manual profile changes</property>
-                        <property name="subtitle" translatable="yes">When enabled, manually selected profiles become the new default for the current power state. When disabled, manual changes are temporary</property>
-                        <property name="activatable-widget">remember_user_profile</property>
+                    <object class="AdwActionRow">
+                        <property name="title" translatable="yes">Power Saving Threshold</property>
+                        <property name="subtitle" translatable="yes">Switch to power saving profile when the battery level drops below</property>
+                        <property name="activatable-widget">threshold</property>
                         <child>
-                            <object class="GtkSwitch" id="remember_user_profile">
+                            <object class="GtkSpinButton" id="threshold">
                                 <property name="valign">center</property>
-                            </object>
-                        </child>
-                    </object>
-                </child>
-
-                <child>
-                    <object class="AdwActionRow" id="row_notifications">
-                        <property name="title" translatable="yes">Notifications</property>
-                        <property name="subtitle" translatable="yes">Allow extension notifications</property>
-                        <property name="activatable-widget">notifications</property>
-                        <child>
-                            <object class="GtkSwitch" id="notifications">
-                                <property name="valign">center</property>
+                                <property name="adjustment">threshold_adjustment</property>
+                                <property name="numeric">True</property>
+                                <property name="snap-to-ticks">True</property>
+                                <property name="update-policy">if-valid</property>
                             </object>
                         </child>
                     </object>
@@ -85,4 +64,12 @@
     </template>
 
     <object class="GtkStringList" id="platform_profile_model"></object>
+
+    <object class="GtkAdjustment" id="threshold_adjustment">
+        <property name="page-increment">5.0</property>
+        <property name="step-increment">1.0</property>
+        <property name="upper">99.0</property>
+        <property name="lower">0.0</property>
+        <property name="value">25.0</property>
+    </object>
 </interface>

@@ -16,30 +16,11 @@
 		<key name="tilegroups-in-app-switcher" type="b">
 			<default>false</default>
 		</key>
-		<key name="dynamic-keybinding-behavior" type="i">
+		<key name="dynamic-keybinding-behaviour" type="i">
 			<!-- 0: Disabled, 1: Focus, 2: Tiling State, 3: Tiling State (Windows), 4: Favorite Layout -->
 			<default>0</default>
 		</key>
-		<key name="focus-hint" type="i">
-			<default>0</default>
-		</key>
-		<key name="focus-hint-color" type="s">
-			<default>''</default>
-		</key>
-		<key name="focus-hint-outline-border-radius" type="i">
-			<default>8</default>
-		</key>
-		<key name="focus-hint-outline-size" type="i">
-			<default>8</default>
-		</key>
-		<key name="focus-hint-outline-style" type="i">
-			<!-- 0: Solid Background, 1: Border -->
-			<default>0</default>
-		</key>
 		<key name="window-gap" type="i">
-			<default>0</default>
-		</key>
-		<key name="single-screen-gap" type="i">
 			<default>0</default>
 		</key>
 		<key name="screen-top-gap" type="i">
@@ -114,30 +95,7 @@
 		<key name="tile-bottomright-quarter" type="as">
 			<default><![CDATA[['<Super>KP_3']]]></default>
 		</key>
-		<key name="tile-top-half-ignore-ta" type="as">
-			<default>[]</default>
-		</key>
-		<key name="tile-bottom-half-ignore-ta" type="as">
-			<default>[]</default>
-		</key>
-		<key name="tile-left-half-ignore-ta" type="as">
-			<default>[]</default>
-		</key>
-		<key name="tile-right-half-ignore-ta" type="as">
-			<default>[]</default>
-		</key>
-		<key name="tile-topleft-quarter-ignore-ta" type="as">
-			<default>[]</default>
-		</key>
-		<key name="tile-topright-quarter-ignore-ta" type="as">
-			<default>[]</default>
-		</key>
-		<key name="tile-bottomleft-quarter-ignore-ta" type="as">
-			<default>[]</default>
-		</key>
-		<key name="tile-bottomright-quarter-ignore-ta" type="as">
-			<default>[]</default>
-		</key>
+
 		<!-- Layouts Page -->
 		<!-- Hidden by default unless the advanced / experimental settings are enabled.
 		The number of layouts / shortcuts are hardcoded / limited to 20 -->
@@ -233,7 +191,7 @@
 			<default>false</default>
 		</key>
 		<key name="default-move-mode" type="i">
-			<!-- 0: Edge Tiling, 1: Adaptive Tiling, 2: Favorite Layout, 3: Ignore TA -->
+			<!-- 0: Edge Tiling, 1: Adaptive Tiling, 2: Favorite Layout -->
 			<default>0</default>
 		</key>
 		<key name="low-performance-move-mode" type="b">
@@ -243,16 +201,12 @@
 			<default>false</default>
 		</key>
 		<key name="move-adaptive-tiling-mod" type="i">
-			<!-- 0: Disabled, 1: Ctrl, 2: Alt, 3: RMB, 4: Meta -->
-			<default>1</default>
+			<!-- 0: Ctrl, 1: Alt, 2: RMB, 3: Meta -->
+			<default>0</default>
 		</key>
 		<key name="move-favorite-layout-mod" type="i">
-			<!-- 0: Disabled, 1: Ctrl, 2: Alt, 3: RMB, 4: Meta -->
-			<default>2</default>
-		</key>
-		<key name="ignore-ta-mod" type="i">
-			<!-- 0: Disabled, 1: Ctrl, 2: Alt, 3: RMB, 4: Meta -->
-			<default>0</default>
+			<!-- 0: Ctrl, 1: Alt, 2: RMB, 3: Meta -->
+			<default>1</default>
 		</key>
 		<key name="vertical-preview-area" type="i">
 			<default>15</default>
@@ -269,17 +223,14 @@
 		<key name="enable-hold-maximize-inverse-portrait" type="b">
 			<default>false</default>
 		</key>
+		<key name="restore-window-size-on" type="i">
+			<!-- 0: Grab Start, 1: Grab End -->
+			<default>0</default>
+		</key>
 		<key name="debugging-show-tiled-rects" type="as">
 			<default>[]</default>
 		</key>
 		<key name="debugging-free-rects" type="as">
-			<default>[]</default>
-		</key>
-		<key name="last-version-installed" type="i">
-			<default>-1</default>
-		</key>
-		<key name="overridden-settings" type="a{sv}">
-			<!-- Private key for remembering the overridden values -->
 			<default>[]</default>
 		</key>
 	</schema>

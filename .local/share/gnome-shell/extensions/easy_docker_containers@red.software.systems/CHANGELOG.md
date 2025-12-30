@@ -2,82 +2,22 @@
 
 All notable changes to this project will be documented in this file. _(The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).)_
 
-## [31] - 2025-12-17
-
-### Added
-
-- Batch container inspection optimization: All container names are now processed in a single docker inspect command instead of individual calls, significantly improving performance for users with many containers
-- Error handling for malformed container labels with try-catch around JSON parsing to prevent crashes
-
-(thanks to https://github.com/fabiogiaffaglione)
-
-### Fixed
-
-- Docker daemon check now uses `sh -c` to properly execute ps command across different platforms
-- Handle empty container arrays to avoid unnecessary command execution
-- Improved compose object formatting for better code readability
-
-## [30] - 2025-11-05
-
-Added Gnome 49 support
-
-## [29] - 2025-04-02
-
-Added Gnome 48 support
-
-## [28] - 2025-03-28
-
-Added ptyxis terminal support (thanks to https://github.com/DasJott)
-
-## [27] - 2024-11-06
-
-Added Gnome 47 support
-
-## [26] - 2024-08-21
-
-Added Docker compose support!
-
-## [25] - 2024-04-28
-
-Gnome 45 regression fix
-
-## [24] - 2024-04-27
-
-Gnome 46 compatibility issues fixes
-
-## [23] - 2024-03-30
-
-Small cleanup fixes
-
-## [22] - 2024-03-30
-
-Added Gnome 46 support (thanks to https://github.com/LuckShiba)
-
-## [21] - 2023-10-24
-
-Added Gnome 45 support (thanks to https://github.com/hhoao)
 
 ## [20] - 2022-04-18
-
 Added Gnome 44 support
-
 ## [19] - 2022-10-03
-
 Added Gnome 43 support
 
 ## [18] - 2022-06-06
-
 ### Fix
-
 Fixed compatibility issue with gnome 3.x
+
 
 ## [17] - 2022-05-31
 
 ### Fix
-
 Remove of Mainloop dependency
 Optimizing Promise.all call
-
 ## [16] - 2022-05-11
 
 ### Fix

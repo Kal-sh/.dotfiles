@@ -16,28 +16,26 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 
-/* Copyright Ulvican Kahya aka ulville 2022-2023 */
+/* Copyright Ulvican Kahya aka ulville 2022 */
 
-/* exported EEPSExtension */
+/* exported init */
 
-import GObject from 'gi://GObject';
-import St from 'gi://St';
-import GLib from 'gi://GLib';
-import Gio from 'gi://Gio';
-import Shell from 'gi://Shell';
-import Clutter from 'gi://Clutter';
-import Meta from 'gi://Meta';
+const GETTEXT_DOMAIN = 'gnome-shell-extension-eepresetselector';
 
-import {Extension, gettext as _} from 'resource:///org/gnome/shell/extensions/extension.js';
-import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
-import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
+const {GObject, St, GLib, Gio, Shell, Clutter, Meta} = imports.gi;
+
+const ExtensionUtils = imports.misc.extensionUtils;
+const Main = imports.ui.main;
+const PanelMenu = imports.ui.panelMenu;
+const PopupMenu = imports.ui.popupMenu;
+const _ = ExtensionUtils.gettext;
+const Me = ExtensionUtils.getCurrentExtension();
 
 let sourceId = null;
 
 const EEPSIndicator = GObject.registerClass(
     class EEPSIndicator extends PanelMenu.Button {
-        _init(settings, path) {
+        _init() {
             super._init(0.5, _('EasyEffects Preset Selector'));
 
             this.categoryNames = [' ', ' '];
@@ -46,11 +44,8 @@ const EEPSIndicator = GObject.registerClass(
             this.lastUsedInputPreset = ' ';
             this.lastUsedOutputPreset = ' ';
             this.lastPresetLoadTime = 0;
-            this.enableBypass = false;
             this.command = [];
-            this.settings = settings;
-            this.appDesktopFile = 'com.github.wwmm.easyeffects.desktop';
-            this.easyEffectsApp = Shell.AppSystem.get_default().lookup_app(this.appDesktopFile);
+            this.settings = ExtensionUtils.getSettings();
 
             Main.wm.addKeybinding(
                 'cycle-output-presets',
@@ -64,30 +59,16 @@ const EEPSIndicator = GObject.registerClass(
                 Meta.KeyBindingFlags.IGNORE_AUTOREPEAT,
                 Shell.ActionMode.NORMAL | Shell.ActionMode.OVERVIEW | Shell.ActionMode.POPUP,
                 () => this._loadNext('input'));
-            Main.wm.addKeybinding(
-                'toggle-global-bypass',
-                this.settings,
-                Meta.KeyBindingFlags.IGNORE_AUTOREPEAT,
-                Shell.ActionMode.NORMAL | Shell.ActionMode.OVERVIEW | Shell.ActionMode.POPUP,
-                () => this._toggleGlobalBypass());
 
             this._icon = new St.Icon({style_class: 'system-status-icon'});
             this._icon.gicon = Gio.icon_new_for_string(
-                `${path}/icons/eepresetselector-symbolic.svg`
+                `${Me.path}/icons/eepresetselector-symbolic.svg`
             );
             this.add_child(this._icon);
             this.connect('button-press-event', () => {
                 this._refreshMenu();
             });
             this._refreshMenu();
-        }
-
-        async _toggleGlobalBypass() {
-            await this._refreshMenu();
-            this._enableGlobalBypass(!this.enableBypass);
-            await this._refreshMenu();
-            if (!this.menu.isOpen)
-                this.menu.toggle();
         }
 
         _loadNext(presetType) {
@@ -132,21 +113,6 @@ const EEPSIndicator = GObject.registerClass(
             }
         }
 
-        _enableGlobalBypass(state) {
-            this.enableBypass = state;
-            const bypassOption = state ? '1' : '2';
-            const command = this.command.concat(['-b', bypassOption]).join(' ');
-            try {
-                GLib.spawn_command_line_async(command);
-            } catch (error) {
-                Main.notify(
-                    _('An error occurred while trying to toggle bypass'),
-                    _(`Error:\n\n${error}`)
-                );
-                logError(error);
-            }
-        }
-
         _addCategoryTitle(categoryName, categoryIconName) {
             let _title = new PopupMenu.PopupSeparatorMenuItem(
                 `${_(categoryName)}:`
@@ -164,21 +130,14 @@ const EEPSIndicator = GObject.registerClass(
         _addScrollMenuSection(scrollView, menuSection, presets, lastUsedPreset, command) {
             let _scrollSection = new PopupMenu.PopupMenuSection();
             scrollView.set_overlay_scrollbars(false);
-            try {
-                scrollView.add_actor(menuSection.actor);
-                _scrollSection.actor.add_actor(scrollView);
-            } catch (e) {
-                scrollView.add_child(menuSection.actor);
-                _scrollSection.actor.add_child(scrollView);
-            }
+            scrollView.add_actor(menuSection.actor);
+            _scrollSection.actor.add_actor(scrollView);
 
             // Add a menu item to menu for each preset and connect it to easyeffects' load preset command
             presets.forEach(element => {
                 let _menuItem = new PopupMenu.PopupMenuItem(_(element));
                 if (element === lastUsedPreset)
                     _menuItem.setOrnament(PopupMenu.Ornament.DOT);
-                else
-                    _menuItem.setOrnament(PopupMenu.Ornament.NO_DOT);
 
                 _menuItem.connect('activate', () => {
                     this._loadPreset(element, command);
@@ -195,7 +154,6 @@ const EEPSIndicator = GObject.registerClass(
             this.menu._getMenuItems().forEach(item => {
                 item.destroy();
             });
-
             // Category Title: "Output Presets" (As how the command did output it)
             if (outputCategoryName)
                 this._addCategoryTitle(outputCategoryName, 'audio-speakers-symbolic');
@@ -214,50 +172,22 @@ const EEPSIndicator = GObject.registerClass(
             let _inputSection = new PopupMenu.PopupMenuSection();
             this._addScrollMenuSection(_inputScrollView, _inputSection, this.inputPresets, this.lastUsedInputPreset, command);
 
-            // Separator
-            let _separatorItem = new PopupMenu.PopupSeparatorMenuItem();
-            this.menu.addMenuItem(_separatorItem);
-
-            // Add switch menu item to toggle global bypass
-            const toggleBypassItem = new PopupMenu.PopupSwitchMenuItem(_('Global Bypass'), this.enableBypass, {});
-            toggleBypassItem.setOrnament(PopupMenu.Ornament.NONE);
-            toggleBypassItem.add_style_class_name('bypass-toggle-item');
-            toggleBypassItem.connect('toggled', (item, state) => {
-                this._enableGlobalBypass(state);
-            });
-            this.menu.addMenuItem(toggleBypassItem);
-
-            // Add a menu item to activate (open) the Easy Effects application
-            let _easyEffectsActivatorItem = new PopupMenu.PopupMenuItem(
-                _('Launch %s').format(this.easyEffectsApp.get_name())
-            );
-            _easyEffectsActivatorItem.setOrnament(PopupMenu.Ornament.NONE);
-            _easyEffectsActivatorItem.add_style_class_name('easyeffects-activator-item');
-            _easyEffectsActivatorItem.connect('activate', () => {
-                Main.overview.hide();
-                this.easyEffectsApp.activate();
-            });
-            this.menu.addMenuItem(_easyEffectsActivatorItem);
-
             // Arrange scrollbar policies
             let _menuThemeNode = this.menu.actor.get_theme_node();
             let _maxHeight = _menuThemeNode.get_max_height();
-            let [, _titleNaturH] = this.menu.firstMenuItem.actor.get_preferred_height(-1);
-            let [, _outputNaturH] = _outputSection.actor.get_preferred_height(-1);
-            let [, _inputNaturH] = _inputSection.actor.get_preferred_height(-1);
-            let [, _sepNaturH] = _separatorItem.actor.get_preferred_height(-1);
-            let [, _toggleBypassNaturH] = toggleBypassItem.actor.get_preferred_height(-1);
-            let [, _eeActNaturH] = _easyEffectsActivatorItem.actor.get_preferred_height(-1);
+            let [, _titleNaturalHeight] = this.menu.firstMenuItem.actor.get_preferred_height(-1);
+            let [, _outputNaturalHeight] = _outputSection.actor.get_preferred_height(-1);
+            let [, _inputNaturalHeight] = _inputSection.actor.get_preferred_height(-1);
 
-            let _notFillsScreen = _maxHeight >= 0 && _inputNaturH + _outputNaturH + 2 * _titleNaturH <= _maxHeight - _eeActNaturH - _sepNaturH - _toggleBypassNaturH;
+            let _notFillsScreen = _maxHeight >= 0 && _inputNaturalHeight + _outputNaturalHeight + 2 * _titleNaturalHeight <= _maxHeight;
             if (_notFillsScreen) {
                 _inputScrollView.vscrollbar_policy = St.PolicyType.NEVER;
                 _outputScrollView.vscrollbar_policy = St.PolicyType.NEVER;
             } else {
-                let _outputNeedsScrollbar = _maxHeight >= 0 && _outputNaturH + _titleNaturH >= (_maxHeight - _eeActNaturH - _sepNaturH - _toggleBypassNaturH) / 2;
+                let _outputNeedsScrollbar = _maxHeight >= 0 && _outputNaturalHeight + _titleNaturalHeight >= _maxHeight / 2;
                 _outputScrollView.vscrollbar_policy = _outputNeedsScrollbar ? St.PolicyType.AUTOMATIC : St.PolicyType.NEVER;
 
-                let _inputNeedsScrollbar = _maxHeight >= 0 && _inputNaturH + _titleNaturH >= (_maxHeight - _eeActNaturH - _sepNaturH - _toggleBypassNaturH) / 2;
+                let _inputNeedsScrollbar = _maxHeight >= 0 && _inputNaturalHeight + _titleNaturalHeight >= _maxHeight / 2;
                 _inputScrollView.vscrollbar_policy = _inputNeedsScrollbar ? St.PolicyType.AUTOMATIC : St.PolicyType.NEVER;
             }
         }
@@ -265,9 +195,9 @@ const EEPSIndicator = GObject.registerClass(
         async _refreshMenu() {
             // Learn if EasyEffects is installed as a Flatpak
             let appSystem = Shell.AppSystem.get_default();
-            this.easyEffectsApp = appSystem.lookup_app(this.appDesktopFile);
+            let app = appSystem.lookup_app('com.github.wwmm.easyeffects.desktop');
 
-            if (!this.easyEffectsApp) {
+            if (!app) {
                 this.menu._getMenuItems().forEach(item => {
                     item.destroy();
                 });
@@ -277,7 +207,7 @@ const EEPSIndicator = GObject.registerClass(
                 );
                 log(_("EasyEffects isn't available on the system"));
             } else {
-                let info = this.easyEffectsApp.get_app_info();
+                let info = app.get_app_info();
                 let filename = info.get_filename();
                 let appType;
                 if (filename.includes('flatpak')) {
@@ -290,15 +220,6 @@ const EEPSIndicator = GObject.registerClass(
 
                 // Build menu with last values
                 this._buildMenu(this.categoryNames[0], this.categoryNames[1], this.command);
-
-                // Get global bypass
-                try {
-                    const bypassResponse = await this.execCommunicate(this.command.concat(['-b', '3']));
-                    this.enableBypass = bypassResponse.trim() === '1';
-                } catch (err) {
-                    Main.notify(_('An error occurred while trying to get global bypass'), _(`Error:\n\n${err}`));
-                    logError(err);
-                }
 
                 // Try to get Last used presets
                 let erMessage = 'An error occurred while trying to get last presets';
@@ -387,7 +308,6 @@ const EEPSIndicator = GObject.registerClass(
                                 ] === ''
                             )
                                 this.outputPresets.pop();
-                            this.outputPresets.sort();
 
                             this.inputPresets = presetsAsText[1]
                                 .trim()
@@ -398,7 +318,6 @@ const EEPSIndicator = GObject.registerClass(
                                 ] === ''
                             )
                                 this.inputPresets.pop();
-                            this.inputPresets.sort();
                         } catch (e) {
                             Main.notify(
                                 _(
@@ -429,14 +348,14 @@ const EEPSIndicator = GObject.registerClass(
         async getLastPresets(appType) {
             let _lastUsedOutputPreset = '';
             let _lastUsedInputPreset = '';
-            let lastInputKeyName = 'last-loaded-input-preset';
             let lastOutputKeyName = 'last-loaded-output-preset';
+            let lastInputKeyName = 'last-loaded-input-preset';
             try {
-                // Check if schema keys are valid
                 // Get a list of all keys
                 let keys = [];
-                let lastInputKeyNameFallback = 'last-used-input-preset';
-                let lastOutputKeyNameFallback = 'last-used-output-preset';
+                // These are the keys used by some versions of easyeffects (older versions?)
+                let lastOutputKeyFallback = 'last-used-output-preset';
+                let lastInputKeyFallback = 'last-used-input-preset';
                 if (appType === 'flatpak') {
                     const listKeysCommand = [
                         'flatpak',
@@ -447,21 +366,22 @@ const EEPSIndicator = GObject.registerClass(
                         'com.github.wwmm.easyeffects', // argument 2
                     ];
                     const listKeyResponse = await this.execCommunicate(listKeysCommand);
-                    // String (values are separated by new line)
+                    // It's a string with newline-separated values
                     keys = listKeyResponse.trim().split('\n');
                 } else if (appType === 'native') {
-                    const settings = new Gio.Settings({
+                    const settings = new Gio.settings({
                         schema_id: 'com.github.wwmm.easyeffects',
                     });
                     keys = settings.settings_schema.list_keys();
                 }
-                // If key names are invalid, try fallback
+
+                // If key names aren't valid, try fallback keys
                 if (!(keys.includes(lastInputKeyName) && keys.includes(lastOutputKeyName))) {
-                    if (keys.includes(lastInputKeyNameFallback) && keys.includes(lastOutputKeyNameFallback)) {
-                        lastInputKeyName = lastInputKeyNameFallback;
-                        lastOutputKeyName = lastOutputKeyNameFallback;
+                    if (keys.includes(lastInputKeyFallback) && keys.includes(lastOutputKeyFallback)) {
+                        lastOutputKeyName = lastOutputKeyFallback;
+                        lastInputKeyName = lastInputKeyFallback;
                     } else {
-                        return Promise.reject(new Error("Couldn't find the GSettings schema key for easyeffects last used presets."));
+                        return Promise.reject(new Error("Couldn't find the GSettings schema keys for easyeffects last used presets."));
                     }
                 }
             } catch (err) {
@@ -478,18 +398,26 @@ const EEPSIndicator = GObject.registerClass(
                         'get', // argument 1
                         'com.github.wwmm.easyeffects', // argument 2
                     ];
-                    let _odata = await this.execCommunicate(command.concat([lastOutputKeyName]));
+                    let _odata = await this.execCommunicate(
+                        command.concat([lastOutputKeyName])
+                    );
                     _lastUsedOutputPreset = _odata.trim().slice(1, -1);
 
-                    let _idata = await this.execCommunicate(command.concat([lastInputKeyName]));
+                    let _idata = await this.execCommunicate(
+                        command.concat([lastInputKeyName])
+                    );
                     _lastUsedInputPreset = _idata.trim().slice(1, -1);
                 } else if (appType === 'native') {
                     // Get last used presets
                     const settings = new Gio.Settings({
                         schema_id: 'com.github.wwmm.easyeffects',
                     });
-                    _lastUsedOutputPreset = settings.get_string(lastOutputKeyName);
-                    _lastUsedInputPreset = settings.get_string(lastInputKeyName);
+                    _lastUsedOutputPreset = settings.get_string(
+                        'last-used-output-preset'
+                    );
+                    _lastUsedInputPreset = settings.get_string(
+                        'last-used-input-preset'
+                    );
                 }
                 return Promise.resolve([_lastUsedOutputPreset, _lastUsedInputPreset]);
             } catch (error) {
@@ -570,11 +498,16 @@ const EEPSIndicator = GObject.registerClass(
     }
 );
 
-export default class EEPSExtension extends Extension {
+class Extension {
+    constructor(uuid) {
+        this._uuid = uuid;
+
+        ExtensionUtils.initTranslations(GETTEXT_DOMAIN);
+    }
+
     enable() {
-        this._settings = this.getSettings();
-        this._indicator = new EEPSIndicator(this._settings, this.path);
-        Main.panel.addToStatusArea(this.uuid, this._indicator);
+        this._indicator = new EEPSIndicator();
+        Main.panel.addToStatusArea(this._uuid, this._indicator);
     }
 
     disable() {
@@ -584,9 +517,13 @@ export default class EEPSExtension extends Extension {
         }
         Main.wm.removeKeybinding('cycle-output-presets');
         Main.wm.removeKeybinding('cycle-input-presets');
-        Main.wm.removeKeybinding('toggle-global-bypass');
         this._indicator.destroy();
         this._indicator = null;
-        this._settings = null;
+        this.settings = null;
     }
+}
+
+// eslint-disable-next-line jsdoc/require-jsdoc, no-unused-vars
+function init(meta) {
+    return new Extension(meta.uuid);
 }

@@ -17,38 +17,32 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+const Main = imports.ui.main;
 
-import * as PanelVisibilityManager from './panelVisibilityManager.js';
-import * as Convenience from './convenience.js';
-const DEBUG = Convenience.DEBUG;
+const ExtensionUtils = imports.misc.extensionUtils;
 
-import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
+const Me = ExtensionUtils.getCurrentExtension();
+const PanelVisibilityManager = Me.imports.panelVisibilityManager;
+const DEBUG = Me.imports.convenience.DEBUG;
 
 let mSettings = null;
 let mPVManager = null;
 let monitorIndex = null;
 
-export default class HideTopBarExtension extends Extension {
-    constructor(metadata) {
-        super(metadata);
-        console.log(`Initiating ${this.uuid}`);
-    }
+function init() { }
 
-    enable() {
-        DEBUG("enable()");
-        mSettings = this.getSettings();
-        monitorIndex = Main.layoutManager.primaryIndex;
-        mPVManager = new PanelVisibilityManager.PanelVisibilityManager(
-            mSettings, monitorIndex,
-        );
-    }
+function enable() {
+    DEBUG("enable()");
+    mSettings = ExtensionUtils.getSettings();
+    monitorIndex = Main.layoutManager.primaryIndex;
+    mPVManager = new PanelVisibilityManager.PanelVisibilityManager(mSettings, monitorIndex);
+}
 
-    disable() {
-        DEBUG("disable()");
-        mPVManager.destroy();
+function disable() {
+    DEBUG("disable()");
+    mPVManager.destroy();
+    mSettings.run_dispose();
 
-        mPVManager = null;
-        mSettings = null;
-    }
+    mPVManager = null;
+    mSettings = null;
 }

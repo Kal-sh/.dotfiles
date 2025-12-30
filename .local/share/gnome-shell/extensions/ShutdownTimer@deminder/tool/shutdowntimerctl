@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# SPDX-FileCopyrightText: 2023 Deminder <tremminder@gmail.com>
-# SPDX-License-Identifier: GPL-3.0-or-later
-#
 # shutdowntimerctl - This script can configure the shutdown and rtc wake alarm schedule.
 #
 # This file is part of the gnome-shell extension ShutdownTimer@Deminder.
@@ -17,7 +14,7 @@ fi
 
 function print_help() {
 	echo "[help] (show this help)" >&2
-	echo "[shutdown|reboot|shutdown-cancel] {MINUTES}" >&2
+	echo "[shutdown|reboot] {MINUTES}" >&2
 	echo "[wake|wake-cancel] {MINUTES} (default: 0)" >&2
 }
 
@@ -36,14 +33,15 @@ case "$1" in
 	shutdown-cancel)
 		$SHUTDOWN_BIN -c
 		;;
-	wake)
-		$RTCWAKE_BIN --date +${POSITIVE_VALUE:-0}min --mode no
-		;;
-	wake-cancel)
-		$RTCWAKE_BIN --mode disable
-		;;
-	--version)
-		echo 1
+	wake|wake-cancel)
+		if [ -z "$POSITIVE_VALUE" ];then
+			$RTCWAKE_BIN --mode disable
+		else
+			$RTCWAKE_BIN --date +${POSITIVE_VALUE}min --mode on &
+			PID=$!
+			sleep 0.2
+			kill $PID
+		fi
 		;;
 	-h|help)
 		print_help

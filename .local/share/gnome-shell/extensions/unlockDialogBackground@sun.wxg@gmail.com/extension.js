@@ -1,27 +1,30 @@
 // -*- mode: js2; indent-tabs-mode: nil; js2-basic-offset: 4 -*-
 
-import Clutter from 'gi://Clutter';
-import Gio from 'gi://Gio';
-import GLib from 'gi://GLib';
-import Shell from 'gi://Shell';
-import St from 'gi://St';
+const { Clutter, Gio, GLib, Shell, St, Gdk, Gtk } = imports.gi;
 
-import {Extension, gettext as _} from 'resource:///org/gnome/shell/extensions/extension.js';
+const Main = imports.ui.main;
+const UnlockDialog = imports.ui.unlockDialog
 
-import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import * as Layout from 'resource:///org/gnome/shell/ui/layout.js';
-import * as BackgroundNew from './backgroundNew.js';
-import { UnlockDialog } from 'resource:///org/gnome/shell/ui/unlockDialog.js';
+const ExtensionUtils = imports.misc.extensionUtils;
 
+const Background = imports.ui.background;
+const ScreenShield = imports.ui.screenShield;
+
+const BLUR_BRIGHTNESS = 0.55;
+const BLUR_SIGMA = 60;
 const CROSSFADE_TIME = 300;
-const DEFAULT_RADIUS = 30;
-const DEFAULT_BRIGHTNESS = 0.65;
-const KEY_RADIUS = 'radius';
-const KEY_BRIGHTNESS = 'brightness';
 
-let dir = null;
-let radius;
-let brightness;
+const BACKGROUND_SCHEMA = 'org.gnome.shell.extensions.unlockDialogBackground';
+
+var newBackgroundSource = class extends Background.BackgroundSource {
+    constructor(layoutManager, settingsSchema) {
+        if (settingsSchema.includes("unlockDialogBackground")) {
+            super(layoutManager, 'org.gnome.desktop.background');
+            this._settings = ExtensionUtils.getSettings(settingsSchema);
+        } else
+            super(layoutManager, settingsSchema);
+    }
+};
 
 function _createBackgroundNew(monitorIndex) {
     let monitor = Main.layoutManager.monitors[monitorIndex];
@@ -31,21 +34,14 @@ function _createBackgroundNew(monitorIndex) {
         y: monitor.y,
         width: monitor.width,
         height: monitor.height,
+        effect: new Shell.BlurEffect({ name: 'blur' }),
     });
 
-    let blur_effect = new Shell.BlurEffect({
-        name: 'blur',
-        radius: radius,
-        brightness: brightness,
-    });
-    blur_effect.set_enabled(false);
-    widget.add_effect(blur_effect);
-
-    let bgManager = new BackgroundNew.BackgroundManager({
+    let bgManager = new Background.BackgroundManager({
         container: widget,
         monitorIndex,
         controlPosition: false,
-        dir: dir,
+        settingsSchema: BACKGROUND_SCHEMA,
     });
 
     this._bgManagers.push(bgManager);
@@ -59,16 +55,14 @@ function _showClockNew() {
 
     this._activePage = this._clock;
 
-    for (const widget of this._backgroundGroup) {
-        const blur_effect = widget.get_effect('blur');
-        blur_effect.set_enabled(true);
-        if (blur_effect) {
-            blur_effect.set({
-                radius: radius,
-                brightness: brightness,
-            });
+    let children = this._backgroundGroup.get_children();
+    children.forEach( child => {
+        let effects = child.get_effects();
+        if (effects.length > 0) {
+            child.myEffect = effects[0];
+            child.remove_effect(child.myEffect);
         }
-    }
+    });
 
     this._adjustment.ease(0, {
         duration: CROSSFADE_TIME,
@@ -85,16 +79,11 @@ function _showPromptNew() {
 
     this._activePage = this._promptBox;
 
-    for (const widget of this._backgroundGroup) {
-        const blur_effect = widget.get_effect('blur');
-        blur_effect.set_enabled(true);
-        if (blur_effect) {
-            blur_effect.set({
-                radius: DEFAULT_RADIUS,
-                brightness: DEFAULT_BRIGHTNESS,
-            });
-        }
-    }
+    let children = this._backgroundGroup.get_children();
+    children.forEach( child => {
+        if (child.get_effects().length == 0)
+            child.add_effect(child.myEffect);
+    });
 
     this._adjustment.ease(1, {
         duration: CROSSFADE_TIME,
@@ -103,82 +92,74 @@ function _showPromptNew() {
 }
 
 class DialogBackground {
-    constructor(settings) {
-        this.settings = settings;
+    constructor() {
+        this._gsettings = ExtensionUtils.getSettings(BACKGROUND_SCHEMA);
+        this.enabled = false;
 
-        this._createBackground = UnlockDialog.prototype._createBackground;
-        this._showClock = UnlockDialog.prototype._showClock;
-        this._showPrompt = UnlockDialog.prototype._showPrompt;
+        Background.BackgroundSource = newBackgroundSource;
 
-        radius = this.settings.get_int(KEY_RADIUS);
-        this.radiusID = this.settings.connect("changed::" + KEY_RADIUS, () => {
-            radius = this.settings.get_int(KEY_RADIUS);
-        })
-        brightness = this.settings.get_double(KEY_BRIGHTNESS);
-        this.brightnessID = this.settings.connect("changed::" + KEY_BRIGHTNESS, () => {
-            brightness = this.settings.get_double(KEY_BRIGHTNESS);
-        })
+        this._createBackground = UnlockDialog.UnlockDialog.prototype._createBackground;
+        this._showClock = UnlockDialog.UnlockDialog.prototype._showClock;
+        this._showPrompt = UnlockDialog.UnlockDialog.prototype._showPrompt;
     }
 
     enable() {
-        UnlockDialog.prototype._createBackground = _createBackgroundNew;
-        UnlockDialog.prototype._showClock = _showClockNew;
-        UnlockDialog.prototype._showPrompt = _showPromptNew;
-
-        if (Main.screenShield._dialog)
-            Main.screenShield._dialog._updateBackgrounds();
-    }
-
-    disable() {
-        UnlockDialog.prototype._createBackground = this._createBackground;
-        UnlockDialog.prototype._showClock = this._showClock;
-        UnlockDialog.prototype._showPrompt = this._showPrompt;
+        UnlockDialog.UnlockDialog.prototype._createBackground = _createBackgroundNew;
+        UnlockDialog.UnlockDialog.prototype._showClock = _showClockNew;
+        UnlockDialog.UnlockDialog.prototype._showPrompt = _showPromptNew;
 
         if (Main.screenShield._dialog)
             Main.screenShield._dialog._updateBackgrounds();
 
-        if (this.radiusID)
-            this.settings.disconnect(this.radiusID);
-
-        if (this.brightnessID)
-            this.settings.disconnect(this.brightnessID);
-    }
-}
-
-export default class unlockDialogBackgroundExtension extends Extension {
-    constructor(metadata) {
-        super(metadata);
-
-        this._startupPreparedId = 0;
-    }
-
-    enable() {
-        dir = this.dir;
-        this.background = new DialogBackground(this.getSettings());
-
-        if (Main.layoutManager._startingUp)
-            this._startupPreparedId = Main.layoutManager.connect('startup-complete', () => this.enableMe());
-        else
-            this.enableMe();
+        this.enabled = true;
     }
 
     disable() {
-        // This extension controls the lock screen background, so it cannot be disabled on unlock dialog
-        this.background.disable();
-        dir = null;
+        UnlockDialog.UnlockDialog.prototype._createBackground = this._createBackground;
+        UnlockDialog.UnlockDialog.prototype._showClock = this._showClock;
+        UnlockDialog.UnlockDialog.prototype._showPrompt = this._showPrompt;
 
-        if (this._startupPreparedId) {
-            Main.layoutManager.disconnect(this._startupPreparedId);
-            this._startupPreparedId = 0;
-        }
-    }
+        if (Main.screenShield._dialog)
+            Main.screenShield._dialog._updateBackgrounds();
 
-    enableMe() {
-        if (this._startupPreparedId) {
-            Main.layoutManager.disconnect(this._startupPreparedId);
-            this._startupPreparedId = 0;
-        }
-
-        this.background.enable();
+        this.enabled = false;
     }
 }
+
+let background;
+let _startupPreparedId;
+let enabled = false;
+
+function enableMe() {
+    if (_startupPreparedId) {
+        Main.layoutManager.disconnect(_startupPreparedId);
+        _startupPreparedId = 0;
+    }
+
+    background.enable();
+    enabled = true;
+}
+
+function init() {
+}
+
+function enable() {
+    if (enabled)
+        return;
+
+    background = new DialogBackground();
+
+    if (Main.layoutManager._startingUp)
+        _startupPreparedId = Main.layoutManager.connect('startup-complete', () => enableMe());
+    else
+        enableMe();
+}
+
+function disable() {
+    if (!Main.sessionMode.isLocked) {
+        background.disable();
+        background = null;
+        enabled = false;
+    }
+}
+

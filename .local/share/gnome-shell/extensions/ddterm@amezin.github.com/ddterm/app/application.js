@@ -1,8 +1,4 @@
 // SPDX-FileCopyrightText: 2020 Aleksandr Mezin <mezin.alexander@gmail.com>
-// SPDX-FileContributor: Mohammad Javad Naderi
-// SPDX-FileContributor: Juan M. Cruz-Martinez
-// SPDX-FileContributor: Jackson Goode
-// SPDX-FileContributor: Samuel Bachmann
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -13,38 +9,23 @@ import GObject from 'gi://GObject';
 import Gio from 'gi://Gio';
 import Gdk from 'gi://Gdk';
 import Gtk from 'gi://Gtk';
-import Handy from 'gi://Handy';
 
 import Gettext from 'gettext';
-import Gi from 'gi';
 import System from 'system';
 
-import { AboutDialog } from './about.js';
 import { AppWindow } from './appwindow.js';
-import { get_settings, metadata } from './meta.js';
-import { TerminalCommand, WIFEXITED, WEXITSTATUS, WTERMSIG } from './terminal.js';
+import { ThemeManager } from './gtktheme.js';
+import { metadata } from './meta.js';
+import { get_resource_file, get_resource_text } from './resources.js';
+import { get_settings } from './settings.js';
+import { TerminalCommand } from './terminal.js';
 import { TerminalSettings, TerminalSettingsParser } from './terminalsettings.js';
+import { WIFEXITED, WEXITSTATUS, WTERMSIG } from './waitstatus.js';
 import { DisplayConfig } from '../util/displayconfig.js';
 import {
     create_extension_dbus_proxy,
     create_extension_dbus_proxy_oneshot,
 } from './extensiondbus.js';
-
-function try_require(namespace, version = undefined) {
-    try {
-        return Gi.require(namespace, version);
-    } catch (ex) {
-        logError(ex);
-        return null;
-    }
-}
-
-const GLibUnix = GLib.check_version(2, 79, 2) === null ? try_require('GLibUnix') : null;
-const signal_add = GLibUnix?.signal_add_full ?? GLib.unix_signal_add;
-
-const SIGHUP = 1;
-const SIGINT = 2;
-const SIGTERM = 15;
 
 function schedule_gc() {
     GLib.idle_add(GLib.PRIORITY_DEFAULT, () => {
@@ -66,22 +47,15 @@ export const Application = GObject.registerClass({
     Properties: {
         'window': GObject.ParamSpec.object(
             'window',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.EXPLICIT_NOTIFY,
             Gtk.ApplicationWindow
         ),
-        'about-dialog': GObject.ParamSpec.object(
-            'about-dialog',
-            null,
-            null,
-            GObject.ParamFlags.READWRITE | GObject.ParamFlags.EXPLICIT_NOTIFY,
-            Gtk.AboutDialog
-        ),
         'prefs-dialog': GObject.ParamSpec.object(
             'prefs-dialog',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.EXPLICIT_NOTIFY,
             Gtk.Dialog
         ),
@@ -90,6 +64,7 @@ export const Application = GObject.registerClass({
 class Application extends Gtk.Application {
     _init(params) {
         super._init(params);
+        this.__heapgraph_name = this.constructor.$gtype.name;
 
         this.add_main_option(
             'activate-only',
@@ -115,15 +90,6 @@ class Application extends Gtk.Application {
             GLib.OptionFlags.HIDDEN,
             GLib.OptionArg.STRING,
             'Load the specified module on startup (for testing/debug, must be passed from Shell)',
-            null
-        );
-
-        this.add_main_option(
-            'sm-disable',
-            0,
-            GLib.OptionFlags.HIDDEN,
-            GLib.OptionArg.NONE,
-            'Disable registration with the session manager',
             null
         );
 
@@ -204,19 +170,8 @@ class Application extends Gtk.Application {
             null
         );
 
-        for (const signal of ['activate', 'startup', 'shutdown'])
-            this._trace_signal(signal);
-
-        this._trace_signal('handle-local-options', -1);
-
-        this.connect('notify', (_, pspec) => {
-            const name = pspec.get_name();
-
-            console.debug('Application property %O changed: %s', name, this[name]);
-        });
-
         this.connect('activate', () => {
-            this.ensure_window_with_terminal().present();
+            this.ensure_window_with_terminal().present_with_time(Gdk.CURRENT_TIME);
         });
 
         this.connect('handle-local-options', (_, options) => {
@@ -266,9 +221,12 @@ class Application extends Gtk.Application {
     startup() {
         this.settings = get_settings();
 
-        this.simple_action('quit', () => this.quit());
+        this.simple_action('quit', () => {
+            this.save_session();
+            this.quit();
+        });
+
         this.simple_action('preferences', () => this.preferences().catch(logError));
-        this.simple_action('about', () => this.about());
 
         [
             'window-above',
@@ -285,21 +243,19 @@ class Application extends Gtk.Application {
             this.add_action(this.settings.create_action(key));
         });
 
-        Handy.init();
-        this.style_manager = Handy.StyleManager.get_default();
+        this.theme_manager = new ThemeManager({
+            theme_variant: this.settings.get_string('theme-variant'),
+        });
 
-        this.settings.connect(
-            'changed::theme-variant',
-            this.update_color_scheme.bind(this)
+        this.settings.bind(
+            'theme-variant',
+            this.theme_manager,
+            'theme-variant',
+            Gio.SettingsBindFlags.GET
         );
 
-        this.update_color_scheme();
-
         const css_provider = Gtk.CssProvider.new();
-
-        css_provider.load_from_file(Gio.File.new_for_uri(
-            GLib.Uri.resolve_relative(import.meta.url, 'style.css', GLib.UriFlags.NONE)
-        ));
+        css_provider.load_from_file(get_resource_file('style.css'));
 
         Gtk.StyleContext.add_provider_for_screen(
             Gdk.Screen.get_default(),
@@ -327,9 +283,7 @@ class Application extends Gtk.Application {
         this.display_config.update_sync();
 
         this.simple_action('toggle', () => this.ensure_window_with_terminal().toggle());
-        this.simple_action('show', () => {
-            this.ensure_window_with_terminal().present();
-        });
+        this.simple_action('show', () => this.ensure_window_with_terminal().show());
         this.simple_action('hide', () => this.window?.hide());
 
         const shortcut_actions = {
@@ -380,17 +334,7 @@ class Application extends Gtk.Application {
             this.bind_shortcut(action, key);
         });
 
-        const icon_theme = Gtk.IconTheme.get_default();
-        const icon_search_path = icon_theme.get_search_path();
-
-        for (const url of ['icons', '../../data']) {
-            const abs_url = GLib.Uri.resolve_relative(import.meta.url, url, GLib.UriFlags.NONE);
-            const [path] = GLib.filename_from_uri(abs_url);
-
-            icon_search_path.unshift(path);
-        }
-
-        icon_theme.set_search_path(icon_search_path);
+        Gtk.IconTheme.get_default().append_search_path(get_resource_file('icons').get_path());
 
         this.session_file_path = GLib.build_filenamev([
             GLib.get_user_cache_dir(),
@@ -398,38 +342,26 @@ class Application extends Gtk.Application {
             'session',
         ]);
 
-        this.restore_session();
-        this.connect('shutdown', () => {
-            if (this._save_session_handler) {
-                this.window.disconnect(this._save_session_handler);
-                this._save_session_handler = null;
+        try {
+            this.restore_session();
+        } catch (ex) {
+            if (!(ex instanceof GLib.Error &&
+                ex.matches(GLib.file_error_quark(), GLib.FileError.NOENT)))
+                logError(ex, "Can't restore session");
+        }
+
+        this.connect('query-end', () => {
+            const cookie = this.inhibit(
+                null,
+                Gtk.ApplicationInhibitFlags.LOGOUT,
+                Gettext.gettext('Saving session…')
+            );
+
+            try {
+                this.save_session();
+            } finally {
+                this.uninhibit(cookie);
             }
-
-            if (this._save_session_source) {
-                GLib.Source.remove(this._save_session_source);
-                this._save_session_source = null;
-            }
-
-            this.save_session();
-        });
-
-        // gdm sends SIGHUP to gnome-session's process group to terminate it
-        signal_add(GLib.PRIORITY_HIGH, SIGHUP, () => this.quit());
-        signal_add(GLib.PRIORITY_HIGH, SIGINT, () => this.quit());
-        signal_add(GLib.PRIORITY_HIGH, SIGTERM, () => this.quit());
-    }
-
-    _trace_signal(signal, return_value = undefined) {
-        this.connect(signal, () => {
-            console.debug('Application %O', signal);
-
-            return return_value;
-        });
-
-        this.connect_after(signal, () => {
-            console.debug('End of application %O', signal);
-
-            return return_value;
         });
     }
 
@@ -441,24 +373,13 @@ class Application extends Gtk.Application {
 
         const debug_module = options.lookup('debug-module');
 
-        if (debug_module) {
-            const loop = GLib.MainLoop.new(null, false);
-
-            import(debug_module).catch(logError).finally(() => {
-                loop.quit();
-            });
-
-            loop.run();
-        }
+        if (debug_module)
+            import(debug_module).catch(logError);
 
         const allowed_gdk_backends = options.lookup('allowed-gdk-backends');
 
         if (allowed_gdk_backends)
             Gdk.set_allowed_backends(allowed_gdk_backends);
-
-        const sm_disable = options.lookup('sm-disable');
-
-        this.register_session = !sm_disable;
 
         if (this.flags & Gio.ApplicationFlags.IS_SERVICE)
             return -1;
@@ -592,57 +513,27 @@ class Application extends Gtk.Application {
         this.activate();
     }
 
-    get_version() {
-        const version = metadata.version?.toString();
-        const name = metadata['version-name'];
-
-        if (version && name)
-            return `${name} (${version})`;
-
-        return name || version;
-    }
-
-    get_extension_version() {
-        const result = Gio.DBus.session.call_sync(
-            'org.gnome.Shell',
-            '/org/gnome/Shell',
-            'org.gnome.Shell.Extensions',
-            'GetExtensionInfo',
-            GLib.Variant.new_tuple([GLib.Variant.new_string(metadata.uuid)]),
-            new GLib.VariantType('(a{sv})'),
-            Gio.DBusCallFlags.NO_AUTO_START,
-            2000,
-            null
-        );
-
-        const info = result.get_child_value(0);
-        const version = info.lookup_value('version', null)?.unpack();
-        const name = info.lookup_value('version-name', null)?.unpack();
-
-        if (version && name)
-            return `${name} (${version})`;
-
-        return name || version;
-    }
-
     print_version_info() {
-        const app_version = this.get_version();
-
-        print(metadata.name, app_version);
+        const revision = get_resource_text('../../revision.txt').trim();
+        print(metadata.name, metadata.version, 'revision', revision);
 
         try {
-            const ext_version = this.get_extension_version();
+            const extension_dbus = create_extension_dbus_proxy();
+            const ext_version = extension_dbus.get_cached_property('Version')?.unpack();
+            const ext_revision = extension_dbus.get_cached_property('Revision')?.unpack();
+            print('Extension', ext_version, 'revision', ext_revision);
 
-            print('Extension', ext_version);
-
-            if (!ext_version) {
+            if (ext_version === undefined && ext_revision === undefined) {
                 print(Gettext.gettext("Can't read the version of the loaded extension."));
-            } else if (app_version !== ext_version) {
+                print(Gettext.gettext(
+                    'Please, make sure ddterm GNOME Shell extension is enabled.'
+                ));
+            } else if (revision !== ext_revision) {
                 print(Gettext.gettext('Warning: ddterm version has changed'));
                 print(Gettext.gettext('Log out, then log in again to load the updated extension.'));
             }
         } catch (ex) {
-            logError(ex, "Can't get extension information from GNOME Shell");
+            logError(ex, "Can't get version information from the extension");
         }
     }
 
@@ -660,19 +551,9 @@ class Application extends Gtk.Application {
         });
 
         this.window.connect('destroy', source => {
-            if (source !== this.window)
-                return;
-
-            this.window = null;
-
-            if (this._save_session_handler) {
-                source.disconnect(this._save_session_handler);
-                this._save_session_handler = null;
-            }
+            if (source === this.window)
+                this.window = null;
         });
-
-        this._save_session_handler =
-            this.window.connect('session-update', this.schedule_save_session.bind(this));
 
         return this.window;
     }
@@ -685,7 +566,7 @@ class Application extends Gtk.Application {
 
     async preferences() {
         if (this.prefs_dialog !== null) {
-            this.prefs_dialog.present();
+            this.prefs_dialog.present_with_time(Gdk.CURRENT_TIME);
             return;
         }
 
@@ -712,23 +593,7 @@ class Application extends Gtk.Application {
             this.release();
         }
 
-        this.prefs_dialog.present();
-    }
-
-    about() {
-        if (this.about_dialog === null) {
-            this.about_dialog = new AboutDialog({
-                transient_for: this.window,
-                application: this,
-            });
-
-            this.about_dialog.connect('destroy', source => {
-                if (source === this.about_dialog)
-                    this.about_dialog = null;
-            });
-        }
-
-        this.about_dialog.present();
+        this.prefs_dialog.present_with_time(Gdk.CURRENT_TIME);
     }
 
     simple_action(name, activate, params = {}) {
@@ -763,72 +628,24 @@ class Application extends Gtk.Application {
         this.set_accels_for_action(action, keys);
     }
 
-    update_color_scheme() {
-        const mapping = {
-            'system': Handy.ColorScheme.PREFER_LIGHT,
-            'dark': Handy.ColorScheme.FORCE_DARK,
-            'light': Handy.ColorScheme.FORCE_LIGHT,
-        };
-
-        const variant = this.settings.get_string('theme-variant');
-        const resolved = mapping[variant];
-
-        if (resolved === undefined)
-            logError(new Error(`Unknown theme-variant: ${variant}`));
-        else
-            this.style_manager.color_scheme = resolved;
-    }
-
     restore_session() {
-        if (!this.settings.get_boolean('save-restore-session'))
-            return;
+        const [, data] = GLib.file_get_contents(this.session_file_path);
 
-        try {
-            const [, data] = GLib.file_get_contents(this.session_file_path);
-
-            if (!data?.length)
-                return;
-
+        if (data?.length) {
             const data_variant = GLib.Variant.new_from_bytes(
                 new GLib.VariantType('a{sv}'),
                 data,
                 false
             );
 
-            if (!data_variant.is_normal_form())
-                throw new Error('Session data is malformed, probably the file was damaged');
-
-            const win = this.ensure_window();
-
-            GObject.signal_handler_block(win, this._save_session_handler);
-
-            try {
-                win.deserialize_state(data_variant);
-            } finally {
-                GObject.signal_handler_unblock(win, this._save_session_handler);
-            }
-        } catch (ex) {
-            if (!(ex instanceof GLib.Error &&
-                ex.matches(GLib.file_error_quark(), GLib.FileError.NOENT))) {
-                logError(ex, "Can't restore session. Deleting session file.");
-                GLib.unlink(this.session_file_path);
-            }
+            this.ensure_window().deserialize_state(data_variant);
         }
+
+        GLib.unlink(this.session_file_path);
     }
 
     save_session() {
-        if (!this.settings.get_boolean('save-restore-session')) {
-            GLib.unlink(this.session_file_path);
-            return;
-        }
-
         const data = this.window?.serialize_state();
-
-        if (!data) {
-            GLib.unlink(this.session_file_path);
-            return;
-        }
-
         const bytes = data?.get_data_as_bytes().toArray() ?? [];
 
         GLib.mkdir_with_parents(GLib.path_get_dirname(this.session_file_path), 0o700);
@@ -839,17 +656,5 @@ class Application extends Gtk.Application {
             GLib.FileSetContentsFlags.CONSISTENT | GLib.FileSetContentsFlags.DURABLE,
             0o600
         );
-    }
-
-    schedule_save_session() {
-        if (this._save_session_source)
-            return;
-
-        this._save_session_source = GLib.idle_add(GLib.PRIORITY_LOW, () => {
-            this._save_session_source = null;
-            this.save_session();
-
-            return GLib.SOURCE_REMOVE;
-        });
     }
 });

@@ -2,7 +2,6 @@
 <!-- Generated with glade 3.40.0 
 
 SPDX-FileCopyrightText: 2022 Aleksandr Mezin <mezin.alexander@gmail.com>
-SPDX-FileContributor: Lingfeng Zhang ccat3z
 
 SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -620,11 +619,12 @@ SPDX-License-Identifier: GPL-3.0-or-later
       </packing>
     </child>
     <child>
-      <object class="GtkButton" id="copy_gnome_terminal_profile_button">
+      <object class="GtkButton">
         <property name="label" translatable="yes">Copy profile from GNOME Terminal</property>
         <property name="visible">1</property>
         <property name="can-focus">1</property>
         <property name="receives-default">1</property>
+        <property name="action-name">aux.copy-gnome-terminal-profile</property>
       </object>
       <packing>
         <property name="left-attach">0</property>

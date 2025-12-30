@@ -2,9 +2,6 @@
 <!-- Generated with glade 3.40.0 
 
 SPDX-FileCopyrightText: 2022 Aleksandr Mezin <mezin.alexander@gmail.com>
-SPDX-FileContributor: Mohammad Javad Naderi
-SPDX-FileContributor: Juan M. Cruz-Martinez
-SPDX-FileContributor: Jackson Goode
 
 SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -483,10 +480,11 @@ SPDX-License-Identifier: GPL-3.0-or-later
       </object>
     </child>
     <child>
-      <object class="GtkButton" id="reset_button">
+      <object class="GtkButton">
         <property name="label" translatable="1">Reset All Shortcuts to Defaults</property>
         <property name="focusable">1</property>
         <property name="receives-default">1</property>
+        <property name="action-name">aux.reset</property>
       </object>
     </child>
   </template>

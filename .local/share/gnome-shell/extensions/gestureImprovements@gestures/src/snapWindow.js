@@ -1,22 +1,24 @@
 /* exported SnapWindowExtension */
-import Clutter from 'gi://Clutter';
-import Meta from 'gi://Meta';
-import Shell from 'gi://Shell';
-import St from 'gi://St';
+const Clutter = imports.gi.Clutter;
+const Meta = imports.gi.Meta;
+const Shell = imports.gi.Shell;
+const St = imports.gi.St;
 
-import { registerClass } from '../common/utils/gobject.js'
-import { ExtSettings } from '../constants.js'
-import { createSwipeTracker } from './swipeTracker.js'
-import { easeActor, easeAdjustment } from './utils/environment.js'
-import { getVirtualKeyboard } from './utils/keyboard.js'
-import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import * as Utils from 'resource:///org/gnome/shell/misc/util.js';
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+const { registerClass } = Me.imports.common.utils.gobject;
+const { ExtSettings } = Me.imports.constants;
+const { createSwipeTracker } = Me.imports.src.swipeTracker;
+const { easeActor, easeAdjustment } = Me.imports.src.utils.environment;
+const { getVirtualKeyboard } = Me.imports.src.utils.keyboard;
+const Main = imports.ui.main;
+const Utils = imports.misc.util;
+const { SwipeTracker } = imports.ui.swipeTracker;
 const WINDOW_ANIMATION_TIME = 250;
 const UPDATED_WINDOW_ANIMATION_TIME = 150;
 const TRIGGER_THRESHOLD = 0.1;
 
 // define enum
-export var GestureMaxUnMaxState;
+var GestureMaxUnMaxState;
 (function (GestureMaxUnMaxState) {
 	GestureMaxUnMaxState[GestureMaxUnMaxState['MINIMIZE'] = -1] = 'MINIMIZE';
 	GestureMaxUnMaxState[GestureMaxUnMaxState['UNMAXIMIZE'] = 0] = 'UNMAXIMIZE';
@@ -25,7 +27,7 @@ export var GestureMaxUnMaxState;
 })(GestureMaxUnMaxState || (GestureMaxUnMaxState = {}));
 
 // define enum
-export var GestureTileState;
+var GestureTileState;
 (function (GestureTileState) {
 	GestureTileState[GestureTileState['RIGHT_TILE'] = -1] = 'RIGHT_TILE';
 	GestureTileState[GestureTileState['NORMAL'] = 0] = 'NORMAL';
@@ -253,7 +255,7 @@ const TilePreview = registerClass(class TilePreview extends St.Widget {
 	}
 });
 
-export var SnapWindowExtension = class SnapWindowExtension {
+var SnapWindowExtension = class SnapWindowExtension {
 	constructor() {
 		this._connectors = [];
 		this._toggledDirection = false;
@@ -263,12 +265,9 @@ export var SnapWindowExtension = class SnapWindowExtension {
 		this._touchpadSwipeGesture = this._swipeTracker._touchpadGesture;
 		this._tilePreview = new TilePreview();
 		Main.layoutManager.uiGroup.add_child(this._tilePreview);
-		this._uiGroupAddedActorId = Main.layoutManager.uiGroup.connect('child-added', () => {
+		this._uiGroupAddedActorId = Main.layoutManager.uiGroup.connect('actor-added', () => {
 			Main.layoutManager.uiGroup.set_child_above_sibling(this._tilePreview, null);
 		});
-		// this._uiGroupAddedActorId = Main.layoutManager.uiGroup.connect('actor-added', () => {
-		// 	Main.layoutManager.uiGroup.set_child_above_sibling(this._tilePreview, null);
-		// });
 
 		Main.layoutManager.uiGroup.set_child_above_sibling(this._tilePreview, null);
 	}

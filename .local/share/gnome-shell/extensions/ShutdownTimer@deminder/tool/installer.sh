@@ -1,15 +1,10 @@
 #!/bin/bash
 
-# SPDX-FileCopyrightText: 2023 Deminder <tremminder@gmail.com>
-# SPDX-License-Identifier: GPL-3.0-or-later
-#
-# Adapted from cpupower extension by:
-# Martin Koppehel <psl.kontakt@gmail.com>, Fin Christensen <christensen.fin@gmail.com>
-
 # installer.sh - This script installs a policykit rule for the Shutdown Timer gnome-shell extension.
 #
 # This file is part of the gnome-shell extension ShutdownTimer@Deminder.
 
+# Authors: Martin Koppehel <psl.kontakt@gmail.com>, Fin Christensen <christensen.fin@gmail.com> (cpupower extension), Deminder <tremminder@gmail.com>
 
 set -e
 
@@ -241,18 +236,21 @@ then
         rm "${LEG_RULE_OUT}" || fail " - $(gtxt 'cannot remove') ${LEG_RULE_OUT}" && success
     fi
 
-    function uninstallFile() {
-        echo -n "$(gtxt 'Uninstalling') $2... "
-        if [ -f "$1" ]
-        then
-            rm "$1" || fail " - $(gtxt 'cannot remove') $1" && success
-        else
-            echo "$2 $(gtxt 'not installed at') $1"
-        fi
-    }
+    echo -n "$(gtxt 'Uninstalling') ${TOOL_NAME} $(gtxt 'tool')... "
+    if [ -f "${TOOL_OUT}" ]
+    then
+        rm "${TOOL_OUT}" || fail " - $(gtxt 'cannot remove') ${TOOL_OUT}" && success
+    else
+        echo "$(gtxt 'tool') $(gtxt 'not installed at') ${TOOL_OUT}"
+    fi
 
-    uninstallFile "${TOOL_OUT}" "${TOOL_NAME} $(gtxt 'tool')"
-    uninstallFile "${RULE_OUT}" "$(gtxt 'policykit rule')"
+    echo -n "$(gtxt 'Uninstalling') $(gtxt 'policykit rule')... "
+    if [ -f "${RULE_OUT}" ]
+    then
+        rm "${RULE_OUT}" || fail " - $(gtxt 'cannot remove') ${RULE_OUT}" && success
+    else
+        echo "$(gtxt 'policy rule') $(gtxt 'not installed at') ${RULE_OUT}"
+    fi
 
     exit ${EXIT_SUCCESS}
 fi

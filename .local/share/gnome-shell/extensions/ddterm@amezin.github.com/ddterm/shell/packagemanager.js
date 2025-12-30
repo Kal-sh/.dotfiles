@@ -2,8 +2,10 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import GLib from 'gi://GLib';
-import Gio from 'gi://Gio';
+'use strict';
+
+const GLib = imports.gi.GLib;
+const Gio = imports.gi.Gio;
 
 function shell_join(argv) {
     return argv.map(arg => GLib.shell_quote(arg)).join(' ');
@@ -113,7 +115,7 @@ async function find_package_manager_install_command(cancellable) {
     return null;
 }
 
-export async function find_package_installer(cancellable) {
+async function find_package_installer(cancellable) {
     const terminal_command = find_terminal_command();
 
     if (!terminal_command)
@@ -131,3 +133,5 @@ export async function find_package_installer(cancellable) {
         GLib.spawn_close_pid(pid);
     };
 }
+
+/* exported find_package_installer */

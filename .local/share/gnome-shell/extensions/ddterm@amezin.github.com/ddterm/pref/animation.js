@@ -2,19 +2,22 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import GObject from 'gi://GObject';
-import Gio from 'gi://Gio';
-import Gtk from 'gi://Gtk';
+'use strict';
 
-import {
+const GObject = imports.gi.GObject;
+const Gio = imports.gi.Gio;
+const Gtk = imports.gi.Gtk;
+
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+const {
     bind_sensitive,
     bind_widgets,
     insert_settings_actions,
     set_scale_value_format,
     ui_file_uri,
-} from './util.js';
+} = Me.imports.ddterm.pref.util;
 
-export const AnimationWidget = GObject.registerClass({
+var AnimationWidget = GObject.registerClass({
     GTypeName: 'DDTermPrefsAnimation',
     Template: ui_file_uri('prefs-animation.ui'),
     Children: [
@@ -27,21 +30,21 @@ export const AnimationWidget = GObject.registerClass({
     Properties: {
         'settings': GObject.ParamSpec.object(
             'settings',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
             Gio.Settings
         ),
-        'gettext-domain': GObject.ParamSpec.jsobject(
-            'gettext-domain',
-            null,
-            null,
+        'gettext-context': GObject.ParamSpec.jsobject(
+            'gettext-context',
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY
         ),
     },
 }, class PrefsAnimation extends Gtk.Box {
-    constructor(params) {
-        super(params);
+    _init(params) {
+        super._init(params);
 
         insert_settings_actions(this, this.settings, ['override-window-animation']);
         bind_sensitive(this.settings, 'override-window-animation', this.animation_prefs);
@@ -59,6 +62,8 @@ export const AnimationWidget = GObject.registerClass({
     }
 
     get title() {
-        return this.gettext_domain.gettext('Animation');
+        return this.gettext_context.gettext('Animation');
     }
 });
+
+/* exported AnimationWidget */

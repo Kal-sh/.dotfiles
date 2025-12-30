@@ -1,19 +1,15 @@
-// SPDX-FileCopyrightText: 2020 Florian Müllner <fmuellner@gnome.org>
-//
-// SPDX-License-Identifier: GPL-2.0-or-later
+// -*- mode: js2; indent-tabs-mode: nil; js2-basic-offset: 4 -*-
+/* exported init buildPrefsWidget */
 
 // we use async/await here to not block the mainloop, not to parallelize
 /* eslint-disable no-await-in-loop */
 
-import Adw from 'gi://Adw';
-import Gio from 'gi://Gio';
-import GLib from 'gi://GLib';
-import GObject from 'gi://GObject';
-import Gtk from 'gi://Gtk';
+const { Adw, Gio, GLib, GObject, Gtk } = imports.gi;
 
-import {ExtensionPreferences} from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
+const ExtensionUtils = imports.misc.extensionUtils;
 
-import {getThemeDirs, getModeThemeDirs} from './util.js';
+const Me = ExtensionUtils.getCurrentExtension();
+const Util = Me.imports.util;
 
 Gio._promisify(Gio.File.prototype, 'enumerate_children_async');
 Gio._promisify(Gio.File.prototype, 'query_info_async');
@@ -24,17 +20,17 @@ class UserThemePrefsWidget extends Adw.PreferencesGroup {
         GObject.registerClass(this);
     }
 
-    constructor(settings) {
-        super({title: 'Themes'});
+    constructor() {
+        super({ title: 'Themes' });
 
         this._actionGroup = new Gio.SimpleActionGroup();
         this.insert_action_group('theme', this._actionGroup);
 
-        this._settings = settings;
+        this._settings = ExtensionUtils.getSettings();
         this._actionGroup.add_action(
             this._settings.create_action('name'));
 
-        this.connect('destroy', () => (this._settings = null));
+        this.connect('destroy', () => this._settings.run_dispose());
 
         this._rows = new Map();
         this._addTheme(''); // default
@@ -43,7 +39,7 @@ class UserThemePrefsWidget extends Adw.PreferencesGroup {
     }
 
     async _collectThemes() {
-        for (const dirName of getThemeDirs()) {
+        for (const dirName of Util.getThemeDirs()) {
             const dir = Gio.File.new_for_path(dirName);
             for (const name of await this._enumerateDir(dir)) {
                 if (this._rows.has(name))
@@ -64,7 +60,7 @@ class UserThemePrefsWidget extends Adw.PreferencesGroup {
             }
         }
 
-        for (const dirName of getModeThemeDirs()) {
+        for (const dirName of Util.getModeThemeDirs()) {
             const dir = Gio.File.new_for_path(dirName);
             for (const filename of await this._enumerateDir(dir)) {
                 if (!filename.endsWith('.css'))
@@ -129,8 +125,13 @@ class ThemeRow extends Adw.ActionRow {
     }
 }
 
-export default class UserThemePrefs extends ExtensionPreferences {
-    getPreferencesWidget() {
-        return new UserThemePrefsWidget(this.getSettings());
-    }
+/** */
+function init() {
+}
+
+/**
+ * @returns {Gtk.Widget} - the prefs widget
+ */
+function buildPrefsWidget() {
+    return new UserThemePrefsWidget();
 }

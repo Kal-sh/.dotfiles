@@ -1,5 +1,5 @@
 /* exported printStack */
-export function printStack(message) {
+function printStack(message) {
 	const stack = new Error().stack;
 	let prefix = '';
 	if (stack) {

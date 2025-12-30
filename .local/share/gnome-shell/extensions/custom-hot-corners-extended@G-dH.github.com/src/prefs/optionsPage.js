@@ -3,30 +3,44 @@
  * OptionsPage
  *
  * @author     GdH <G-dH@github.com>
- * @copyright  2021-2024
+ * @copyright  2021-2022
  * @license    GPL-3.0
  */
 
 'use strict';
 
-import GObject from 'gi://GObject';
-import Gtk from 'gi://Gtk';
+const { Gtk, GObject } = imports.gi;
 
-import * as OptionsFactory from './optionsFactory.js';
+let Adw = null;
+try {
+    Adw = imports.gi.Adw;
+} catch (e) {}
+
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+const Settings        = Me.imports.src.common.settings;
+
+const optionsFactory = Me.imports.src.prefs.optionsFactory;
+
+var shellVersion = parseFloat(imports.misc.config.PACKAGE_VERSION);
 
 // gettext
-let _;
+const _  = Settings._;
 
-export function init(extension) {
-    _ = extension.gettext.bind(extension);
+// const OptionList = Me.imports.src.prefs.optionList;
+
+
+if (Adw) {
+    var MscOptionsPageAdw = GObject.registerClass(
+    class MscOptionsPageAdw extends optionsFactory.OptionsPageAdw {
+        _init(mscOptions, pageProperties = {}) {
+            const optionList = getOptionList(mscOptions);
+            super._init(optionList, pageProperties);
+        }
+    });
 }
 
-export function cleanGlobals() {
-    _ = null;
-}
-
-export const MscOptionsPageAdw = GObject.registerClass(
-class MscOptionsPageAdw extends OptionsFactory.OptionsPageAdw {
+var MscOptionsPageLegacy = GObject.registerClass(
+class MscOptionsPageLegacy extends optionsFactory.OptionsPageLegacy {
     _init(mscOptions, pageProperties = {}) {
         const optionList = getOptionList(mscOptions);
         super._init(optionList, pageProperties);
@@ -34,7 +48,7 @@ class MscOptionsPageAdw extends OptionsFactory.OptionsPageAdw {
 });
 
 function getOptionList(mscOptions) {
-    const itemFactory = new OptionsFactory.ItemFactory(mscOptions);
+    const itemFactory = new optionsFactory.ItemFactory(mscOptions);
 
     let optionsList = [];
     // options item format:
@@ -153,6 +167,39 @@ function getOptionList(mscOptions) {
             _('Exclude minimized windows from the switcher list'),
             itemFactory.newSwitch(),
             'winSkipMinimized'
+        )
+    );
+
+    optionsList.push(
+        itemFactory.getRowWidget(
+            _('DND Window Thumbnails'),
+            `${_('Window thumbnails are overlay clones of windows, can be dragged by mouse anywhere on the screen')}\n${
+                _('Thumbnail control:')}\n    ${
+                _('Double click:    \t\tactivate source window')}\n    ${
+                _('Primary click:   \t\ttoggle scroll wheel function (resize / source)')}\n    ${
+                _('Secondary click: \t\tshow full size window preview')}\n    ${
+                _('Middle click:    \t\ttoggle icon view')}\n    ${
+                _('Scroll wheel:    \t\tresize or change source window')}\n    ${
+                _('Ctrl + Scroll wheel: \tchange source window or resize')}\n    ${
+                _('Shift + Scroll wheel: \tadjust opacity')}\n    `
+            ,
+            null
+        )
+    );
+
+    let tmbScaleAdjustment = new Gtk.Adjustment({
+        lower: 5,
+        upper: 50,
+        step_increment: 1,
+        page_increment: 10,
+    });
+
+    optionsList.push(
+        itemFactory.getRowWidget(
+            _('Thumbnail height scale (%)'),
+            _('Height of the thumbnail relative to screen height'),
+            itemFactory.newSpinButton(tmbScaleAdjustment),
+            'winThumbnailScale'
         )
     );
 

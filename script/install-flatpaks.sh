@@ -18,9 +18,9 @@ flatpaks=(
   io.gitlab.news_flash.NewsFlash
   #com.protonvpn.www
   #org.videolan.VLC
-  #io.github.kolunmi.Bazaar
+  io.github.kolunmi.Bazaar
   #com.github.wwmm.easyeffects
-  #org.pulseaudio.pavucontrol
+  org.pulseaudio.pavucontrol
 )
 
 echo "📦 Installing Flatpak apps..."

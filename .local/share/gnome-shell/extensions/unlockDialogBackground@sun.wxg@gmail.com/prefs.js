@@ -1,18 +1,25 @@
-import Adw from 'gi://Adw';
-import Gio from 'gi://Gio';
-import GLib from 'gi://GLib';
-import GObject from 'gi://GObject';
-import Gtk from 'gi://Gtk';
-import Gdk from 'gi://Gdk';
-import GdkPixbuf from 'gi://GdkPixbuf';
+const GLib = imports.gi.GLib;
+const Gio = imports.gi.Gio;
+const Gtk = imports.gi.Gtk;
+const GdkPixbuf = imports.gi.GdkPixbuf;
+const Gdk = imports.gi.Gdk;
 
-import {ExtensionPreferences} from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
+const ExtensionUtils = imports.misc.extensionUtils;
+const Me = imports.misc.extensionUtils.getCurrentExtension();
 
-const BACKGROUND_SCHEMA = 'org.gnome.desktop.background.lockdialog';
+const SCHEMA_NAME = 'org.gnome.shell.extensions.unlockDialogBackground';
+
+function init() {
+}
+
+function buildPrefsWidget() {
+    let widget = new PrefsWidget();
+    return widget.widget;
+}
 
 class PrefsWidget {
-    constructor(settings) {
-        this.gsettings = settings;
+    constructor() {
+        this.gsettings = ExtensionUtils.getSettings(SCHEMA_NAME);
 
         this.widget = new Gtk.Box({
             orientation: Gtk.Orientation.VERTICAL,
@@ -31,8 +38,6 @@ class PrefsWidget {
 
         this.addBoldTextToBox("Change background", this.vbox);
         this.vbox.append(new Gtk.Separator({ orientation: Gtk.Orientation.HORIZONTAL, margin_bottom: 5, margin_top: 5}));
-        this.vbox.append(this.addAdjustBlur());
-        this.vbox.append(this.addAdjustBrightness());
         this.vbox.append(this.addPictureUrl());
         this.vbox.append(this.addPictureShow());
 
@@ -125,73 +130,5 @@ class PrefsWidget {
         txt.set_wrap(true);
         box.append(txt);
     }
-
-    addAdjustBlur() {
-        let hbox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL, margin_top: 5});
-        let blurLabel = new Gtk.Label({label: 'Adjust Radius', xalign: 0, hexpand: true});
-
-        this.blur_adjustment = new Gtk.Adjustment({
-            lower: 0,
-            'step-increment': 1,
-            'page-increment': 5,
-            upper: 100,
-        });
-
-        this.blur_scale = new Gtk.Scale({
-            hexpand: true,
-            'draw-value': true,
-            'value-pos': 'left',
-            'can-focus': true,
-            digits: 0,
-            adjustment: this.blur_adjustment,
-        });
-
-        this.blur_scale.set_value(this.gsettings.get_int('radius'));
-        this.blur_scale.connect('value-changed', entry => {
-            this.gsettings.set_int('radius', entry.get_value());
-        });
-
-        hbox.append(blurLabel);
-        hbox.append(this.blur_scale);
-
-        return hbox;
-    }
-
-    addAdjustBrightness() {
-        let hbox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL, margin_top: 5});
-        let brightnessLabel = new Gtk.Label({label: 'Adjust Brightness', xalign: 0, hexpand: true});
-
-        this.brightness_adjustment = new Gtk.Adjustment({
-            lower: 0,
-            'step-increment': 0.05,
-            'page-increment': 0.1,
-            upper: 1,
-        });
-
-        this.brightness_scale = new Gtk.Scale({
-            hexpand: true,
-            'draw-value': true,
-            'value-pos': 'left',
-            'can-focus': true,
-            digits: 2,
-            adjustment: this.brightness_adjustment,
-        });
-
-        this.brightness_scale.set_value(this.gsettings.get_double('brightness'));
-        this.brightness_scale.connect('value-changed', entry => {
-            this.gsettings.set_double('brightness', entry.get_value());
-        });
-
-        hbox.append(brightnessLabel);
-        hbox.append(this.brightness_scale);
-
-        return hbox;
-    }
 }
 
-export default class UnlockDialogBackgroundPrefs extends ExtensionPreferences {
-    getPreferencesWidget() {
-        let widget = new PrefsWidget(this.getSettings());
-        return widget.widget;
-    }
-}

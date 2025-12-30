@@ -5,7 +5,7 @@
  *
  * QrCode.js
  *
- * Copyright (c) 2021-2025 Gianni Lerro {glerro} ~ <glerro@pm.me>
+ * Copyright (c) 2021-2023 Gianni Lerro {glerro} ~ <glerro@pm.me>
  *
  * Wifi QR Code is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by the
@@ -21,38 +21,39 @@
  * with Wifi QR Code. If not, see <https://www.gnu.org/licenses/>.
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
- * SPDX-FileCopyrightText: 2021-2025 Gianni Lerro <glerro@pm.me>
+ * SPDX-FileCopyrightText: 2021-2023 Gianni Lerro <glerro@pm.me>
  */
+
+/* exported QrCodeBox, QrCodeActor */
 
 'use strict';
 
-import Clutter from 'gi://Clutter';
-import Gio from 'gi://Gio';
-import GObject from 'gi://GObject';
-import NM from 'gi://NM';
-import St from 'gi://St';
+const Cairo = imports.cairo;
+const ByteArray = imports.byteArray;
 
-import {gettext as _} from 'resource:///org/gnome/shell/extensions/extension.js';
+const {Clutter, Gio, GObject, NM, St} = imports.gi;
 
-import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import * as MessageTray from 'resource:///org/gnome/shell/ui/messageTray.js';
-import * as Config from 'resource:///org/gnome/shell/misc/config.js';
+const Main = imports.ui.main;
+const MessageTray = imports.ui.messageTray;
 
-import Cairo from 'cairo';
+const ExtensionUtils = imports.misc.extensionUtils;
+const Me = ExtensionUtils.getCurrentExtension();
+const ExtensionName = Me.metadata.name;
 
-import * as QrCodeGen from './libs/qrcodegen.js';
+const _ = ExtensionUtils.gettext;
 
-const SHELL_MAJOR = parseInt(Config.PACKAGE_VERSION.split('.')[0]);
+const QrCodeGen = Me.imports.libs.qrcodegen;
+
 const MIN_SQUARE_SIZE = 1.0;
 const MIN_BORDER = 1;
 const MIN_WIDTH = 150;
 
 // Extend the BoxLayout class from St.
-export const QrCodeBox = GObject.registerClass({
+var QrCodeBox = GObject.registerClass({
     GTypeName: 'QrCodeBox',
 }, class QrCodeBox extends St.BoxLayout {
-    constructor(extension, device, isVisible = true) {
-        super({
+    _init(device, isVisible = true) {
+        super._init({
             vertical: true,
             x_align: Clutter.ActorAlign.CENTER,
             y_align: Clutter.ActorAlign.CENTER,
@@ -62,15 +63,12 @@ export const QrCodeBox = GObject.registerClass({
             visible: isVisible,
         });
 
-        this._extension = extension;
-        this._extensionName = this._extension.metadata.name;
-
-        let _qrCodeActor = new QrCodeActor(this._extension, this._getWifiSettingsString(device), 200, 2);
-        this.add_child(_qrCodeActor);
+        let _qrCodeActor = new QrCodeActor(this._getWifiSettingsString(device), 200, 2);
+        this.add_actor(_qrCodeActor);
     }
 
     _getWifiSettingsString(device) {
-        console.log(`${this._extensionName}: Collecting Wifi Settings`);
+        log(`${ExtensionName}: Collecting Wifi Settings`);
 
         // device is a NM.Device class
         let _device = device;
@@ -95,8 +93,7 @@ export const QrCodeBox = GObject.registerClass({
         let _qrCodeString = 'WIFI:';
 
         /* SSID */
-        let decoder = new TextDecoder('utf-8');
-        let _ssid = decoder.decode(_setting.get_ssid().get_data());
+        let _ssid = ByteArray.toString(_setting.get_ssid().get_data());
         if (!_ssid)
             return null;
 
@@ -124,7 +121,7 @@ export const QrCodeBox = GObject.registerClass({
                 let _secrets = _remoteConnection.get_secrets(NM.SETTING_WIRELESS_SECURITY_SETTING_NAME, null);
                 _remoteConnection.update_secrets(NM.SETTING_WIRELESS_SECURITY_SETTING_NAME, _secrets);
             } catch (e) {
-                console.error(e.message, 'Wifi QR Code');
+                logError(e.message, 'Wifi QR Code');
                 return null;
             }
 
@@ -150,22 +147,18 @@ export const QrCodeBox = GObject.registerClass({
     }
 });
 
-// Extend the DrawingArea class from St.
-const QrCodeActor = GObject.registerClass({
+// Extend the Actor class from Clutter.
+var QrCodeActor = GObject.registerClass({
     GTypeName: 'QrCodeActor',
-}, class QrCodeActor extends St.DrawingArea {
-    constructor(extension, qrcodetext = 'Invalid Text', size = 100, border = 2) {
-        super({
+}, class QrCodeActor extends Clutter.Actor {
+    _init(qrcodetext = 'Invalid Text', size = 100, border = 2) {
+        super._init({
             layout_manager: new Clutter.BinLayout(),
             clip_to_allocation: true,
             reactive: true,
         });
 
-        this._extension = extension;
-        this._extensionName = this._extension.metadata.name;
-        this._extensionPath = this._extension.path;
-
-        console.log(`${this._extensionName}: Generating Wifi QR Code`);
+        log(`${ExtensionName}: Generating Wifi QR Code`);
 
         // Define local variables
         this._qrcodetext = qrcodetext;
@@ -177,13 +170,21 @@ const QrCodeActor = GObject.registerClass({
         this._qrcode = QRC.encodeText(this._qrcodetext, QRC.Ecc.MEDIUM);
 
         if (this._qrcode !== null || this._qrcode !== undefined) {
-            this.set_size(this._size, this._size);
-            this.connectObject('repaint', this.draw.bind(this), this);
+            // Create a 2D canvas, courtesy of Clutter
+            this.canvas = new Clutter.Canvas();
+            this.canvas.set_size(this._size, this._size);
 
-            // Emitt the repaint signal
-            this.queue_repaint();
+            // Add the canvas to the Clutter Actor
+            this.set_content(this.canvas);
+            this.set_size(this._size, this._size);
+
+            // Connect the draw signal to the draw function
+            this.canvas.connect('draw',  (canvas, cr, width, height) => this.draw(canvas, cr, width, height));
+
+            // Invalidate the canvas to emitt the draw signal
+            this.canvas.invalidate();
         } else {
-            console.log(`${this._extensionName}: An error occurred generating the QR Code`);
+            log(`${ExtensionName}: An error occurred generating the QR Code`);
         }
     }
 
@@ -222,18 +223,18 @@ const QrCodeActor = GObject.registerClass({
 
                 cr.$dispose();
 
-                surface.writeToPNG(`${this._extensionPath}/TmpQrCode.png`);
+                surface.writeToPNG(`${Me.path}/TmpQrCode.png`);
 
-                const imageFile = Gio.File.new_for_path(`${this._extensionPath}/TmpQrCode.png`);
+                const imageFile = Gio.File.new_for_path(`${Me.path}/TmpQrCode.png`);
                 if (!imageFile.query_exists(null)) {
-                    console.log(`${this._extensionName}: Temp file to copy in the clipboard not found`);
+                    log(`${ExtensionName}: Temp file to copy in the clipboard not found`);
                     return;
                 }
 
                 const [bytes] = imageFile.load_bytes(null);
                 const data = bytes.get_data();
                 if (!data) {
-                    console.log(`${this._extensionName}: Error reading temp file to copy in the clipboard`);
+                    log(`${ExtensionName}: Error reading temp file to copy in the clipboard`);
                     return;
                 }
 
@@ -247,48 +248,26 @@ const QrCodeActor = GObject.registerClass({
                 Clipboard.set_content(CLIPBOARD_TYPE, 'image/png', data);
 
                 // Show Notification
-                if (SHELL_MAJOR > 45) {
-                    this._notifySource = new MessageTray.Source({
-                        title: 'Gnome Shell Extension',
-                        iconName: 'org.gnome.Shell.Extensions-symbolic',
-                    });
-                    this._notification = new MessageTray.Notification({
-                        source: this._notifySource,
-                        title: 'Wifi QR Code',
-                        body: _('QR Code copied to clipboard'),
-                        iconName: 'edit-paste-symbolic',
-                        isTransient: true,
-                        resident: false,
-                    });
-                } else {
-                    this._notifySource = new MessageTray.Source('Gnome Shell Extension',
-                        'edit-paste-symbolic');
-                    this._notification = new MessageTray.Notification(this._notifySource,
-                        'Wifi QR Code', _('QR Code copied to clipboard'));
-                    this._notification.setTransient(true);
-                }
-
-                this._notifySource.connectObject('destroy', () => (this._notifySource = null), this);
+                this._notifySource = new MessageTray.Source('', 'edit-paste-symbolic');
+                this._notifySource.connect('destroy', () => (this._notifySource = null));
                 Main.messageTray.add(this._notifySource);
 
-                if (SHELL_MAJOR > 45)
-                    this._notifySource.addNotification(this._notification);
-                else
-                    this._notifySource.showNotification(this._notification);
+                let notification = new MessageTray.Notification(this._notifySource, 'Wifi QR Code', _('QR Code copied to clipboard'));
+                notification.setTransient(true);
+
+                this._notifySource.showNotification(notification);
             }
         }
     }
 
-    // Draw the QR Code into the St.DrawingArea
-    draw() {
+    // Draw the QR Code into the Clutter.Actor content
+    draw(canvas, cr, width, height) {
         let _qrSize = this._qrcode.size;
         let _border = this._border;
 
-        let [width, height] = this.get_surface_size();
         let _rowSize = _border + _qrSize + _border;
         let _squareSize = (width / _rowSize) < MIN_SQUARE_SIZE ? MIN_SQUARE_SIZE : width / _rowSize;
 
-        let cr = this.get_context();
         // Set Antialiasing mode to none (bilevel alpha mask)
         cr.setAntialias(Cairo.Antialias.NONE);
 

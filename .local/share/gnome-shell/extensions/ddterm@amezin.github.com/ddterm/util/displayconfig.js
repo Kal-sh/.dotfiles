@@ -26,40 +26,36 @@ export const DisplayConfig = GObject.registerClass({
     Properties: {
         'dbus-connection': GObject.ParamSpec.object(
             'dbus-connection',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
             Gio.DBusConnection
         ),
         'current-state': GObject.param_spec_variant(
             'current-state',
-            null,
-            null,
+            '',
+            '',
             CURRENT_STATE_TYPE,
             null,
             GObject.ParamFlags.READABLE
         ),
         'layout-mode': GObject.ParamSpec.int(
             'layout-mode',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READABLE,
-            0,
-            2,
             0
         ),
     },
 }, class DDTermDisplayConfig extends GObject.Object {
-    #current_state = null;
-    #cancellable = null;
-    #layout_mode = 0;
-    #serial = -1;
-    #change_handler;
+    _init(params) {
+        super._init(params);
 
-    constructor(params) {
-        super(params);
+        this._cancellable = null;
+        this._layout_mode = 0;
+        this._serial = -1;
 
-        this.#change_handler = this.dbus_connection.signal_subscribe(
+        this._change_handler = this.dbus_connection.signal_subscribe(
             BUS_NAME,
             INTERFACE_NAME,
             'MonitorsChanged',
@@ -79,11 +75,11 @@ export const DisplayConfig = GObject.registerClass({
     }
 
     get current_state() {
-        return this.#current_state;
+        return this._current_state;
     }
 
     get layout_mode() {
-        return this.#layout_mode;
+        return this._layout_mode;
     }
 
     create_monitor_list() {
@@ -93,17 +89,17 @@ export const DisplayConfig = GObject.registerClass({
             'current-state',
             monitors,
             'current-state',
-            this.#current_state ? GObject.BindingFlags.SYNC_CREATE : GObject.BindingFlags.DEFAULT
+            this._current_state ? GObject.BindingFlags.SYNC_CREATE : GObject.BindingFlags.DEFAULT
         );
 
         return monitors;
     }
 
     update_sync() {
-        this.#cancellable?.cancel();
-        this.#cancellable = new Gio.Cancellable();
+        this._cancellable?.cancel();
+        this._cancellable = new Gio.Cancellable();
 
-        this.#parse_current_state(
+        this._parse_current_state(
             this.dbus_connection.call_sync(
                 BUS_NAME,
                 OBJECT_PATH,
@@ -113,14 +109,14 @@ export const DisplayConfig = GObject.registerClass({
                 CURRENT_STATE_TYPE,
                 Gio.DBusCallFlags.NO_AUTO_START,
                 -1,
-                this.#cancellable
+                this._cancellable
             )
         );
     }
 
     update_async() {
-        this.#cancellable?.cancel();
-        this.#cancellable = new Gio.Cancellable();
+        this._cancellable?.cancel();
+        this._cancellable = new Gio.Cancellable();
 
         this.dbus_connection.call(
             BUS_NAME,
@@ -131,10 +127,10 @@ export const DisplayConfig = GObject.registerClass({
             CURRENT_STATE_TYPE,
             Gio.DBusCallFlags.NO_AUTO_START,
             -1,
-            this.#cancellable,
+            this._cancellable,
             (source, result) => {
                 try {
-                    this.#parse_current_state(source.call_finish(result));
+                    this._parse_current_state(source.call_finish(result));
                 } catch (error) {
                     if (!(error instanceof GLib.Error &&
                           error.matches(Gio.io_error_quark(), Gio.IOErrorEnum.CANCELLED)))
@@ -144,13 +140,13 @@ export const DisplayConfig = GObject.registerClass({
         );
     }
 
-    #parse_current_state(state) {
+    _parse_current_state(state) {
         const serial = state.get_child_value(0).get_uint32();
-        if (serial <= this.#serial)
+        if (serial <= this._serial)
             return;
 
-        this.#current_state = state;
-        this.#serial = serial;
+        this._current_state = state;
+        this._serial = serial;
         this.freeze_notify();
 
         try {
@@ -159,8 +155,8 @@ export const DisplayConfig = GObject.registerClass({
             const properties = this.current_state.get_child_value(3);
             const layout_mode = properties.lookup_value('layout-mode', null)?.unpack();
 
-            if (layout_mode !== this.#layout_mode) {
-                this.#layout_mode = layout_mode;
+            if (layout_mode !== this._layout_mode) {
+                this._layout_mode = layout_mode;
                 this.notify('layout-mode');
             }
         } finally {
@@ -169,12 +165,12 @@ export const DisplayConfig = GObject.registerClass({
     }
 
     unwatch() {
-        if (this.#change_handler) {
-            this.dbus_connection.signal_unsubscribe(this.#change_handler);
-            this.#change_handler = null;
+        if (this._change_handler) {
+            this.dbus_connection.signal_unsubscribe(this._change_handler);
+            this._change_handler = null;
         }
 
-        this.#cancellable?.cancel();
+        this._cancellable?.cancel();
     }
 });
 
@@ -182,36 +178,36 @@ export const Monitor = GObject.registerClass({
     Properties: {
         'connector': GObject.ParamSpec.string(
             'connector',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
             ''
         ),
         'vendor': GObject.ParamSpec.string(
             'vendor',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
             ''
         ),
         'product': GObject.ParamSpec.string(
             'product',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
             ''
         ),
         'serial': GObject.ParamSpec.string(
             'serial',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
             ''
         ),
         'display-name': GObject.ParamSpec.string(
             'display-name',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
             ''
         ),
@@ -237,22 +233,25 @@ export const MonitorList = GObject.registerClass({
     Properties: {
         'current-state': GObject.param_spec_variant(
             'current-state',
-            null,
-            null,
+            '',
+            '',
             CURRENT_STATE_TYPE,
             null,
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.EXPLICIT_NOTIFY
         ),
     },
 }, class DDTermMonitorList extends GObject.Object {
-    #objects = [];
-    #current_state = null;
+    _init(params) {
+        this._objects = [];
+
+        super._init(params);
+    }
 
     vfunc_get_item(position) {
-        if (position >= this.#objects.length)
+        if (position >= this._objects.length)
             return 0;
 
-        return this.#objects[position];
+        return this._objects[position];
     }
 
     vfunc_get_item_type() {
@@ -260,15 +259,15 @@ export const MonitorList = GObject.registerClass({
     }
 
     vfunc_get_n_items() {
-        return this.#objects.length;
+        return this._objects.length;
     }
 
     get current_state() {
-        return this.#current_state;
+        return this._current_state;
     }
 
     set current_state(value) {
-        if (this.#current_state?.equal(value))
+        if (this._current_state?.equal(value))
             return;
 
         const monitors = value.get_child_value(1);
@@ -277,10 +276,10 @@ export const MonitorList = GObject.registerClass({
             (_, i) => Monitor.properties_from_variant(monitors.get_child_value(i))
         );
 
-        const max_same = Math.min(properties.length, this.#objects.length);
+        const max_same = Math.min(properties.length, this._objects.length);
         let same_head = 0;
 
-        while (same_head < max_same && this.#objects[same_head].matches(properties[same_head]))
+        while (same_head < max_same && this._objects[same_head].matches(properties[same_head]))
             same_head++;
 
         const max_same_tail = max_same - same_head;
@@ -288,7 +287,7 @@ export const MonitorList = GObject.registerClass({
 
         while (
             same_tail < max_same_tail &&
-            this.#objects[this.#objects.length - same_tail - 1].matches(
+            this._objects[this._objects.length - same_tail - 1].matches(
                 properties[properties.length - same_tail - 1]
             )
         )
@@ -296,18 +295,18 @@ export const MonitorList = GObject.registerClass({
 
         const n_same = same_head + same_tail;
 
-        if (properties.length !== n_same || this.#objects.length !== n_same) {
-            const remove = this.#objects.length - n_same;
+        if (properties.length !== n_same || this._objects.length !== n_same) {
+            const remove = this._objects.length - n_same;
             const add = [];
 
             for (let i = same_head; i < properties.length - same_tail; i++)
                 add.push(new Monitor(properties[i]));
 
-            this.#objects.splice(same_head, remove, ...add);
+            this._objects.splice(same_head, remove, ...add);
             this.items_changed(same_head, remove, add.length);
         }
 
-        this.#current_state = value;
+        this._current_state = value;
         this.notify('current-state');
     }
 });

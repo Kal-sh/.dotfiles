@@ -2,87 +2,83 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import GObject from 'gi://GObject';
-import Gio from 'gi://Gio';
+'use strict';
 
-import { Subprocess, WaylandSubprocess } from './subprocess.js';
+const GObject = imports.gi.GObject;
+const Gio = imports.gi.Gio;
 
-export const Service = GObject.registerClass({
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+const { Subprocess, WaylandSubprocess } = Me.imports.ddterm.shell.subprocess;
+
+var Service = GObject.registerClass({
     Properties: {
         'bus': GObject.ParamSpec.object(
             'bus',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
             Gio.DBusConnection
         ),
         'bus-name': GObject.ParamSpec.string(
             'bus-name',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
             null
         ),
         'executable': GObject.ParamSpec.string(
             'executable',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
             null
         ),
         'wayland': GObject.ParamSpec.boolean(
             'wayland',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.EXPLICIT_NOTIFY,
             false
         ),
         'extra-argv': GObject.ParamSpec.boxed(
             'extra-argv',
-            null,
-            null,
-            GObject.ParamFlags.READWRITE | GObject.ParamFlags.EXPLICIT_NOTIFY,
-            GObject.type_from_name('GStrv')
-        ),
-        'extra-env': GObject.ParamSpec.boxed(
-            'extra-env',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.EXPLICIT_NOTIFY,
             GObject.type_from_name('GStrv')
         ),
         'subprocess': GObject.ParamSpec.object(
             'subprocess',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READABLE,
             Subprocess
         ),
         'bus-name-owner': GObject.ParamSpec.string(
             'bus-name-owner',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READABLE,
             null
         ),
         'is-registered': GObject.ParamSpec.boolean(
             'is-registered',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READABLE,
             false
         ),
         'is-running': GObject.ParamSpec.boolean(
             'is-running',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READABLE,
             false
         ),
         'starting': GObject.ParamSpec.boolean(
             'starting',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READABLE,
             false
         ),
@@ -93,73 +89,53 @@ export const Service = GObject.registerClass({
         },
     },
 }, class DDTermService extends GObject.Object {
-    #starting = false;
-    #subprocess = null;
-    #subprocess_running = false;
-    #subprocess_wait = null;
-    #subprocess_wait_cancel = null;
-    #bus_name_owner = null;
-    #bus_watch = null;
-
-    constructor(params) {
+    _init(params) {
         const { subprocess, ...rest } = params;
+        super._init(rest);
 
-        super(rest);
+        this._starting = false;
+        this._subprocess = subprocess;
+        this._subprocess_running = subprocess?.is_running ?? false;
 
-        this.#subprocess = subprocess;
+        if (subprocess)
+            this._subprocess_wait = this._wait_subprocess();
 
-        if (subprocess) {
-            this.#subprocess_running = true;
-            this.#subprocess_wait = this.#wait_subprocess();
-        }
-
-        this.#bus_watch = Gio.bus_watch_name_on_connection(
+        this._bus_name_owner = null;
+        this._bus_watch = Gio.bus_watch_name_on_connection(
             this.bus,
             this.bus_name,
             Gio.BusNameWatcherFlags.NONE,
-            (connection, name, owner) => this.#update_bus_name_owner(owner),
-            () => this.#update_bus_name_owner(null)
+            (connection, name, owner) => this._update_bus_name_owner(owner),
+            () => this._update_bus_name_owner(null)
         );
     }
 
     get subprocess() {
-        return this.#subprocess;
-    }
-
-    owns_window(win) {
-        return this.#subprocess_running && this.#subprocess.owns_window(win);
-    }
-
-    hide_from_window_list(win) {
-        this.#subprocess.hide_from_window_list(win);
-    }
-
-    show_in_window_list(win) {
-        this.#subprocess.show_in_window_list(win);
+        return this._subprocess;
     }
 
     get bus_name_owner() {
-        return this.#bus_name_owner;
+        return this._bus_name_owner;
     }
 
     get is_registered() {
-        return Boolean(this.#bus_name_owner);
+        return Boolean(this._bus_name_owner);
     }
 
     get is_running() {
-        return this.#subprocess_running;
+        return this._subprocess_running;
     }
 
     get starting() {
-        return this.#starting;
+        return this._starting;
     }
 
     unwatch() {
-        this.#subprocess_wait_cancel?.cancel();
+        this._subprocess_wait_cancel?.cancel();
 
-        if (this.#bus_watch) {
-            Gio.bus_unwatch_name(this.#bus_watch);
-            this.#bus_watch = null;
+        if (this._bus_watch) {
+            Gio.bus_unwatch_name(this._bus_watch);
+            this._bus_watch = null;
         }
     }
 
@@ -167,7 +143,7 @@ export const Service = GObject.registerClass({
         this.subprocess?.terminate();
     }
 
-    #create_subprocess() {
+    _create_subprocess() {
         const argv = [
             this.executable,
             '--gapplication-service',
@@ -175,22 +151,16 @@ export const Service = GObject.registerClass({
             ...this.extra_argv,
         ];
 
-        const params = {
-            journal_identifier: this.bus_name,
-            argv,
-            environ: this.extra_env,
-        };
-
         if (this.wayland)
-            return new WaylandSubprocess(params);
+            return new WaylandSubprocess({ journal_identifier: this.bus_name, argv });
         else
-            return new Subprocess(params);
+            return new Subprocess({ journal_identifier: this.bus_name, argv });
     }
 
-    #wait_subprocess() {
-        this.#subprocess_wait_cancel = new Gio.Cancellable();
+    _wait_subprocess() {
+        this._subprocess_wait_cancel = new Gio.Cancellable();
 
-        return this.subprocess.wait_check(this.#subprocess_wait_cancel).catch(ex => {
+        return this.subprocess.wait_check(this._subprocess_wait_cancel).catch(ex => {
             if (this.starting)
                 return;
 
@@ -199,20 +169,20 @@ export const Service = GObject.registerClass({
 
             this.emit('error', ex);
         }).finally(() => {
-            this.#subprocess_running = false;
+            this._subprocess_running = false;
             this.notify('is-running');
         });
     }
 
-    #update_bus_name_owner(owner) {
-        if (this.#bus_name_owner === owner)
+    _update_bus_name_owner(owner) {
+        if (this._bus_name_owner === owner)
             return;
 
         const prev_registered = this.is_registered;
 
         log(`${this.bus_name}: name owner changed to ${JSON.stringify(owner)}`);
 
-        this.#bus_name_owner = owner;
+        this._bus_name_owner = owner;
         this.notify('bus-name-owner');
 
         if (prev_registered !== this.is_registered)
@@ -223,7 +193,7 @@ export const Service = GObject.registerClass({
         if (this.is_registered)
             return;
 
-        this.#starting = true;
+        this._starting = true;
         this.notify('starting');
 
         try {
@@ -232,11 +202,11 @@ export const Service = GObject.registerClass({
 
             try {
                 if (!this.is_running) {
-                    this.#subprocess = this.#create_subprocess();
-                    this.#subprocess_running = true;
+                    this._subprocess = this._create_subprocess();
+                    this._subprocess_running = true;
                     this.notify('subprocess');
                     this.notify('is-running');
-                    this.#subprocess_wait = this.#wait_subprocess();
+                    this._subprocess_wait = this._wait_subprocess();
                 }
 
                 const registered = new Promise(resolve => {
@@ -250,7 +220,7 @@ export const Service = GObject.registerClass({
                     });
                 });
 
-                await Promise.race([registered, this.#subprocess_wait]);
+                await Promise.race([registered, this._subprocess_wait]);
             } finally {
                 cancellable?.disconnect(cancellable_chain);
                 inner_cancellable.cancel();
@@ -265,8 +235,10 @@ export const Service = GObject.registerClass({
             this.emit('error', ex);
             throw ex;
         } finally {
-            this.#starting = false;
+            this._starting = false;
             this.notify('starting');
         }
     }
 });
+
+/* exported Service */

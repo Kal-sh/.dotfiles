@@ -3,7 +3,7 @@
     <schema id="org.gnome.shell.extensions.forge" path="/org/gnome/shell/extensions/forge/">
         <!-- Main Settings -->
         <key type="b" name="focus-border-toggle">
-            <default>true</default>
+            <default>false</default>
             <summary>Show window border on focused window</summary>
         </key>
 
@@ -37,7 +37,7 @@
         <key type="u" name="resize-amount">
             <default>15</default>
             <summary>
-                The window resize increment/decrement in pixels
+                The size of the gap between windows in the workarea
             </summary>
         </key>
 
@@ -61,11 +61,6 @@
         <key type="b" name="tiling-mode-enabled">
             <default>true</default>
             <summary>Tiling mode on/off</summary>
-        </key>
-
-        <key type="b" name="quick-settings-enabled">
-            <default>true</default>
-            <summary>Forge quick settings toggle</summary>
         </key>
 
         <key type="s" name="workspace-skip-tile">
@@ -120,20 +115,12 @@
             </summary>
         </key>
         <key type="b" name="move-pointer-focus-enabled">
-            <default>false</default>
+            <default>true</default>
             <summary>Move the pointer when focusing or swapping via kbd</summary>
-        </key>
-        <key type="b" name="focus-on-hover-enabled">
-            <default>false</default>
-            <summary>Focus switches to the window under the pointer.</summary>
         </key>
         <key type="b" name="float-always-on-top-enabled">
             <default>true</default>
             <summary>Floating windows toggle always-on-top</summary>
-        </key>
-        <key type="b" name="auto-exit-tabbed">
-            <default>true</default>
-            <summary>Exit tabbed tiling mode when only a single tab remains</summary>
         </key>
         <key type="b" name="auto-split-enabled">
             <default>true</default>
@@ -146,11 +133,6 @@
         <key type="b" name="showtab-decoration-enabled">
             <default>true</default>
             <summary>Whether to show the tab decoration or not</summary>
-        </key>
-
-        <key type="u" name="window-overrides-reload-trigger">
-            <default>0</default>
-            <summary>Timestamp to trigger window overrides reload</summary>
         </key>
 
     </schema>

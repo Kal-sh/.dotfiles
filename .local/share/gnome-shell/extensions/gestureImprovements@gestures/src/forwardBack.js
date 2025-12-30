@@ -1,16 +1,17 @@
 /* exported ForwardBackGestureExtension */
-import Clutter from 'gi://Clutter';
-import Shell from 'gi://Shell';
+const Clutter = imports.gi.Clutter;
+const Shell = imports.gi.Shell;
 
-import { ExtSettings } from '../constants.js'
-import { ArrowIconAnimation } from './animations/arrow.js'
-import { createSwipeTracker } from './swipeTracker.js'
-import { getVirtualKeyboard } from './utils/keyboard.js'
-import { ForwardBackKeyBinds } from '../common/settings.js'
-import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+const { ExtSettings } = Me.imports.constants;
+const { ArrowIconAnimation } = Me.imports.src.animations.arrow;
+const { createSwipeTracker } = Me.imports.src.swipeTracker;
+const { getVirtualKeyboard } = Me.imports.src.utils.keyboard;
+const { ForwardBackKeyBinds } = Me.imports.common.settings;
+const Main = imports.ui.main;
 
 // declare enum
-export var AnimationState;
+var AnimationState;
 (function (AnimationState) {
 	AnimationState[AnimationState['WAITING'] = 0] = 'WAITING';
 	AnimationState[AnimationState['DEFAULT'] = 0] = 'DEFAULT';
@@ -19,7 +20,7 @@ export var AnimationState;
 })(AnimationState || (AnimationState = {}));
 
 // declare enum
-export var SwipeGestureDirection;
+var SwipeGestureDirection;
 (function (SwipeGestureDirection) {
 	SwipeGestureDirection[SwipeGestureDirection['LeftToRight'] = 1] = 'LeftToRight';
 	SwipeGestureDirection[SwipeGestureDirection['RightToLeft'] = 2] = 'RightToLeft';
@@ -27,7 +28,7 @@ export var SwipeGestureDirection;
 
 const SnapPointThreshold = 0.1;
 
-export var ForwardBackGestureExtension = class ForwardBackGestureExtension {
+var ForwardBackGestureExtension = class ForwardBackGestureExtension {
 	constructor(appForwardBackKeyBinds) {
 		this._animationState = AnimationState.WAITING;
 		this._appForwardBackKeyBinds = appForwardBackKeyBinds;

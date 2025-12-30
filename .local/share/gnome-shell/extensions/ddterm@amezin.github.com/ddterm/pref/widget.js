@@ -2,48 +2,51 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import GObject from 'gi://GObject';
-import Gio from 'gi://Gio';
-import Gtk from 'gi://Gtk';
+'use strict';
 
-import { AnimationWidget } from './animation.js';
-import { BehaviorWidget } from './behavior.js';
-import { ColorsWidget } from './colors.js';
-import { CommandWidget } from './command.js';
-import { CompatibilityWidget } from './compatibility.js';
-import { PanelIconWidget } from './panelicon.js';
-import { PositionSizeWidget } from './positionsize.js';
-import { ScrollingWidget } from './scrolling.js';
-import { ShortcutsWidget } from './shortcuts.js';
-import { TabsWidget } from './tabs.js';
-import { TextWidget } from './text.js';
+const GObject = imports.gi.GObject;
+const Gio = imports.gi.Gio;
+const Gtk = imports.gi.Gtk;
 
-export const PrefsWidget = GObject.registerClass({
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+const { AnimationWidget } = Me.imports.ddterm.pref.animation;
+const { BehaviorWidget } = Me.imports.ddterm.pref.behavior;
+const { ColorsWidget } = Me.imports.ddterm.pref.colors;
+const { CommandWidget } = Me.imports.ddterm.pref.command;
+const { CompatibilityWidget } = Me.imports.ddterm.pref.compatibility;
+const { PanelIconWidget } = Me.imports.ddterm.pref.panelicon;
+const { PositionSizeWidget } = Me.imports.ddterm.pref.positionsize;
+const { ScrollingWidget } = Me.imports.ddterm.pref.scrolling;
+const { ShortcutsWidget } = Me.imports.ddterm.pref.shortcuts;
+const { TabsWidget } = Me.imports.ddterm.pref.tabs;
+const { TextWidget } = Me.imports.ddterm.pref.text;
+
+var PrefsWidget = GObject.registerClass({
     Properties: {
         'settings': GObject.ParamSpec.object(
             'settings',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
             Gio.Settings
         ),
         'monitors': GObject.ParamSpec.object(
             'monitors',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.EXPLICIT_NOTIFY,
             Gio.ListModel
         ),
-        'gettext-domain': GObject.ParamSpec.jsobject(
-            'gettext-domain',
-            null,
-            null,
+        'gettext-context': GObject.ParamSpec.jsobject(
+            'gettext-context',
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY
         ),
     },
 }, class PrefsWidget extends Gtk.Box {
-    constructor(params) {
-        super(params);
+    _init(params) {
+        super._init(params);
 
         this.hexpand = true;
         this.vexpand = true;
@@ -91,24 +94,29 @@ export const PrefsWidget = GObject.registerClass({
         else
             this.pack_end(scrolled_window, true, true, 0);
 
-        this.#add_page('position-size', PositionSizeWidget, { monitors: this.monitors });
-        this.#add_page('behavior', BehaviorWidget);
-        this.#add_page('animation', AnimationWidget);
-        this.#add_page('tabs', TabsWidget);
-        this.#add_page('text', TextWidget);
-        this.#add_page('colors', ColorsWidget);
-        this.#add_page('command', CommandWidget);
-        this.#add_page('scrolling', ScrollingWidget);
-        this.#add_page('compatibility', CompatibilityWidget);
-        this.#add_page('shortcuts', ShortcutsWidget);
-        this.#add_page('panel-icon', PanelIconWidget);
+        this.bind_property(
+            'monitors',
+            this.add_page('position-size', PositionSizeWidget),
+            'monitors',
+            GObject.BindingFlags.SYNC_CREATE
+        );
+
+        this.add_page('behavior', BehaviorWidget);
+        this.add_page('animation', AnimationWidget);
+        this.add_page('tabs', TabsWidget);
+        this.add_page('text', TextWidget);
+        this.add_page('colors', ColorsWidget);
+        this.add_page('command', CommandWidget);
+        this.add_page('scrolling', ScrollingWidget);
+        this.add_page('compatibility', CompatibilityWidget);
+        this.add_page('shortcuts', ShortcutsWidget);
+        this.add_page('panel-icon', PanelIconWidget);
     }
 
-    #add_page(name, widget_type, extra_properties = {}) {
+    add_page(name, widget_type) {
         const widget = new widget_type({
             settings: this.settings,
-            gettext_domain: this.gettext_domain,
-            ...extra_properties,
+            gettext_context: this.gettext_context,
         });
 
         this.stack.add_titled(widget, name, widget.title);
@@ -116,3 +124,5 @@ export const PrefsWidget = GObject.registerClass({
         return widget;
     }
 });
+
+/* exported PrefsWidget */

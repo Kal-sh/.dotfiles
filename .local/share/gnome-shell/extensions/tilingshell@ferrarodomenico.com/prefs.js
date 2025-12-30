@@ -1,12 +1,22 @@
+// For GNOME Shell version before 45
+class ExtensionPreferences {
+    constructor(metadata) {
+        this.metadata = metadata;
+    }
+
+    getSettings() {
+        return imports.misc.extensionUtils.getSettings();
+    }
+}
 // src/gi.shared.ts
-import Gio from "gi://Gio";
-import GLib from "gi://GLib";
-import GObject from "gi://GObject";
+const Gio = imports.gi.Gio;
+const GLib = imports.gi.GLib;
+const GObject = imports.gi.GObject;
 
 // src/gi.prefs.ts
-import Gdk from "gi://Gdk";
-import Gtk from "gi://Gtk";
-import Adw from "gi://Adw";
+const Gdk = imports.gi.Gdk;
+const Gtk = imports.gi.Gtk;
+const Adw = imports.gi.Adw;
 
 // src/components/layout/Layout.ts
 var Layout = class {
@@ -769,9 +779,9 @@ var SettingsExport = class {
 
 // src/prefs.ts
 var _a;
-import { ExtensionPreferences } from "resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js";
-import { gettext as _ } from "resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js";
-import * as Config from "resource:///org/gnome/Shell/Extensions/js/misc/config.js";
+
+const { gettext: _, ngettext, pgettext } = imports.misc.extensionUtils;
+const Config = imports.misc.config;
 var debug = logger("prefs");
 function buildPrefsWidget() {
   return new Gtk.Label({
@@ -1982,9 +1992,7 @@ var ShortcutSettingButton = (_a = class extends Gtk.Button {
   },
   _a
 ), _a);
-export {
-  TilingShellExtensionPreferences as default
-};
+
 /*!
  * Tiling Shell: advanced and modern window management for GNOME
  *
@@ -2005,3 +2013,13 @@ export {
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
+
+function init() {
+    imports.misc.extensionUtils.initTranslations();
+}
+
+function fillPreferencesWindow(window) {
+    const metadata = imports.misc.extensionUtils.getCurrentExtension().metadata;
+    const prefs = new TilingShellExtensionPreferences(metadata);
+    prefs.fillPreferencesWindow(window);
+}

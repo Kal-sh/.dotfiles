@@ -1,14 +1,22 @@
-import { Clutter, Gio, GLib, Mtk, St } from '../dependencies/gi.js';
-import { Main } from '../dependencies/shell.js';
+'use strict';
 
-import { Direction, Orientation, Settings } from '../common.js';
+const { Clutter, Gio, GLib, Meta, St } = imports.gi;
+const { main: Main } = imports.ui;
+const ByteArray = imports.byteArray;
+
+const ExtensionUtils = imports.misc.extensionUtils;
+const Me = ExtensionUtils.getCurrentExtension();
+
+const { Direction, Orientation, Settings } = Me.imports.src.common;
+
+const GNOME_VERSION = parseFloat(imports.misc.config.PACKAGE_VERSION);
 
 /**
  * Library of commonly used functions for the extension.js' files
  * (and *not* the prefs files)
  */
 
-export class Util {
+var Util = class Utility {
     /**
      * Performs an approximate equality check. There will be times when
      * there will be inaccuracies. For example, the user may enable window
@@ -21,7 +29,7 @@ export class Util {
      * @param {number} value
      * @param {number} value2
      * @param {number} [margin=4]
-     * @returns {boolean} whether the values are approximately equal.
+     * @returns {boolean} wether the values are approximately equal.
      */
     static equal(value, value2, margin = 4) {
         return Math.abs(value - value2) <= margin;
@@ -41,7 +49,7 @@ export class Util {
     /**
      * @param {number} keyVal
      * @param {Direction} direction
-     * @returns {boolean} whether the `keyVal` is considered to be in the
+     * @returns {boolean} wether the `keyVal` is considered to be in the
      *      direction of `direction`.
      */
     static isDirection(keyVal, direction) {
@@ -101,18 +109,9 @@ export class Util {
         return scaledGap % 2 === 0 ? scaledGap : scaledGap + 1;
     }
 
-    static useIndividualGaps(monitor) {
-        // Prefer individual gaps over the single one
-        const screenTopGap = this.getScaledGap('screen-top-gap', monitor);
-        const screenLeftGap = this.getScaledGap('screen-left-gap', monitor);
-        const screenRightGap = this.getScaledGap('screen-right-gap', monitor);
-        const screenBottomGap = this.getScaledGap('screen-bottom-gap', monitor);
-        return screenTopGap || screenLeftGap || screenRightGap || screenBottomGap;
-    }
-
     /**
      * @param {number} modMask a Clutter.ModifierType.
-     * @returns whether the current event the modifier at `modMask`.
+     * @returns wether the current event the modifier at `modMask`.
      */
     static isModPressed(modMask) {
         return global.get_pointer()[2] & modMask;
@@ -133,7 +132,7 @@ export class Util {
         if (!success || !contents.length)
             return [];
 
-        return JSON.parse(new TextDecoder().decode(contents));
+        return JSON.parse(ByteArray.toString(contents));
     }
 
     /**
@@ -148,7 +147,7 @@ export class Util {
         const monitor = monitorNr ?? global.display.get_current_monitor();
         const favoriteLayout = [];
         const layouts = this.getLayouts();
-        const layout = layouts?.[Settings.getStrv('favorite-layouts')[monitor]];
+        const layout = layouts?.[Settings.getStrv(Settings.FAVORITE_LAYOUTS)[monitor]];
 
         if (!layout)
             return [];
@@ -181,8 +180,8 @@ export class Util {
      *
      * @returns {St.Widget[]} an array of St.Widgets to indicate the tiled rects.
      */
-    static async ___debugShowTiledRects() {
-        const twm = (await import('./tilingWindowManager.js')).TilingWindowManager;
+    static ___debugShowTiledRects() {
+        const twm = Me.imports.src.extension.tilingWindowManager.TilingWindowManager;
         const topTileGroup = twm.getTopTileGroup();
         if (!topTileGroup.length) {
             Main.notify('Tiling Assistant', 'No tiled windows / tiled rects.');
@@ -212,11 +211,11 @@ export class Util {
      * @returns {St.Widget[]} an array of St.Widgets to indicate the free
      *      screen rects.
      */
-    static async ___debugShowFreeScreenRects() {
+    static ___debugShowFreeScreenRects() {
         const activeWs = global.workspace_manager.get_active_workspace();
         const monitor = global.display.get_current_monitor();
         const workArea = new Rect(activeWs.get_work_area_for_monitor(monitor));
-        const twm = (await import('./tilingWindowManager.js')).TilingWindowManager;
+        const twm = Me.imports.src.extension.tilingWindowManager.TilingWindowManager;
         const topTileGroup = twm.getTopTileGroup();
         const tRects = topTileGroup.map(w => w.tiledRect);
         const freeScreenSpace = twm.getFreeScreen(tRects);
@@ -245,9 +244,9 @@ export class Util {
     /**
      * Print the tile groups to the logs.
      */
-    static async __debugPrintTileGroups() {
+    static __debugPrintTileGroups() {
         log('--- Tiling Assistant: Start ---');
-        const twm = (await import('./tilingWindowManager.js')).TilingWindowManager;
+        const twm = Me.imports.src.extension.tilingWindowManager.TilingWindowManager;
         const openWindows = twm.getWindows();
         openWindows.forEach(w => {
             if (!w.isTiled)
@@ -260,18 +259,18 @@ export class Util {
         });
         log('--- Tiling Assistant: End ---');
     }
-}
+};
 
 /**
- * Wrapper for Mtk.Rectangle to add some more functions.
+ * Wrapper for Meta.Rectangle to add some more functions.
  */
-export class Rect {
+var Rect = class Rect {
     /**
-     * @param  {...any} params No parameters, 1 Mtk.Rectangle or the x, y,
+     * @param  {...any} params No parameters, 1 Meta.Rectangle or the x, y,
      * width and height values should be passed to the constructor.
      */
     constructor(...params) {
-        this._rect = new Mtk.Rectangle();
+        this._rect = new Meta.Rectangle();
 
         switch (params.length) {
             case 0:
@@ -300,60 +299,41 @@ export class Rect {
      * Gets a new rectangle where the screen and window gaps were
      * added/subbed to/from `this`.
      *
-     * @param {Rect} workArea a tiled Rect
+     * @param {Rect} rect a tiled Rect
      * @param {number} monitor the number of the monitor to scale the gap to
      * @returns {Rect} the rectangle after the gaps were taken into account
      */
     addGaps(workArea, monitor) {
-        const screenTopGap = Util.getScaledGap('screen-top-gap', monitor);
-        const screenLeftGap = Util.getScaledGap('screen-left-gap', monitor);
-        const screenRightGap = Util.getScaledGap('screen-right-gap', monitor);
-        const screenBottomGap = Util.getScaledGap('screen-bottom-gap', monitor);
-        const singleScreenGap = Util.getScaledGap('single-screen-gap', monitor);
-        const windowGap = Util.getScaledGap('window-gap', monitor);
+        const screenTopGap = Util.getScaledGap(Settings.SCREEN_TOP_GAP, monitor);
+        const screenLeftGap = Util.getScaledGap(Settings.SCREEN_LEFT_GAP, monitor);
+        const screenRightGap = Util.getScaledGap(Settings.SCREEN_RIGHT_GAP, monitor);
+        const screenBottomGap = Util.getScaledGap(Settings.SCREEN_BOTTOM_GAP, monitor);
+        const windowGap = Util.getScaledGap(Settings.WINDOW_GAP, monitor);
         const r = this.copy();
 
-        // Prefer individual gaps
-        if (Util.useIndividualGaps(monitor)) {
-            [['x', 'width', screenLeftGap, screenRightGap],
-                ['y', 'height', screenTopGap, screenBottomGap]]
-            .forEach(([pos, dim, posGap, dimGap]) => {
-                if (this[pos] === workArea[pos]) {
-                    r[pos] = this[pos] + posGap;
-                    r[dim] -= posGap;
-                } else {
-                    r[pos] = this[pos] + windowGap / 2;
-                    r[dim] -= windowGap / 2;
-                }
+        [
+            ['x', 'width', screenLeftGap, screenRightGap],
+            ['y', 'height', screenTopGap, screenBottomGap]
+        ].forEach(([pos, dim, posGap, dimGap]) => {
+            if (this[pos] === workArea[pos]) {
+                r[pos] = this[pos] + posGap;
+                r[dim] -= posGap;
+            } else {
+                r[pos] = this[pos] + windowGap / 2;
+                r[dim] -= windowGap / 2;
+            }
 
-                if (this[pos] + this[dim] === workArea[pos] + workArea[dim])
-                    r[dim] -= dimGap;
-                else
-                    r[dim] -= windowGap / 2;
-            });
-        // Use the single screen gap
-        } else {
-            [['x', 'width'], ['y', 'height']].forEach(([pos, dim]) => {
-                if (this[pos] === workArea[pos]) {
-                    r[pos] = this[pos] + singleScreenGap;
-                    r[dim] -= singleScreenGap;
-                } else {
-                    r[pos] = this[pos] + windowGap / 2;
-                    r[dim] -= windowGap / 2;
-                }
-
-                if (this[pos] + this[dim] === workArea[pos] + workArea[dim])
-                    r[dim] -= singleScreenGap;
-                else
-                    r[dim] -= windowGap / 2;
-            });
-        }
+            if (this[pos] + this[dim] === workArea[pos] + workArea[dim])
+                r[dim] -= dimGap;
+            else
+                r[dim] -= windowGap / 2;
+        });
 
         return r;
     }
 
     /**
-     * Checks whether `this` borders another rectangle on this' east edge.
+     * Checks wether `this` borders another rectangle on this' east edge.
      *
      * @param {Rect} rect
      * @returns {boolean}
@@ -363,7 +343,7 @@ export class Rect {
     }
 
     /**
-     * Checks whether `this` borders another rectangle on this' south edge.
+     * Checks wether `this` borders another rectangle on this' south edge.
      *
      * @param {Rect} rect
      * @returns {boolean}
@@ -382,11 +362,11 @@ export class Rect {
     }
 
     /**
-     * @param {Rect|Mtk.Rectangle} rect
+     * @param {Rect} rect
      * @returns {boolean}
      */
     containsRect(rect) {
-        rect = rect instanceof Mtk.Rectangle ? rect : rect.meta;
+        rect = rect instanceof Meta.Rectangle ? rect : rect.meta;
         return this._rect.contains_rect(rect);
     }
 
@@ -398,20 +378,20 @@ export class Rect {
     }
 
     /**
-     * @param {Rect|Mtk.Rectangle} rect
+     * @param {Rect} rect
      * @returns {boolean}
      */
     couldFitRect(rect) {
-        rect = rect instanceof Mtk.Rectangle ? rect : rect.meta;
+        rect = rect instanceof Meta.Rectangle ? rect : rect.meta;
         return this._rect.could_fit_rect(rect);
     }
 
     /**
-     * @param {Rect|Mtk.Rectangle} rect
+     * @param {Rect} rect
      * @returns {boolean}
      */
     equal(rect) {
-        rect = rect instanceof Mtk.Rectangle ? rect : rect.meta;
+        rect = rect instanceof Meta.Rectangle ? rect : rect.meta;
         return this._rect.equal(rect);
     }
 
@@ -422,7 +402,7 @@ export class Rect {
      * @param {Direction} dir the direction that is looked into.
      * @param {Rect[]} rects an array of the available Rects. It may contain
      *      `this` itself. The rects shouldn't overlap each other.
-     * @param {boolean} [wrap=true] whether wrap is enabled,
+     * @param {boolean} [wrap=true] wether wrap is enabled,
      *      if there is no Rect in the direction of `dir`.
      * @returns {Rect|null} the nearest Rect.
      */
@@ -499,61 +479,42 @@ export class Rect {
      *      splitting this rectangle.
      * @param {number} unitSize the size of 1 partial unit of the rectangle.
      * @param {Orientation} orientation determines the split orientation
-     *      (horizontally or vertically).
+     *      (horizonally or vertically).
      * @returns {Rect} the rectangle at `index` after the split.
      */
     getUnitAt(index, unitSize, orientation) {
         unitSize = Math.floor(unitSize);
-
         const isVertical = orientation === Orientation.V;
-        const lastIndex = Math.round(this[isVertical ? 'width' : 'height'] / unitSize) - 1;
+        const firstUnitRect = new Rect(
+            this.x,
+            this.y,
+            isVertical ? unitSize : this.width,
+            isVertical ? this.height : unitSize
+        );
 
-        const getLastRect = () => {
-            const margin = unitSize * index;
-            return new Rect(
-                isVertical ? this.x + margin : this.x,
-                isVertical ? this.y : this.y + margin,
-                isVertical ? this.width - margin : this.width,
-                isVertical ? this.height : this.height - margin
-            );
-        };
-        const getNonLastRect = (remainingRect, idx) => {
-            const firstUnitRect = new Rect(
-                remainingRect.x,
-                remainingRect.y,
-                isVertical ? unitSize : remainingRect.width,
-                isVertical ? remainingRect.height : unitSize
-            );
-
-            if (idx <= 0) {
-                return firstUnitRect;
-            } else {
-                const remaining = remainingRect.minus(firstUnitRect)[0];
-                return getNonLastRect(remaining, idx - 1);
-            }
-        };
-
-        if (index === lastIndex)
-            return getLastRect();
-        else
-            return getNonLastRect(this, index);
+        if (index <= 0) {
+            return firstUnitRect;
+        } else {
+            const remaining = this.minus(firstUnitRect)[0];
+            return remaining.getUnitAt(index - 1, unitSize, orientation);
+        }
     }
 
     /**
-     * @param {Rect|Mtk.Rectangle} rect
+     * @param {Rect} rect
      * @returns {boolean}
      */
     horizOverlap(rect) {
-        rect = rect instanceof Mtk.Rectangle ? rect : rect.meta;
+        rect = rect instanceof Meta.Rectangle ? rect : rect.meta;
         return this._rect.horiz_overlap(rect);
     }
 
     /**
-     * @param {Rect|Mtk.Rectangle} rect
+     * @param {Rect} rect
      * @returns {[boolean, Rect]}
      */
     intersect(rect) {
-        rect = rect instanceof Mtk.Rectangle ? rect : rect.meta;
+        rect = rect instanceof Meta.Rectangle ? rect : rect.meta;
         const [ok, intersection] = this._rect.intersect(rect);
         return [ok, new Rect(intersection)];
     }
@@ -570,7 +531,7 @@ export class Rect {
 
     /**
      * Gets the Rects, which remain from `this` after `rect` was cut off
-     * / subtracted from it.
+     * / substracted from it.
      *
      * Original idea from: \
      * https://en.wikibooks.org/wiki/Algorithm_Implementation/Geometry/Rectangle_difference \
@@ -585,7 +546,7 @@ export class Rect {
      * @returns {Rect[]} an array of Rects. It contains 0 - 4 rects.
      */
     _minusRect(rect) {
-        rect = rect instanceof Mtk.Rectangle ? new Rect(rect) : rect;
+        rect = rect instanceof Meta.Rectangle ? new Rect(rect) : rect;
         if (rect.containsRect(this))
             return [];
 
@@ -653,11 +614,11 @@ export class Rect {
     }
 
     /**
-     * @param {Rect|Mtk.Rectangle} rect
+     * @param {Rect} rect
      * @returns {boolean}
      */
     overlap(rect) {
-        rect = rect instanceof Mtk.Rectangle ? rect : rect.meta;
+        rect = rect instanceof Meta.Rectangle ? rect : rect.meta;
         return this._rect.overlap(rect);
     }
 
@@ -672,7 +633,7 @@ export class Rect {
      * @returns {Rect} a reference to this.
      */
     tryAlignWith(rect, margin = 4) {
-        rect = rect instanceof Mtk.Rectangle ? new Rect(rect) : rect;
+        rect = rect instanceof Meta.Rectangle ? new Rect(rect) : rect;
         const equalApprox = (value1, value2) => Math.abs(value1 - value2) <= margin;
 
         if (equalApprox(rect.x, this.x))
@@ -699,20 +660,20 @@ export class Rect {
     }
 
     /**
-     * @param {Rect|Mtk.Rectangle} rect
+     * @param {Rect} rect
      * @returns {Rect}
      */
     union(rect) {
-        rect = rect instanceof Mtk.Rectangle ? rect : rect.meta;
+        rect = rect instanceof Meta.Rectangle ? rect : rect.meta;
         return new Rect(this._rect.union(rect));
     }
 
     /**
-     * @param {Rect|Mtk.Rectangle} rect
+     * @param {Rect} rect
      * @returns {boolean}
      */
     vertOverlap(rect) {
-        rect = rect instanceof Mtk.Rectangle ? rect : rect.meta;
+        rect = rect instanceof Meta.Rectangle ? rect : rect.meta;
         return this._rect.vert_overlap(rect);
     }
 
@@ -786,4 +747,4 @@ export class Rect {
     set height(value) {
         this._rect.height = Math.floor(value);
     }
-}
+};

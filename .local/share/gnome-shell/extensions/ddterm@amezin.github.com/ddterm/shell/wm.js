@@ -1,19 +1,21 @@
 // SPDX-FileCopyrightText: 2021 Aleksandr Mezin <mezin.alexander@gmail.com>
-// SPDX-FileContributor: Juan M. Cruz-Martinez
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import GObject from 'gi://GObject';
-import Gio from 'gi://Gio';
-import Clutter from 'gi://Clutter';
-import Meta from 'gi://Meta';
-import Mtk from 'gi://Mtk';
+'use strict';
 
-import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+const GObject = imports.gi.GObject;
+const Gio = imports.gi.Gio;
+const Clutter = imports.gi.Clutter;
+const Meta = imports.gi.Meta;
+const Mtk = imports.gi.Meta;
 
-import { Animation } from './animation.js';
-import { WindowGeometry } from './geometry.js';
-import { is_wlclipboard, WlClipboardActivator } from './wlclipboard.js';
+const Main = imports.ui.main;
+
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+const { Animation } = Me.imports.ddterm.shell.animation;
+const { WindowGeometry } = Me.imports.ddterm.shell.geometry;
+const { is_wlclipboard, WlClipboardActivator } = Me.imports.ddterm.shell.wlclipboard;
 
 const MOUSE_RESIZE_GRABS = [
     Meta.GrabOp.RESIZING_NW,
@@ -26,48 +28,42 @@ const MOUSE_RESIZE_GRABS = [
     Meta.GrabOp.RESIZING_W,
 ];
 
-export const WindowManager = GObject.registerClass({
+var WindowManager = GObject.registerClass({
     Properties: {
         'settings': GObject.ParamSpec.object(
             'settings',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
             Gio.Settings
         ),
         'window': GObject.ParamSpec.object(
             'window',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
             Meta.Window
         ),
         'geometry': GObject.ParamSpec.object(
             'geometry',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
             WindowGeometry
         ),
         'show-animation': GObject.ParamSpec.object(
             'show-animation',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
             Animation
         ),
         'hide-animation': GObject.ParamSpec.object(
             'hide-animation',
-            null,
-            null,
+            '',
+            '',
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
             Animation
-        ),
-        'logger': GObject.ParamSpec.jsobject(
-            'logger',
-            null,
-            null,
-            GObject.ParamFlags.READWRITE | GObject.ParamFlags.EXPLICIT_NOTIFY
         ),
     },
     Signals: {
@@ -77,165 +73,129 @@ export const WindowManager = GObject.registerClass({
         },
     },
 }, class DDTermWindowManager extends GObject.Object {
-    #mutter_settings;
-    #actor;
-    #client_type;
-    #settings_handlers;
-    #geometry_handlers;
-    #display_handlers;
-    #window_handlers;
-    #saved_auto_maximize;
-    #map_animation_override_handler;
-    #destroy_animation_override_handler;
-    #hide_animation_setup_handler;
-    #map_handler;
-    #maximized_handler;
-    #focus_window_handler;
-    #geometry_fixup_handlers;
-    #wl_clipboard_activator;
+    _init(params) {
+        super._init(params);
 
-    constructor(params) {
-        super(params);
-
-        this.#mutter_settings = Gio.Settings.new('org.gnome.mutter');
+        this.debug = null;
 
         try {
-            this.#enable();
+            this._enable();
         } catch (ex) {
             this.disable();
             throw ex;
         }
     }
 
-    #enable() {
-        this.#actor = this.window.get_compositor_private();
-        this.#client_type = this.window.get_client_type();
+    _enable() {
+        this._actor = this.window.get_compositor_private();
+        this._client_type = this.window.get_client_type();
 
-        this.#settings_handlers = Object.entries({
-            'changed::window-above': this.#set_window_above.bind(this),
-            'changed::window-stick': this.#set_window_stick.bind(this),
-            'changed::window-size': this.#disable_window_maximize_setting.bind(this),
-            'changed::window-maximize': this.#set_window_maximized.bind(this),
-            'changed::hide-when-focus-lost': this.#setup_hide_when_focus_lost.bind(this),
+        this._settings_handlers = Object.entries({
+            'changed::window-above': this._set_window_above.bind(this),
+            'changed::window-stick': this._set_window_stick.bind(this),
+            'changed::window-size': this._disable_window_maximize_setting.bind(this),
+            'changed::window-maximize': this._set_window_maximized.bind(this),
+            'changed::hide-when-focus-lost': this._setup_hide_when_focus_lost.bind(this),
         }).map(
             ([signal, callback]) => this.settings.connect(signal, callback)
         );
 
-        this.#geometry_handlers = Object.entries({
+        this._geometry_handlers = Object.entries({
             'notify::monitor-index': () => {
                 this.window.move_to_monitor(this.geometry.monitor_index);
             },
             'notify::maximize-flag': () => {
-                this.#setup_maximized_handlers();
+                this._setup_maximized_handlers();
             },
             'notify::target-rect': () => {
-                this.#update_window_geometry();
+                this._update_window_geometry();
             },
         }).map(
             ([signal, callback]) => this.geometry.connect(signal, callback)
         );
 
-        this.#window_handlers = Object.entries({
+        this._window_handlers = Object.entries({
             'unmanaged': () => {
                 this.disable();
             },
             'unmanaging': () => {
                 if (this.hide_animation.should_skip) {
-                    Main.wm.skipNextEffect(this.#actor);
+                    Main.wm.skipNextEffect(this._actor);
                     this.disable();
                 }
             },
             'notify::above': () => {
-                this.#setup_wl_clipboard_activator();
+                this._setup_wl_clipboard_activator();
             },
         }).map(
             ([signal, callback]) => this.window.connect(signal, callback)
         );
 
-        this.#setup_maximized_handlers();
-        this.#update_window_geometry();
+        this._setup_maximized_handlers();
+        this._update_window_geometry();
 
-        const should_maximize = this.settings.get_boolean('window-maximize');
+        if (!this._actor.visible) {
+            if (this._client_type === Meta.WindowClientType.WAYLAND) {
+                this._map_handler = global.window_manager.connect('map', (wm, actor) => {
+                    if (actor !== this._actor)
+                        return;
 
-        if (this.window.is_hidden()) {
-            const current_auto_maximize = this.#mutter_settings.get_boolean('auto-maximize');
+                    global.window_manager.disconnect(this._map_handler);
+                    this._map_handler = null;
 
-            if (current_auto_maximize !== should_maximize) {
-                this.#saved_auto_maximize = current_auto_maximize;
-                this.#mutter_settings.set_boolean('auto-maximize', should_maximize);
+                    this._update_window_geometry();
+                    this._set_window_above();
+                    this._set_window_stick();
+                });
+            } else {
+                this._set_window_above();
+                this._set_window_stick();
             }
 
-            this.#window_handlers.push(
-                this.window.connect('shown', this.#restore_auto_maximize.bind(this))
-            );
-        }
-
-        if (!this.#actor.visible) {
-            this.#map_handler = global.window_manager.connect('map', (wm, actor) => {
-                if (actor !== this.#actor)
-                    return;
-
-                global.window_manager.disconnect(this.#map_handler);
-                this.#map_handler = null;
-
-                if (this.#client_type === Meta.WindowClientType.WAYLAND) {
-                    this.#update_window_geometry();
-                    this.#schedule_geometry_fixup();
-                }
-
-                Main.activateWindow(this.window);
-
-                this.#set_window_above();
-                this.#set_window_stick();
-            });
-
             if (this.show_animation.should_skip) {
-                Main.wm.skipNextEffect(this.#actor);
+                Main.wm.skipNextEffect(this._actor);
             } else if (this.show_animation.should_override) {
-                this.#map_animation_override_handler = global.window_manager.connect(
+                this._map_animation_override_handler = global.window_manager.connect(
                     'map',
-                    this.#override_map_animation.bind(this)
+                    this._override_map_animation.bind(this)
                 );
             }
         }
 
-        this.#display_handlers = [
-            global.display.connect('grab-op-begin', this.#grab_op_begin.bind(this)),
-            global.display.connect('grab-op-end', this.#update_size_setting_on_grab_end.bind(this)),
+        this._display_handlers = [
+            global.display.connect('grab-op-begin', this._grab_op_begin.bind(this)),
+            global.display.connect('grab-op-end', this.update_size_setting_on_grab_end.bind(this)),
         ];
 
-        this.#setup_hide_when_focus_lost();
+        this._setup_hide_when_focus_lost();
 
-        this.#hide_animation_setup_handler =
+        this._hide_animation_setup_handler =
             this.hide_animation.connect('notify::should-override', () => {
-                this.#setup_destroy_animation_override(this.hide_animation.should_override);
+                this._setup_destroy_animation_override(this.hide_animation.should_override);
             });
 
-        this.#setup_destroy_animation_override(this.hide_animation.should_override);
+        this._setup_destroy_animation_override(this.hide_animation.should_override);
 
-        if (this.#actor.visible) {
+        if (this._client_type === Meta.WindowClientType.X11)
             Main.activateWindow(this.window);
 
-            this.#set_window_above();
-            this.#set_window_stick();
+        if (this._actor.visible) {
+            this._set_window_above();
+            this._set_window_stick();
         }
 
-        if (should_maximize && this.#get_maximize_flags() !== Meta.MaximizeFlags.BOTH) {
-            this.#set_maximize_flags(Meta.MaximizeFlags.BOTH);
+        if (this.settings.get_boolean('window-maximize'))
+            this.window.maximize(Meta.MaximizeFlags.BOTH);
 
-            if (this.show_animation.should_skip)
-                Main.wm.skipNextEffect(this.#actor);
-        }
-
-        this.#setup_wl_clipboard_activator();
+        this._setup_wl_clipboard_activator();
     }
 
-    #override_map_animation(wm, actor) {
-        if (actor !== this.#actor)
+    _override_map_animation(wm, actor) {
+        if (actor !== this._actor)
             return;
 
-        global.window_manager.disconnect(this.#map_animation_override_handler);
-        this.#map_animation_override_handler = null;
+        global.window_manager.disconnect(this._map_animation_override_handler);
+        this._map_animation_override_handler = null;
 
         if (!Main.wm._waitForOverviewToHide) {
             this.show_animation.apply_override(actor);
@@ -243,35 +203,35 @@ export const WindowManager = GObject.registerClass({
         }
 
         Main.wm._waitForOverviewToHide().then(() => {
-            if (actor === this.#actor)
+            if (actor === this._actor)
                 this.show_animation.apply_override(actor);
         });
     }
 
-    #setup_destroy_animation_override(enable) {
-        if (enable === Boolean(this.#destroy_animation_override_handler))
+    _setup_destroy_animation_override(enable) {
+        if (enable === Boolean(this._destroy_animation_override_handler))
             return;
 
         if (enable) {
-            this.#destroy_animation_override_handler = global.window_manager.connect(
+            this._destroy_animation_override_handler = global.window_manager.connect(
                 'destroy',
-                this.#override_destroy_animation.bind(this)
+                this._override_destroy_animation.bind(this)
             );
         } else {
-            global.window_manager.disconnect(this.#destroy_animation_override_handler);
-            this.#destroy_animation_override_handler = null;
+            global.window_manager.disconnect(this._destroy_animation_override_handler);
+            this._destroy_animation_override_handler = null;
         }
     }
 
-    #override_destroy_animation(wm, actor) {
-        if (actor !== this.#actor)
+    _override_destroy_animation(wm, actor) {
+        if (actor !== this._actor)
             return;
 
         this.hide_animation.apply_override(actor);
         this.disable();
     }
 
-    #hide_when_focus_lost() {
+    _hide_when_focus_lost() {
         if (this.window.is_hidden())
             return;
 
@@ -279,46 +239,44 @@ export const WindowManager = GObject.registerClass({
         if (this.window === win)
             return;
 
-        if (win) {
-            if (this.window.is_ancestor_of_transient(win))
-                return;
+        if (win && this.window.is_ancestor_of_transient(win))
+            return;
 
-            if (is_wlclipboard(win))
-                return;
-        }
+        if (is_wlclipboard(win))
+            return;
 
         this.emit('hide-request');
     }
 
-    #setup_hide_when_focus_lost() {
-        if (this.#focus_window_handler) {
-            global.display.disconnect(this.#focus_window_handler);
-            this.#focus_window_handler = null;
+    _setup_hide_when_focus_lost() {
+        if (this._focus_window_handler) {
+            global.display.disconnect(this._focus_window_handler);
+            this._focus_window_handler = null;
         }
 
         if (!this.settings.get_boolean('hide-when-focus-lost'))
             return;
 
-        this.#focus_window_handler = global.display.connect(
+        this._focus_window_handler = global.display.connect(
             'notify::focus-window',
-            this.#hide_when_focus_lost.bind(this)
+            this._hide_when_focus_lost.bind(this)
         );
     }
 
-    #setup_wl_clipboard_activator() {
+    _setup_wl_clipboard_activator() {
         if (this.window.above) {
-            if (!this.#wl_clipboard_activator) {
-                this.#wl_clipboard_activator = new WlClipboardActivator({
+            if (!this._wl_clipboard_activator) {
+                this._wl_clipboard_activator = new WlClipboardActivator({
                     display: global.display,
                 });
             }
         } else {
-            this.#wl_clipboard_activator?.disable();
-            this.#wl_clipboard_activator = null;
+            this._wl_clipboard_activator?.disable();
+            this._wl_clipboard_activator = null;
         }
     }
 
-    #set_window_above() {
+    _set_window_above() {
         const should_be_above = this.settings.get_boolean('window-above');
 
         // Both make_above() and unmake_above() raise the window, so check is necessary
@@ -331,76 +289,76 @@ export const WindowManager = GObject.registerClass({
             this.window.unmake_above();
     }
 
-    #set_window_stick() {
+    _set_window_stick() {
         if (this.settings.get_boolean('window-stick'))
             this.window.stick();
         else
             this.window.unstick();
     }
 
-    #setup_maximized_handlers() {
-        if (this.#maximized_handler) {
-            this.window.disconnect(this.#maximized_handler);
-            this.#maximized_handler = null;
+    _setup_maximized_handlers() {
+        if (this._maximized_handler) {
+            this.window.disconnect(this._maximized_handler);
+            this._maximized_handler = null;
         }
 
         if (this.geometry.maximize_flag === Meta.MaximizeFlags.HORIZONTAL) {
-            this.#maximized_handler = this.window.connect(
+            this._maximized_handler = this.window.connect(
                 'notify::maximized-horizontally',
-                this.#handle_maximized_horizontally.bind(this)
+                this._handle_maximized_horizontally.bind(this)
             );
         } else {
-            this.#maximized_handler = this.window.connect(
+            this._maximized_handler = this.window.connect(
                 'notify::maximized-vertically',
-                this.#handle_maximized_vertically.bind(this)
+                this._handle_maximized_vertically.bind(this)
             );
         }
     }
 
-    #cancel_geometry_fixup() {
-        while (this.#geometry_fixup_handlers?.length)
-            this.window.disconnect(this.#geometry_fixup_handlers.pop());
+    _cancel_geometry_fixup() {
+        while (this._geometry_fixup_handlers?.length)
+            this.window.disconnect(this._geometry_fixup_handlers.pop());
     }
 
-    #schedule_geometry_fixup() {
-        if (this.#client_type !== Meta.WindowClientType.WAYLAND) {
-            this.logger?.log('Not scheduling geometry fixup because not Wayland');
+    _schedule_geometry_fixup() {
+        if (this._client_type !== Meta.WindowClientType.WAYLAND) {
+            this.debug?.('Not scheduling geometry fixup because not Wayland');
             return;
         }
 
-        if (this.#geometry_fixup_handlers?.length) {
-            this.logger?.log('Not scheduling geometry fixup because scheduled already');
+        if (this._geometry_fixup_handlers?.length) {
+            this.debug?.('Not scheduling geometry fixup because scheduled already');
             return;
         }
 
-        this.logger?.log('Scheduling geometry fixup');
+        this.debug?.('Scheduling geometry fixup');
 
-        this.#geometry_fixup_handlers = [
-            this.window.connect('position-changed', () => this.#update_window_geometry()),
-            this.window.connect('size-changed', () => this.#update_window_geometry()),
+        this._geometry_fixup_handlers = [
+            this.window.connect('position-changed', () => this._update_window_geometry()),
+            this.window.connect('size-changed', () => this._update_window_geometry()),
         ];
     }
 
-    #unmaximize_done() {
-        this.logger?.log('Unmaximize done');
+    _unmaximize_done() {
+        this.debug?.('Unmaximize done');
 
         this.settings.set_boolean('window-maximize', false);
-        this.#update_window_geometry();
+        this._update_window_geometry();
 
         // https://github.com/ddterm/gnome-shell-extension-ddterm/issues/48
-        if (this.settings.get_boolean('window-above') && !this.window.is_above()) {
+        if (this.settings.get_boolean('window-above')) {
             // Without unmake_above(), make_above() won't actually take effect (?!)
             this.window.unmake_above();
-            this.window.make_above();
+            this._set_window_above();
         }
 
-        if (!this.#actor.visible && this.show_animation.should_skip)
-            Main.wm.skipNextEffect(this.#actor);
+        if (!this._actor.visible && this.show_animation.should_skip)
+            Main.wm.skipNextEffect(this._actor);
     }
 
-    #handle_maximized_vertically() {
-        if (!this.window.maximized_vertically) {
-            this.#unmaximize_done();
+    _handle_maximized_vertically(win) {
+        if (!win.maximized_vertically) {
+            this._unmaximize_done();
             return;
         }
 
@@ -408,21 +366,18 @@ export const WindowManager = GObject.registerClass({
             return;
 
         if (this.geometry.target_rect.height < this.geometry.workarea.height) {
-            this.logger?.log(
-                'Unmaximizing window because size expected to be less than full height'
-            );
-
-            Main.wm.skipNextEffect(this.#actor);
-            this.#set_unmaximize_flags(Meta.MaximizeFlags.VERTICAL);
+            this.debug?.('Unmaximizing window because size expected to be less than full height');
+            Main.wm.skipNextEffect(this._actor);
+            win.unmaximize(Meta.MaximizeFlags.VERTICAL);
         } else {
-            this.logger?.log('Setting window-maximize=true because window is maximized');
+            this.debug?.('Setting window-maximize=true because window is maximized');
             this.settings.set_boolean('window-maximize', true);
         }
     }
 
-    #handle_maximized_horizontally() {
-        if (!this.window.maximized_horizontally) {
-            this.#unmaximize_done();
+    _handle_maximized_horizontally(win) {
+        if (!win.maximized_horizontally) {
+            this._unmaximize_done();
             return;
         }
 
@@ -430,19 +385,16 @@ export const WindowManager = GObject.registerClass({
             return;
 
         if (this.geometry.target_rect.width < this.geometry.workarea.width) {
-            this.logger?.log(
-                'Unmaximizing window because size expected to be less than full width'
-            );
-
-            Main.wm.skipNextEffect(this.#actor);
-            this.#set_unmaximize_flags(Meta.MaximizeFlags.HORIZONTAL);
+            this.debug?.('Unmaximizing window because size expected to be less than full width');
+            Main.wm.skipNextEffect(this._actor);
+            win.unmaximize(Meta.MaximizeFlags.HORIZONTAL);
         } else {
-            this.logger?.log('Setting window-maximize=true because window is maximized');
+            this.debug?.('Setting window-maximize=true because window is maximized');
             this.settings.set_boolean('window-maximize', true);
         }
     }
 
-    #move_resize_window(target_rect) {
+    _move_resize_window(target_rect) {
         this.window.move_resize_frame(
             false,
             target_rect.x,
@@ -454,128 +406,106 @@ export const WindowManager = GObject.registerClass({
         this.emit('move-resize-requested', target_rect);
     }
 
-    #get_maximize_flags() {
-        if (this.window.get_maximize_flags)
-            return this.window.get_maximize_flags();
-
-        return this.window.get_maximized();
+    _is_maximized() {
+        return Boolean(this.window.get_maximized() & this.geometry.maximize_flag);
     }
 
-    #set_maximize_flags(flags) {
-        if (this.window.set_maximize_flags)
-            return this.window.set_maximize_flags(flags);
-
-        return this.window.maximize(flags);
-    }
-
-    #set_unmaximize_flags(flags) {
-        if (this.window.set_maximize_flags)
-            return this.window.set_unmaximize_flags(flags);
-
-        return this.window.unmaximize(flags);
-    }
-
-    #is_maximized() {
-        return Boolean(this.#get_maximize_flags() & this.geometry.maximize_flag);
-    }
-
-    #set_window_maximized() {
-        const is_maximized = Boolean(this.#is_maximized());
+    _set_window_maximized() {
+        const is_maximized = Boolean(this._is_maximized());
         const should_maximize = this.settings.get_boolean('window-maximize');
 
         if (is_maximized === should_maximize)
             return;
 
         if (should_maximize) {
-            this.logger?.log('Maximizing window according to settings');
-            this.#set_maximize_flags(Meta.MaximizeFlags.BOTH);
+            this.debug?.('Maximizing window according to settings');
+            this.window.maximize(Meta.MaximizeFlags.BOTH);
         } else {
-            this.logger?.log('Unmaximizing window according to settings');
-            this.#set_unmaximize_flags(this.geometry.maximize_flag);
+            this.debug?.('Unmaximizing window according to settings');
+            this.window.unmaximize(this.geometry.maximize_flag);
 
-            this.logger?.log('Sheduling geometry fixup from window-maximize setting change');
-            this.#schedule_geometry_fixup();
+            this.debug?.('Sheduling geometry fixup from window-maximize setting change');
+            this._schedule_geometry_fixup();
         }
     }
 
-    #disable_window_maximize_setting() {
-        const { target_rect, workarea } = this.geometry;
-
-        if (target_rect.height < workarea.height || target_rect.width < workarea.width) {
-            this.logger?.log('Unmaximizing window because size expected to be less than workarea');
+    _disable_window_maximize_setting() {
+        if (this.geometry.target_rect.height < this.geometry.workarea.height ||
+            this.geometry.target_rect.width < this.geometry.workarea.width) {
+            this.debug?.('Unmaximizing window because size expected to be less than workarea');
             this.settings.set_boolean('window-maximize', false);
         }
     }
 
-    #update_window_geometry() {
-        this.#cancel_geometry_fixup();
+    _update_window_geometry() {
+        this._cancel_geometry_fixup();
 
-        this.logger?.log('Updating window geometry');
+        this.debug?.('Updating window geometry');
 
-        const { target_rect, workarea } = this.geometry;
+        const maximize = this.settings.get_boolean('window-maximize');
+        const target_rect = maximize ? this.geometry.workarea : this.geometry.target_rect;
 
-        if (this.settings.get_boolean('window-maximize')) {
-            if (this.#client_type === Meta.WindowClientType.WAYLAND)
-                this.window.move_frame(true, workarea.x, workarea.y);
+        if (this._client_type === Meta.WindowClientType.WAYLAND)
+            this.window.move_frame(true, target_rect.x, target_rect.y);
 
-            this.#move_resize_window(workarea);
+        if (maximize) {
+            this._move_resize_window(target_rect);
 
-            if (!this.#actor.visible && this.show_animation.should_skip)
-                Main.wm.skipNextEffect(this.#actor);
+            if (!this._actor.visible && this.show_animation.should_skip)
+                Main.wm.skipNextEffect(this._actor);
 
-            if (!this.window.get_frame_rect().equal(workarea)) {
-                this.logger?.log('Scheduling geometry fixup because of workarea mismatch');
-                this.#schedule_geometry_fixup();
+            if (!this.window.get_frame_rect().equal(this.geometry.workarea)) {
+                this.debug?.('Scheduling geometry fixup because of workarea mismatch');
+                this._schedule_geometry_fixup();
             }
 
             return;
         }
 
-        if (this.#client_type === Meta.WindowClientType.WAYLAND)
-            this.window.move_frame(true, target_rect.x, target_rect.y);
-
-        if (this.window.maximized_horizontally && target_rect.width < workarea.width) {
-            Main.wm.skipNextEffect(this.#actor);
-            this.#set_unmaximize_flags(Meta.MaximizeFlags.HORIZONTAL);
+        if (this.window.maximized_horizontally &&
+            this.geometry.target_rect.width < this.geometry.workarea.width) {
+            Main.wm.skipNextEffect(this._actor);
+            this.window.unmaximize(Meta.MaximizeFlags.HORIZONTAL);
             return;
         }
 
-        if (this.window.maximized_vertically && target_rect.height < workarea.height) {
-            Main.wm.skipNextEffect(this.#actor);
-            this.#set_unmaximize_flags(Meta.MaximizeFlags.VERTICAL);
+        if (this.window.maximized_vertically &&
+            this.geometry.target_rect.height < this.geometry.workarea.height) {
+            Main.wm.skipNextEffect(this._actor);
+            this.window.unmaximize(Meta.MaximizeFlags.VERTICAL);
             return;
         }
 
-        this.#move_resize_window(target_rect);
+        this._move_resize_window(target_rect);
 
-        if (!this.#actor.visible && this.show_animation.should_skip)
-            Main.wm.skipNextEffect(this.#actor);
+        if (!this._actor.visible && this.show_animation.should_skip)
+            Main.wm.skipNextEffect(this._actor);
 
-        if (!this.window.get_frame_rect().equal(target_rect)) {
-            this.logger?.log('Scheduling geometry fixup because of geometry mismatch');
-            this.#schedule_geometry_fixup();
+        if (!this.window.get_frame_rect().equal(this.geometry.target_rect)) {
+            this.debug?.('Scheduling geometry fixup because of geometry mismatch');
+            this._schedule_geometry_fixup();
         }
 
-        if (this.#is_maximized())
+        if (this._is_maximized())
             this.settings.set_boolean('window-maximize', true);
     }
 
-    #grab_op_begin(display, win, flags) {
+    _grab_op_begin(display, win, flags) {
         if (win !== this.window)
             return;
 
         if (MOUSE_RESIZE_GRABS.includes(flags))
-            this.#unmaximize_for_resize(this.geometry.maximize_flag);
+            this.unmaximize_for_resize(this.geometry.maximize_flag);
     }
 
-    #update_size_setting_on_grab_end(display, win) {
+    update_size_setting_on_grab_end(display, win) {
         if (win !== this.window)
             return;
 
-        if (this.#is_maximized())
+        if (this._is_maximized())
             return;
 
-        this.logger?.log('Updating size setting on grab end');
+        this.debug?.('Updating size setting on grab end');
 
         const frame_rect = win.get_frame_rect();
         const size = this.geometry.orientation === Clutter.Orientation.HORIZONTAL
@@ -585,74 +515,66 @@ export const WindowManager = GObject.registerClass({
         this.settings.set_double('window-size', Math.min(1.0, size));
     }
 
-    #unmaximize_for_resize(flags) {
-        this.#cancel_geometry_fixup();
+    unmaximize_for_resize(flags) {
+        this._cancel_geometry_fixup();
 
-        if (!(this.#get_maximize_flags() & flags))
+        if (!(this.window.get_maximized() & flags))
             return;
 
-        this.logger?.log('Unmaximizing for resize');
+        this.debug?.('Unmaximizing for resize');
 
         // There is a _update_window_geometry() call after successful unmaximize.
         // It must set window size to 100%.
         this.settings.set_double('window-size', 1.0);
 
-        Main.wm.skipNextEffect(this.#actor);
-        this.#set_unmaximize_flags(flags);
-    }
-
-    #restore_auto_maximize() {
-        if (this.#saved_auto_maximize === undefined)
-            return;
-
-        this.#mutter_settings.set_boolean('auto-maximize', this.#saved_auto_maximize);
-        this.#saved_auto_maximize = undefined;
+        Main.wm.skipNextEffect(this._actor);
+        this.window.unmaximize(flags);
     }
 
     disable() {
-        while (this.#settings_handlers?.length)
-            this.settings.disconnect(this.#settings_handlers.pop());
+        while (this._settings_handlers?.length)
+            this.settings.disconnect(this._settings_handlers.pop());
 
-        while (this.#geometry_handlers?.length)
-            this.geometry.disconnect(this.#geometry_handlers.pop());
+        while (this._geometry_handlers?.length)
+            this.geometry.disconnect(this._geometry_handlers.pop());
 
-        while (this.#window_handlers?.length)
-            this.window.disconnect(this.#window_handlers.pop());
+        while (this._window_handlers?.length)
+            this.window.disconnect(this._window_handlers.pop());
 
-        if (this.#map_handler) {
-            global.window_manager.disconnect(this.#map_handler);
-            this.#map_handler = null;
+        if (this._map_handler) {
+            global.window_manager.disconnect(this._map_handler);
+            this._map_handler = null;
         }
 
-        while (this.#display_handlers?.length)
-            global.display.disconnect(this.#display_handlers.pop());
+        while (this._display_handlers?.length)
+            global.display.disconnect(this._display_handlers.pop());
 
-        if (this.#maximized_handler) {
-            this.window.disconnect(this.#maximized_handler);
-            this.#maximized_handler = null;
+        if (this._maximized_handler) {
+            this.window.disconnect(this._maximized_handler);
+            this._maximized_handler = null;
         }
 
-        this.#cancel_geometry_fixup();
+        this._cancel_geometry_fixup();
 
-        if (this.#focus_window_handler) {
-            global.display.disconnect(this.#focus_window_handler);
-            this.#focus_window_handler = null;
+        if (this._focus_window_handler) {
+            global.display.disconnect(this._focus_window_handler);
+            this._focus_window_handler = null;
         }
 
-        if (this.#map_animation_override_handler) {
-            global.window_manager.disconnect(this.#map_animation_override_handler);
-            this.#map_animation_override_handler = null;
+        if (this._map_animation_override_handler) {
+            global.window_manager.disconnect(this._map_animation_override_handler);
+            this._map_animation_override_handler = null;
         }
 
-        if (this.#hide_animation_setup_handler) {
-            this.hide_animation.disconnect(this.#hide_animation_setup_handler);
-            this.#hide_animation_setup_handler = null;
+        if (this._hide_animation_setup_handler) {
+            this.hide_animation.disconnect(this._hide_animation_setup_handler);
+            this._hide_animation_setup_handler = null;
         }
 
-        this.#setup_destroy_animation_override(false);
+        this._setup_destroy_animation_override(false);
 
-        this.#wl_clipboard_activator?.disable();
-
-        this.#restore_auto_maximize();
+        this._wl_clipboard_activator?.disable();
     }
 });
+
+/* exported WindowManager */

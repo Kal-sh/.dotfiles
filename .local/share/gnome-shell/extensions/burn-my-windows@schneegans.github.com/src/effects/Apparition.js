@@ -14,14 +14,12 @@
 
 'use strict';
 
-import * as utils from '../utils.js';
+const _ = imports.gettext.domain('burn-my-windows').gettext;
 
-// We import the ShaderFactory only in the Shell process as it is not required in the
-// preferences process. The preferences process does not create any shader instances, it
-// only uses the static metadata of the effect.
-const ShaderFactory = await utils.importInShellOnly('./ShaderFactory.js');
-
-const _ = await utils.importGettext();
+const ExtensionUtils = imports.misc.extensionUtils;
+const Me             = imports.misc.extensionUtils.getCurrentExtension();
+const utils          = Me.imports.src.utils;
+const ShaderFactory  = Me.imports.src.ShaderFactory.ShaderFactory;
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // This effect hides the actor by violently sucking it into the void of magic.          //
@@ -30,14 +28,14 @@ const _ = await utils.importGettext();
 // The effect class can be used to get some metadata (like the effect's name or supported
 // GNOME Shell versions), to initialize the respective page of the settings dialog, as
 // well as to create the actual shader for the effect.
-export default class Effect {
+var Apparition = class {
 
   // The constructor creates a ShaderFactory which will be used by extension.js to create
   // shader instances for this effect. The shaders will be automagically created using the
   // GLSL file in resources/shaders/<nick>.glsl. The callback will be called for each
   // newly created shader instance.
   constructor() {
-    this.shaderFactory = new ShaderFactory(Effect.getNick(), (shader) => {
+    this.shaderFactory = new ShaderFactory(this.getNick(), (shader) => {
       // Store uniform locations of newly created shaders.
       shader._uSeed       = shader.get_uniform_location('uSeed');
       shader._uShake      = shader.get_uniform_location('uShake');
@@ -62,7 +60,7 @@ export default class Effect {
 
   // The effect is not available on GNOME Shell 3.36 as it requires scaling of the window
   // actor.
-  static getMinShellVersion() {
+  getMinShellVersion() {
     return [3, 38];
   }
 
@@ -70,13 +68,13 @@ export default class Effect {
   // required. It should match the prefix of the settings keys which store whether the
   // effect is enabled currently (e.g. '*-enable-effect'), and its animation time
   // (e.g. '*-animation-time').
-  static getNick() {
+  getNick() {
     return 'apparition';
   }
 
   // This will be shown in the sidebar of the preferences dialog as well as in the
   // drop-down menus where the user can choose the effect.
-  static getLabel() {
+  getLabel() {
     return _('Apparition');
   }
 
@@ -84,7 +82,7 @@ export default class Effect {
 
   // This is called by the preferences dialog whenever a new effect profile is loaded. It
   // binds all user interface elements to the respective settings keys of the profile.
-  static bindPreferences(dialog) {
+  bindPreferences(dialog) {
     dialog.bindAdjustment('apparition-randomness');
     dialog.bindAdjustment('apparition-animation-time');
     dialog.bindAdjustment('apparition-twirl-intensity');
@@ -97,7 +95,7 @@ export default class Effect {
   // The getActorScale() is called from extension.js to adjust the actor's size during the
   // animation. This is useful if the effect requires drawing something beyond the usual
   // bounds of the actor. This only works for GNOME 3.38+.
-  static getActorScale(settings, forOpening, actor) {
+  getActorScale(settings) {
     return {x: 2.0, y: 2.0};
   }
 }

@@ -1,11 +1,12 @@
 /* exported GestureExtension */
-import Clutter from 'gi://Clutter';
-import GObject from 'gi://GObject';
-import Shell from 'gi://Shell';
+const Clutter = imports.gi.Clutter;
+const GObject = imports.gi.GObject;
+const Shell = imports.gi.Shell;
 
-import { ExtSettings, OverviewControlsState } from '../constants.js'
-import { createSwipeTracker, TouchpadSwipeGesture } from './swipeTracker.js'
-import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+const { ExtSettings, OverviewControlsState } = Me.imports.constants;
+const { createSwipeTracker, TouchpadSwipeGesture } = Me.imports.src.swipeTracker;
+const Main = imports.ui.main;
 
 function connectTouchpadEventToTracker(tracker) {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -98,7 +99,7 @@ class WorkspaceAnimationModifier extends SwipeTrackerEndPointsModifer {
 	}
 }
 
-export var GestureExtension = class GestureExtension {
+var GestureExtension = class GestureExtension {
 	constructor() {
 		this._stateAdjustment = Main.overview._overview._controls._stateAdjustment;
 		this._swipeTrackers = [

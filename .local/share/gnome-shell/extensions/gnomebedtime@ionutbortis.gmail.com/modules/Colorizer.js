@@ -1,150 +1,141 @@
 "use strict";
 
-import Clutter from "gi://Clutter";
-import * as Main from "resource:///org/gnome/shell/ui/main.js";
+const { Clutter } = imports.gi;
+const UiGroup = imports.ui.main.layoutManager.uiGroup;
 
-import { ModuleBase } from "./ModuleBase.js";
-import { ColorTone } from "../model/ColorTone.js";
-import { loopRun, logDebug } from "../utils.js";
+const Me = imports.misc.extensionUtils.getCurrentExtension();
 
-const UiGroup = Main.layoutManager.uiGroup;
+const extension = Me.imports.extension;
+
+const { ColorTone } = Me.imports.modules.ColorTone;
+const { loopRun, logDebug } = Me.imports.utils;
 
 const COLORIZE_EFFECT_NAME = "bedtime-mode-colorize-effect";
 const DESATURATE_EFFECT_NAME = "bedtime-mode-desaturate-effect";
 
-export class Colorizer extends ModuleBase {
-  #transitions;
-  #transitionDelay;
-  #transitionStep;
-  #transitionLoopSource;
+var Colorizer = class {
+  constructor() {
+    this._transitions = extension.settings.colorToneFactor;
+    this._transitionDelayMillis = 25;
 
-  #colorTone;
-  #colorizeEffect;
-  #desaturateEffect;
+    this._transitionStep = 0;
+    this._transitionLoopSource = null;
 
-  constructor(extension) {
-    super(extension);
+    this._colorTone = new ColorTone(extension.settings.colorTonePreset, 0);
+    this._colorizeEffect = new Clutter.BrightnessContrastEffect();
 
-    this.#transitions = this.extension.settings.colorToneFactor;
-    this.#transitionDelay = 25;
-
-    this.#transitionStep = 0;
-
-    this.#colorTone = new ColorTone(this.extension.settings.colorTonePreset, 0);
-    this.#colorizeEffect = new Clutter.BrightnessContrastEffect();
-
-    this.#desaturateEffect = new Clutter.DesaturateEffect();
-    this.#desaturateEffect.factor = 0;
+    this._desaturateEffect = new Clutter.DesaturateEffect();
+    this._desaturateEffect.factor = 0;
   }
 
   enable() {
-    this.#createConnections();
+    this._createConnections();
 
-    this.extension.settings.bedtimeModeActive && this.#turnOn();
+    extension.settings.bedtimeModeActive && this._turnOn();
   }
 
   disable() {
-    this.extension.settings.bedtimeModeActive ? this.#turnOff() : this.#cleanUp();
+    extension.settings.bedtimeModeActive ? this._turnOff() : this._cleanUp();
   }
 
-  #createConnections() {
+  _createConnections() {
     logDebug("Creating connections for Colorizer...");
 
-    this.createConnection(this.extension.settings, "bedtime-mode-active-changed", this.onBedtimeModeActiveChanged.name);
-    this.createConnection(this.extension.settings, "color-tone-preset-changed", this.onColorTonePresetChanged.name);
-    this.createConnection(this.extension.settings, "color-tone-factor-changed", this.onColorToneFactorChanged.name);
+    extension.signalManager.connect(this, extension.settings, "bedtime-mode-active-changed", this._onBedtimeModeActiveChanged.name);
+    extension.signalManager.connect(this, extension.settings, "color-tone-preset-changed", this._onColorTonePresetChanged.name);
+    extension.signalManager.connect(this, extension.settings, "color-tone-factor-changed", this._onColorToneFactorChanged.name);
   }
 
-  onBedtimeModeActiveChanged(_settings, _bedtimeModeActive) {
-    _bedtimeModeActive ? this.#turnOn() : this.#turnOff();
+  _onBedtimeModeActiveChanged(_settings, _bedtimeModeActive) {
+    _bedtimeModeActive ? this._turnOn() : this._turnOff();
   }
 
-  onColorTonePresetChanged() {
-    this.#colorTone = new ColorTone(this.extension.settings.colorTonePreset, this.extension.settings.colorToneFactor);
-    this.#updateEffectsFactor();
+  _onColorTonePresetChanged() {
+    this._colorTone = new ColorTone(extension.settings.colorTonePreset, extension.settings.colorToneFactor);
+    this._updateEffectsFactor();
   }
 
-  onColorToneFactorChanged() {
-    this.#transitions = this.extension.settings.colorToneFactor;
+  _onColorToneFactorChanged() {
+    this._transitions = extension.settings.colorToneFactor;
 
-    if (this.#transitionInProgress()) return;
+    if (this._transitionInProgress()) return;
 
-    if (this.extension.settings.bedtimeModeActive) this.#transitionStep = this.#transitions;
+    if (extension.settings.bedtimeModeActive) this._transitionStep = this._transitions;
 
-    this.#updateEffectsFactor();
+    this._updateEffectsFactor();
   }
 
-  #turnOn() {
+  _turnOn() {
     logDebug("Turning on Colorizer...");
 
-    this.#destroyTransitionLoopSource();
-    this.#addColorEffects();
+    this._destroyTransitionLoopSource();
+    this._addColorEffects();
 
-    this.#transitionLoopSource = loopRun(this.#smoothOn.bind(this), this.#transitionDelay);
+    this._transitionLoopSource = loopRun(this._smoothOn.bind(this), this._transitionDelayMillis);
   }
 
-  #turnOff() {
+  _turnOff() {
     logDebug("Turning off Colorizer...");
 
-    this.#destroyTransitionLoopSource();
+    this._destroyTransitionLoopSource();
 
-    this.#transitionLoopSource = loopRun(this.#smoothOff.bind(this), this.#transitionDelay);
+    this._transitionLoopSource = loopRun(this._smoothOff.bind(this), this._transitionDelayMillis);
   }
 
-  #smoothOn() {
-    this.#transitionStep < this.#transitions && this.#transitionStep++;
-    this.#updateEffectsFactor();
+  _smoothOn() {
+    this._transitionStep < this._transitions && this._transitionStep++;
+    this._updateEffectsFactor();
 
-    return this.#transitionStep < this.#transitions || this.#destroyTransitionLoopSource();
+    return this._transitionStep < this._transitions || this._destroyTransitionLoopSource();
   }
 
-  #smoothOff() {
-    this.#transitionStep > 0 && this.#transitionStep--;
-    this.#updateEffectsFactor();
+  _smoothOff() {
+    this._transitionStep > 0 && this._transitionStep--;
+    this._updateEffectsFactor();
 
-    return this.#transitionStep > 0 || this.#cleanUp();
+    return this._transitionStep > 0 || this._cleanUp();
   }
 
-  #updateEffectsFactor() {
-    this.#colorTone.toneFactor = this.#transitionStep;
-    this.#desaturateEffect.factor = this.#transitionStep / 100;
+  _updateEffectsFactor() {
+    this._colorTone.toneFactor = this._transitionStep;
+    this._desaturateEffect.factor = this._transitionStep / 100;
 
-    this.#updateColorizeEffect();
+    this._updateColorizeEffect();
   }
 
-  #addColorEffects() {
-    UiGroup.get_effect(COLORIZE_EFFECT_NAME) || UiGroup.add_effect_with_name(COLORIZE_EFFECT_NAME, this.#colorizeEffect);
-    UiGroup.get_effect(DESATURATE_EFFECT_NAME) || UiGroup.add_effect_with_name(DESATURATE_EFFECT_NAME, this.#desaturateEffect);
+  _addColorEffects() {
+    UiGroup.get_effect(COLORIZE_EFFECT_NAME) || UiGroup.add_effect_with_name(COLORIZE_EFFECT_NAME, this._colorizeEffect);
+    UiGroup.get_effect(DESATURATE_EFFECT_NAME) || UiGroup.add_effect_with_name(DESATURATE_EFFECT_NAME, this._desaturateEffect);
 
-    this.#updateColorizeEffect();
+    this._updateColorizeEffect();
   }
 
-  #updateColorizeEffect() {
-    this.#colorizeEffect.brightness = this.#colorTone.brightnessColor;
-    this.#colorizeEffect.contrast = this.#colorTone.contrastColor;
+  _updateColorizeEffect() {
+    this._colorizeEffect.brightness = this._colorTone.brightnessColor;
+    this._colorizeEffect.contrast = this._colorTone.contrastColor;
   }
 
-  #removeColorEffects() {
+  _removeColorEffects() {
     UiGroup.get_effect(COLORIZE_EFFECT_NAME) && UiGroup.remove_effect_by_name(COLORIZE_EFFECT_NAME);
     UiGroup.get_effect(DESATURATE_EFFECT_NAME) && UiGroup.remove_effect_by_name(DESATURATE_EFFECT_NAME);
   }
 
-  #transitionInProgress() {
-    return this.#transitionLoopSource != null;
+  _transitionInProgress() {
+    return this._transitionLoopSource != null;
   }
 
-  #destroyTransitionLoopSource() {
-    if (this.#transitionLoopSource) {
-      logDebug(`Destroying Transition Loop Source ${this.#transitionLoopSource.get_id()}`);
+  _destroyTransitionLoopSource() {
+    if (this._transitionLoopSource) {
+      logDebug(`Destroying Transition Loop Source ${this._transitionLoopSource.get_id()}`);
 
-      this.#transitionLoopSource.destroy();
-      this.#transitionLoopSource = null;
+      this._transitionLoopSource.destroy();
+      this._transitionLoopSource = null;
     }
   }
 
-  #cleanUp() {
+  _cleanUp() {
     logDebug("Cleaning up Colorizer related changes...");
-    this.#removeColorEffects();
-    this.#destroyTransitionLoopSource();
+    this._removeColorEffects();
+    this._destroyTransitionLoopSource();
   }
-}
+};

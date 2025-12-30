@@ -1,18 +1,15 @@
 // SPDX-FileCopyrightText: 2023 Aleksandr Mezin <mezin.alexander@gmail.com>
-// SPDX-FileContributor: Pedro Sader Azevedo
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import GLib from 'gi://GLib';
-import Gio from 'gi://Gio';
-import Shell from 'gi://Shell';
+'use strict';
+
+const GLib = imports.gi.GLib;
+const Gio = imports.gi.Gio;
+const Shell = imports.gi.Shell;
 
 class File {
-    constructor(source_url, target_file, fallback_files = []) {
-        const [source_file] = GLib.filename_from_uri(
-            GLib.Uri.resolve_relative(import.meta.url, source_url, GLib.UriFlags.NONE)
-        );
-
+    constructor(source_file, target_file, fallback_files = []) {
         this.content = Shell.get_file_contents_utf8_sync(source_file);
         this.target_file = target_file;
         this.fallback_files = fallback_files;
@@ -76,23 +73,16 @@ function dbus_service_path(basedir) {
     );
 }
 
-export class Installer {
-    constructor(launcher_path) {
-        const [icon_path] = GLib.filename_from_uri(GLib.Uri.resolve_relative(
-            import.meta.url,
-            '../../data/com.github.amezin.ddterm.svg',
-            GLib.UriFlags.NONE
-        ));
-
+var Installer = class Installer {
+    constructor(src_dir, launcher_path) {
         const configure_vars = {
             LAUNCHER: launcher_path,
-            ICON: icon_path,
         };
 
         const system_data_dirs = GLib.get_system_data_dirs();
 
         this.desktop_entry = new File(
-            '../../data/com.github.amezin.ddterm.desktop.in',
+            GLib.build_filenamev([src_dir, 'com.github.amezin.ddterm.desktop.in']),
             desktop_entry_path(GLib.get_user_data_dir()),
             system_data_dirs.map(desktop_entry_path)
         );
@@ -100,7 +90,7 @@ export class Installer {
         this.desktop_entry.configure(configure_vars);
 
         this.dbus_service = new File(
-            '../../data/com.github.amezin.ddterm.service.in',
+            GLib.build_filenamev([src_dir, 'com.github.amezin.ddterm.service.in']),
             dbus_service_path(GLib.get_user_runtime_dir()),
             system_data_dirs.map(dbus_service_path)
         );
@@ -131,4 +121,6 @@ export class Installer {
         this.desktop_entry.uninstall();
         this.dbus_service.uninstall();
     }
-}
+};
+
+/* exported Installer */

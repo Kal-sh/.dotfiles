@@ -3,17 +3,16 @@
  * Keybindings
  *
  * @author     GdH <G-dH@github.com>
- * @copyright  2021-2024
+ * @copyright  2021-2022
  * @license    GPL-3.0
  */
 // This code is based on GSConnect extension
 // https://github.com/GSConnect/gnome-shell-extension-gsconnect/blob/master/src/shell/keybindings.js
 'use strict';
 
-import Meta from 'gi://Meta';
-import Shell from 'gi://Shell';
-
-import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+const Main = imports.ui.main;
+const Meta = imports.gi.Meta;
+const Shell = imports.gi.Shell;
 
 /**
  * Keybindings.Manager is a simple convenience class for managing keyboard
@@ -30,7 +29,7 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
  *     https://developer.gnome.org/meta/stable/meta-MetaKeybinding.html
  *     https://gitlab.gnome.org/GNOME/gnome-shell/blob/master/js/ui/windowManager.js#L1093-1112
  */
-export const Manager = class Manager {
+var Manager = class Manager {
     constructor() {
         this._keybindings = new Map();
 

@@ -5,7 +5,7 @@
  *
  * extension.js
  *
- * Copyright (c) 2021-2025 Gianni Lerro {glerro} ~ <glerro@pm.me>
+ * Copyright (c) 2021-2023 Gianni Lerro {glerro} ~ <glerro@pm.me>
  *
  * Wifi QR Code is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by the
@@ -21,29 +21,57 @@
  * with Wifi QR Code. If not, see <https://www.gnu.org/licenses/>.
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
- * SPDX-FileCopyrightText: 2021-2025 Gianni Lerro <glerro@pm.me>
+ * SPDX-FileCopyrightText: 2021-2023 Gianni Lerro <glerro@pm.me>
  */
+
+/* exported init */
 
 'use strict';
 
-import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
+const ExtensionUtils = imports.misc.extensionUtils;
+const Me = ExtensionUtils.getCurrentExtension();
 
-import * as WifiQrCode from './WifiQrCode.js';
+const ExtensionName = Me.metadata.name;
+const ExtensionVersion = Me.metadata.version;
 
-export default class WifiQrCodeExtension extends Extension {
+const Config = imports.misc.config;
+const SHELL_MAJOR = parseInt(Config.PACKAGE_VERSION.split('.')[0]);
+
+const WifiQrCode = SHELL_MAJOR < 43 ? Me.imports.WifiQrCode_legacy : Me.imports.WifiQrCode;
+
+class Extension {
+    constructor() {
+        this._wifiqrcode = null;
+    }
+
     enable() {
-        console.log(`Enabling ${this.metadata.name} - Version ${this.metadata['version-name']}`);
+        log(`Enabling ${ExtensionName} - Version ${ExtensionVersion}`);
 
-        this._wifiqrcode = new WifiQrCode.WifiQrCode(this);
+        this._wifiqrcode = new WifiQrCode.WifiQrCode();
     }
 
     disable() {
-        console.log(`Disabling ${this.metadata.name} - Version ${this.metadata['version-name']}`);
+        log(`Disabling ${ExtensionName} - Version ${ExtensionVersion}`);
 
         if (this._wifiqrcode !== null) {
             this._wifiqrcode.destroy();
             this._wifiqrcode = null;
         }
     }
+}
+
+/**
+ * This function is called once when extension is loaded, not enabled.
+ *
+ * @param {ExtensionMeta} meta - An extension meta object.
+ * @returns {Extension} - the extension object with enable() and disable() methods.
+ */
+function init(meta) {
+    log(`Inizializing ${meta.metadata.name} - Version ${meta.metadata.version}`);
+
+    // Inizializing translations
+    ExtensionUtils.initTranslations();
+
+    return new Extension();
 }
 

@@ -21,7 +21,7 @@
  *   Software.
  */
 "use strict";
-export var qrcodegen;
+var qrcodegen;
 (function (qrcodegen) {
     /*---- QR Code symbol class ----*/
     /*

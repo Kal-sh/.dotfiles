@@ -13,9 +13,8 @@
                     </object>
                 </child>
                 <child>
-                    <object class="PrefsBoxOrderListBox" id="left-box-order-list-box">
+                    <object class="PrefsBoxOrderListBox">
                         <property name="box-order">left-box-order</property>
-                        <signal name="row-move" handler="onRowMove"/>
                     </object>
                 </child>
                 <child>
@@ -27,9 +26,8 @@
                     </object>
                 </child>
                 <child>
-                    <object class="PrefsBoxOrderListBox" id="center-box-order-list-box">
+                    <object class="PrefsBoxOrderListBox">
                         <property name="box-order">center-box-order</property>
-                        <signal name="row-move" handler="onRowMove"/>
                     </object>
                 </child>
                 <child>
@@ -41,9 +39,8 @@
                     </object>
                 </child>
                 <child>
-                    <object class="PrefsBoxOrderListBox" id="right-box-order-list-box">
+                    <object class="PrefsBoxOrderListBox">
                         <property name="box-order">right-box-order</property>
-                        <signal name="row-move" handler="onRowMove"/>
                     </object>
                 </child>
             </object>

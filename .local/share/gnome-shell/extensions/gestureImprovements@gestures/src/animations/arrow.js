@@ -1,14 +1,15 @@
 // import GObject from '@gi-types/gobject2';
 /* exported ArrowIconAnimation */
-import Gio from 'gi://Gio';
-import Clutter from 'gi://Clutter';
-import St from 'gi://St';
+const Gio = imports.gi.Gio;
+const Clutter = imports.gi.Clutter;
+const St = imports.gi.St;
 
-import { registerClass } from '../../common/utils/gobject.js'
-import { easeActor } from '../utils/environment.js'
-import { WIGET_SHOWING_DURATION } from '../../constants.js'
-// const ExtMe = imports.misc.extensionUtils.getCurrentExtension();
-import * as Util from 'resource:///org/gnome/shell/misc/util.js';
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+const { registerClass } = Me.imports.common.utils.gobject;
+const { easeActor } = Me.imports.src.utils.environment;
+const { WIGET_SHOWING_DURATION } = Me.imports.constants;
+const ExtMe = imports.misc.extensionUtils.getCurrentExtension();
+const Util = imports.misc.util;
 const Circle = registerClass(class GIE_Circle extends St.Widget {
 	_init(style_class) {
 		style_class = `gie-circle ${style_class}`;
@@ -17,7 +18,7 @@ const Circle = registerClass(class GIE_Circle extends St.Widget {
 	}
 });
 
-export var ArrowIconAnimation = registerClass(class GIE_ArrowIcon extends St.Widget {
+var ArrowIconAnimation = registerClass(class GIE_ArrowIcon extends St.Widget {
 	_init() {
 		super._init();
 		this._inner_circle = new Circle('gie-inner-circle');
@@ -55,7 +56,7 @@ export var ArrowIconAnimation = registerClass(class GIE_ArrowIcon extends St.Wid
 			duration: WIGET_SHOWING_DURATION,
 		});
 
-		// this._arrow_icon.set_gicon(Gio.Icon.new_for_string(`${ExtMe.dir.get_uri()}/assets/${icon_name}`));
+		this._arrow_icon.set_gicon(Gio.Icon.new_for_string(`${ExtMe.dir.get_uri()}/assets/${icon_name}`));
 	}
 
 	gestureUpdate(progress) {

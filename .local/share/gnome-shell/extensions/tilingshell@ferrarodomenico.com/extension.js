@@ -1,3 +1,24 @@
+// For GNOME Shell version before 45
+class Extension {
+    constructor(meta) { // meta has type ExtensionMeta
+      this.metadata = meta.metadata;
+      this.uuid = meta.uuid;
+      this.path = meta.path;
+    }
+    getSettings() {
+        return imports.misc.extensionUtils.getSettings();
+    }
+
+    static openPrefs() {
+        return imports.misc.extensionUtils.openPrefs();
+    }
+}
+
+class Mtk { Rectangle }
+Mtk.Rectangle = function (params = {}) {
+    return new imports.gi.Meta.Rectangle(params);
+};
+Mtk.Rectangle.$gtype = imports.gi.Meta.Rectangle.$gtype;
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
@@ -12,19 +33,19 @@ var __decorateClass = (decorators, target, key, kind) => {
 var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
 
 // src/gi.shared.ts
-import Gio from "gi://Gio";
-import GLib from "gi://GLib";
-import GObject from "gi://GObject";
+const Gio = imports.gi.Gio;
+const GLib = imports.gi.GLib;
+const GObject = imports.gi.GObject;
 
 // src/gi.ext.ts
-import Clutter from "gi://Clutter";
-import Meta from "gi://Meta";
-import Mtk from "gi://Mtk";
-import Shell from "gi://Shell";
-import St from "gi://St";
-import Graphene from "gi://Graphene";
-import Atk from "gi://Atk";
-import Pango from "gi://Pango";
+const Clutter = imports.gi.Clutter;
+const Meta = imports.gi.Meta;
+;
+const Shell = imports.gi.Shell;
+const St = imports.gi.St;
+const Graphene = imports.gi.Graphene;
+const Atk = imports.gi.Atk;
+const Pango = imports.gi.Pango;
 
 // src/utils/logger.ts
 function rect_to_string(rect) {
@@ -33,7 +54,7 @@ function rect_to_string(rect) {
 var logger = (prefix) => (...content) => console.log("[tilingshell]", `[${prefix}]`, ...content);
 
 // src/utils/ui.ts
-import * as Main from "resource:///org/gnome/shell/ui/main.js";
+const Main = imports.ui.main;
 var getMonitors = () => Main.layoutManager.monitors;
 var isPointInsideRect = (point, rect) => {
   return point.x >= rect.x && point.x <= rect.x + rect.width && point.y >= rect.y && point.y <= rect.y + rect.height;
@@ -782,7 +803,7 @@ var SignalHandling = class {
 };
 
 // src/utils/globalState.ts
-import * as Main2 from "resource:///org/gnome/shell/ui/main.js";
+const Main2 = imports.ui.main;
 var debug = logger("GlobalState");
 var GlobalState = class extends GObject.Object {
   _signals;
@@ -1422,7 +1443,7 @@ var SettingsOverride = class _SettingsOverride {
 };
 
 // src/keybindings.ts
-import * as Main3 from "resource:///org/gnome/shell/ui/main.js";
+const Main3 = imports.ui.main;
 var debug4 = logger("KeyBindings");
 var KeyBindingsDirection = /* @__PURE__ */ ((KeyBindingsDirection2) => {
   KeyBindingsDirection2[KeyBindingsDirection2["NODIRECTION"] = 1] = "NODIRECTION";
@@ -3631,7 +3652,7 @@ SuggestionsTilePreview = __decorateClass([
 ], SuggestionsTilePreview);
 
 // src/components/windowsSuggestions/tilingLayoutWithSuggestions.ts
-import * as Main4 from "resource:///org/gnome/shell/ui/main.js";
+const Main4 = imports.ui.main;
 var debug11 = logger("TilingLayoutWithSuggestions");
 var ANIMATION_SPEED = 200;
 var MASONRY_LAYOUT_ROW_HEIGHT = 0.31;
@@ -3852,7 +3873,7 @@ TilingLayoutWithSuggestions = __decorateClass([
 ], TilingLayoutWithSuggestions);
 
 // src/components/tilingsystem/tilingManager.ts
-import * as Main5 from "resource:///org/gnome/shell/ui/main.js";
+const Main5 = imports.ui.main;
 var MINIMUM_DISTANCE_TO_RESTORE_ORIGINAL_SIZE = 90;
 var SnapAssistingInfo = class {
   _snapAssistantLayoutId;
@@ -5211,7 +5232,7 @@ HoverLine = __decorateClass([
 ], HoverLine);
 
 // src/components/editor/layoutEditor.ts
-import * as Main6 from "resource:///org/gnome/shell/ui/main.js";
+const Main6 = imports.ui.main;
 var LayoutEditor = class extends St.Widget {
   _layout;
   _containerRect;
@@ -5564,10 +5585,10 @@ LayoutButton = __decorateClass([
 ], LayoutButton);
 
 // src/translations.ts
-import { gettext as _, ngettext, pgettext } from "resource:///org/gnome/shell/extensions/extension.js";
+const { gettext: _, ngettext, pgettext } = imports.misc.extensionUtils;
 
 // src/polyfill.ts
-import { Extension } from "resource:///org/gnome/shell/extensions/extension.js";
+
 function openPrefs() {
   if (Extension.openPrefs) {
     Extension.openPrefs();
@@ -5579,8 +5600,8 @@ function openPrefs() {
 }
 
 // src/indicator/defaultMenu.ts
-import * as Main7 from "resource:///org/gnome/shell/ui/main.js";
-import * as PopupMenu from "resource:///org/gnome/shell/ui/popupMenu.js";
+const Main7 = imports.ui.main;
+const PopupMenu = imports.ui.popupMenu;
 var debug12 = logger("DefaultMenu");
 var LayoutsRow = class extends St.BoxLayout {
   _layoutsBox;
@@ -5878,7 +5899,7 @@ var DefaultMenu = class {
 };
 
 // src/indicator/editingMenu.ts
-import * as PopupMenu2 from "resource:///org/gnome/shell/ui/popupMenu.js";
+const PopupMenu2 = imports.ui.popupMenu;
 var EditingMenu = class {
   _indicator;
   constructor(indicator) {
@@ -5935,8 +5956,8 @@ var EditingMenu = class {
 };
 
 // src/components/editor/editorDialog.ts
-import * as ModalDialog from "resource:///org/gnome/shell/ui/modalDialog.js";
-import * as Main8 from "resource:///org/gnome/shell/ui/main.js";
+const ModalDialog = imports.ui.modalDialog;
+const Main8 = imports.ui.main;
 var EditorDialog = class extends ModalDialog.ModalDialog {
   _layoutHeight = 72;
   _layoutWidth = 128;
@@ -6202,8 +6223,8 @@ EditorDialog = __decorateClass([
 ], EditorDialog);
 
 // src/indicator/indicator.ts
-import * as Main9 from "resource:///org/gnome/shell/ui/main.js";
-import * as PanelMenu from "resource:///org/gnome/shell/ui/panelMenu.js";
+const Main9 = imports.ui.main;
+const PanelMenu = imports.ui.panelMenu;
 var IndicatorState = /* @__PURE__ */ ((IndicatorState2) => {
   IndicatorState2[IndicatorState2["DEFAULT"] = 1] = "DEFAULT";
   IndicatorState2[IndicatorState2["CREATE_NEW"] = 2] = "CREATE_NEW";
@@ -6814,9 +6835,9 @@ LayoutIcon = __decorateClass([
 ], LayoutIcon);
 
 // src/components/window_menu/overriddenWindowMenu.ts
-import * as windowMenu from "resource:///org/gnome/shell/ui/windowMenu.js";
-import * as PopupMenu4 from "resource:///org/gnome/shell/ui/popupMenu.js";
-import * as Main10 from "resource:///org/gnome/shell/ui/main.js";
+const windowMenu = imports.ui.windowMenu;
+const PopupMenu4 = imports.ui.popupMenu;
+const Main10 = imports.ui.main;
 var LAYOUT_ICON_WIDTH = 46;
 var LAYOUT_ICON_HEIGHT = 32;
 var INNER_GAPS = 2;
@@ -7533,7 +7554,7 @@ MultipleWindowsIcon = __decorateClass([
 ], MultipleWindowsIcon);
 
 // src/components/altTab/overriddenAltTab.ts
-import * as AltTab from "resource:///org/gnome/shell/ui/altTab.js";
+const AltTab = imports.ui.altTab;
 var GAPS2 = 3;
 var debug16 = logger("OverriddenAltTab");
 var OverriddenAltTab = class _OverriddenAltTab {
@@ -7602,8 +7623,8 @@ var OverriddenAltTab = class _OverriddenAltTab {
 };
 
 // src/components/layoutSwitcher/layoutSwitcher.ts
-import * as SwitcherPopup from "resource:///org/gnome/shell/ui/switcherPopup.js";
-import * as Main12 from "resource:///org/gnome/shell/ui/main.js";
+const SwitcherPopup = imports.ui.switcherPopup;
+const Main12 = imports.ui.main;
 var LAYOUT_HEIGHT = 72;
 var LAYOUT_WIDTH = 128;
 var GAPS3 = 3;
@@ -7706,8 +7727,8 @@ LayoutSwitcherPopup = __decorateClass([
 ], LayoutSwitcherPopup);
 
 // src/extension.ts
-import * as Main13 from "resource:///org/gnome/shell/ui/main.js";
-import * as Config from "resource:///org/gnome/shell/misc/config.js";
+const Main13 = imports.ui.main;
+const Config = imports.misc.config;
 var debug17 = logger("extension");
 var TilingShellExtension = class extends Extension {
   _indicator;
@@ -8223,9 +8244,7 @@ var TilingShellExtension = class extends Extension {
     debug17("extension is disabled");
   }
 };
-export {
-  TilingShellExtension as default
-};
+
 /*!
  * Tiling Shell: advanced and modern window management for GNOME
  *
@@ -8246,3 +8265,8 @@ export {
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
+
+function init(meta) {
+    imports.misc.extensionUtils.initTranslations();
+    return new TilingShellExtension(meta);
+}

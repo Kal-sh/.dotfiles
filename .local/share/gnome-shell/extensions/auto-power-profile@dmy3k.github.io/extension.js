@@ -1,153 +1,256 @@
-import GLib from "gi://GLib";
-import {
-  Extension,
-  gettext as _
-} from "resource:///org/gnome/shell/extensions/extension.js";
+const { Gio, GLib, St, GObject } = imports.gi;
+const UPower = imports.gi.UPowerGlib;
 
-import { Notifier } from "./lib/notifier.js";
-import { CustomSettings } from "./lib/customSettings.js";
-import { UpowerDbus } from "./lib/upowerDbus.js";
-import { PowerProfilesDbus } from "./lib/powerProfilesDbus.js";
-import { PerformanceAppTracker } from "./lib/performanceAppTracker.js";
+const ExtensionUtils = imports.misc.extensionUtils;
+const FileUtils = imports.misc.fileUtils;
+const Me = ExtensionUtils.getCurrentExtension();
 
-export default class AutoPowerProfile extends Extension {
+const Main = imports.ui.main;
+const MessageTray = imports.ui.messageTray;
+
+const UPOWER_BUS_NAME = "org.freedesktop.UPower";
+const UPOWER_OBJECT_PATH = "/org/freedesktop/UPower/devices/DisplayDevice";
+
+const POWER_PROFILES_BUS_NAME = "net.hadess.PowerProfiles";
+const POWER_PROFILES_OBJECT_PATH = "/net/hadess/PowerProfiles";
+
+class Notifier {
+  constructor(extensionObject) {
+    this._uuid = extensionObject.uuid;
+    this._name = extensionObject.metadata.name;
+  }
+
+  notify(msg, action = "error") {
+    let notifyIcon = "battery-level-100-charged-symbolic";
+    let notifyTitle = _("Auto Power Profiles");
+    let urgency = MessageTray.Urgency.NORMAL;
+
+    if (action === "error") {
+      urgency === MessageTray.Urgency.CRITICAL;
+      notifyIcon = "dialog-warning-symbolic";
+    }
+
+    this._source = new MessageTray.Source(this._name, notifyIcon);
+    Main.messageTray.add(this._source);
+
+    if (this._notification) {
+      this._notification.destroy(NotificationDestroyedReason.REPLACED);
+      this._notification = null;
+    }
+
+    Main.messageTray.add(this._source);
+    this._notification = new MessageTray.Notification(
+      this._source,
+      notifyTitle,
+      msg
+    );
+
+    if (action === "show-details") {
+      this._notification.addAction(_("Show details"), () => {
+        const uri = `https://upower.pages.freedesktop.org/power-profiles-daemon/power-profiles-daemon-Platform-Profile-Drivers.html`;
+        Gio.app_info_launch_default_for_uri(uri, null, null, null);
+      });
+    }
+
+    this._notification.setUrgency(urgency);
+    this._notification.setTransient(true);
+    this._source.showNotification(this._notification);
+
+    this._notification.connectObject(
+      "destroy",
+      () => {
+        this._notification = null;
+      },
+      this._notification
+    );
+  }
+
+  _removeActiveNofications() {
+    if (this._notification) {
+      this._notification.destroy(
+        MessageTray.NotificationDestroyedReason.SOURCE_CLOSED
+      );
+    }
+    this._notification = null;
+    this._source = null;
+  }
+
+  destroy() {
+    this._removeActiveNofications();
+  }
+}
+
+class ProfileTransition {
+  effectiveProfile;
+  requestedProfile;
+  committedProfile;
+
+  onBat;
+  lowBat;
+
+  report({ effectiveProfile, onBattery, lowBattery }) {
+    this.effectiveProfile = effectiveProfile;
+    this.onBat = onBattery;
+    this.lowBat = lowBattery;
+
+    if (
+      this.requestedProfile &&
+      !this.committedProfile &&
+      this.effectiveProfile === this.requestedProfile
+    ) {
+      this.committedProfile = this.requestedProfile;
+    }
+
+    if (!effectiveProfile) {
+      this.effectiveProfile = null;
+      this.requestedProfile = null;
+      this.committedProfile = null;
+    }
+  }
+
+  request({ configuredProfile, onBattery, lowBattery }) {
+    const allowed =
+      this.lowBat !== lowBattery ||
+      this.onBat !== onBattery ||
+      !this.committedProfile;
+
+    if (allowed) {
+      this.requestedProfile = configuredProfile;
+      this.committedProfile = null;
+    }
+    return allowed;
+  }
+}
+
+class AutoPowerProfile {
   _settings;
-  _upowerDbus;
-  _powerProfilesDbus;
-  _perfAppTracker;
+  _settingsCache = {};
 
-  // Used to distinguish between user and extension-initiated changes
-  _currentPowerState = {};
-  _currentProfile;
-  _requestedProfile;
+  _transition;
 
   _perfDebounceTimerId;
-  _perfDebounceTimeout = 10;
+
+  _powerManagerProxy;
+  _powerManagerWatcher;
+
+  _powerProfilesProxy;
+  _powerProfileWatcher;
 
   _notifier;
 
-  constructor(metadata) {
-    super(metadata);
-  }
-
   enable() {
-    const settings = this.getSettings(
+    const DisplayDeviceInterface = FileUtils.loadInterfaceXML(
+      "org.freedesktop.UPower.Device"
+    );
+    const PowerManagerProxy = Gio.DBusProxy.makeProxyWrapper(
+      DisplayDeviceInterface
+    );
+
+    const PowerProfilesIface = FileUtils.loadInterfaceXML(
+      "net.hadess.PowerProfiles"
+    );
+    const PowerProfilesProxy =
+      Gio.DBusProxy.makeProxyWrapper(PowerProfilesIface);
+
+    this._transition = new ProfileTransition();
+
+    this._settings = ExtensionUtils.getSettings(
       "org.gnome.shell.extensions.auto-power-profile"
     );
-    this._settings = new CustomSettings(settings);
-    this._settings.connect(this._onSettingsChange);
-
-    this._perfAppTracker = new PerformanceAppTracker();
-    this._perfAppTracker.initialize(this._checkProfile);
-
-    this._notifier = new Notifier(this, this._settings);
-
-    this._initDBusServices()
-      .then(() => {
-        this._validateDrivers();
-        this._onSettingsChange();
-      })
-      .catch((err) => {
-        console.error("Failed to initialize power management proxies:", err);
-        this._notifier?.notify(
-          _("Error connecting to power management services")
-        );
-      });
-  }
-
-  async _initDBusServices() {
-    this._upowerDbus = new UpowerDbus();
-    this._powerProfilesDbus = new PowerProfilesDbus();
-
-    await Promise.all([
-      this._upowerDbus.initialize(),
-      this._powerProfilesDbus.initialize()
-    ]);
-
-    this._upowerDbus.connectSignal("g-properties-changed", this._checkProfile);
-    this._powerProfilesDbus.connectSignal(
-      "g-properties-changed",
-      this._onProfileChange
+    this._settingsWatcher = this._settings.connect(
+      "changed",
+      this._onSettingsChange
     );
+
+    this._powerProfilesProxy = new PowerProfilesProxy(
+      Gio.DBus.system,
+      POWER_PROFILES_BUS_NAME,
+      POWER_PROFILES_OBJECT_PATH,
+      (proxy, error) => {
+        if (error) {
+          console.error(error.message);
+          this._notifier.notify(
+            _(
+              "Error connecting power-profiles-daemon DBus. Check your installation"
+            )
+          );
+          return;
+        }
+        this._powerProfileWatcher = this._powerProfilesProxy.connect(
+          "g-properties-changed",
+          this._onProfileChange
+        );
+
+        if (!this._isValidDrivers()) {
+          this._notifier.notify(
+            _("No system-specific platform driver is available"),
+            "show-details"
+          );
+        }
+      }
+    );
+
+    this._powerManagerProxy = new PowerManagerProxy(
+      Gio.DBus.system,
+      UPOWER_BUS_NAME,
+      UPOWER_OBJECT_PATH,
+      (proxy, error) => {
+        if (error) {
+          console.error(error.message);
+          this._notifier.notify(
+            _("Error connecting UPower DBus. Check your installation")
+          );
+          return;
+        }
+        this._powerManagerWatcher = this._powerManagerProxy.connect(
+          "g-properties-changed",
+          this._checkProfile
+        );
+        this._onSettingsChange();
+      }
+    );
+
+    this._notifier = new Notifier(Me);
   }
 
   disable() {
+    if (this._powerManagerWatcher) {
+      this._powerManagerProxy?.disconnect(this._powerManagerWatcher);
+      this._powerManagerWatcher = null;
+    }
+    if (this._powerProfileWatcher) {
+      this._powerProfilesProxy?.disconnect(this._powerProfileWatcher);
+      this._powerProfileWatcher = null;
+    }
     if (this._notifier) {
       this._notifier.destroy();
       this._notifier = null;
     }
+    this._settings?.disconnect(this._settingsWatcher);
 
-    if (this._powerProfilesDbus) {
-      this._powerProfilesDbus.switchProfile("balanced");
-      this._powerProfilesDbus.destroy();
-      this._powerProfilesDbus = null;
-    }
+    this._switchProfile("balanced");
 
     if (this._perfDebounceTimerId) {
       GLib.Source.remove(this._perfDebounceTimerId);
       this._perfDebounceTimerId = null;
     }
 
-    this._clearCurrentPowerState();
+    this._transition?.report({});
+    this._transition = null;
 
-    if (this._settings) {
-      this._settings.destroy();
-      this._settings = null;
-    }
+    this._settings = null;
+    this._settingsCache = {};
 
-    if (this._upowerDbus) {
-      this._upowerDbus.destroy();
-      this._upowerDbus = null;
-    }
-
-    if (this._perfAppTracker) {
-      this._perfAppTracker.destroy();
-      this._perfAppTracker = null;
-    }
+    this._powerManagerProxy = null;
+    this._powerProfilesProxy = null;
   }
 
-  _onUserProfileChange = (profile, { lowBattery, onBattery, onAC }) => {
-    // Don't remember user changes if the feature is disabled
-    if (!this._settings.rememberUserProfile) {
-      return;
-    }
-
-    // Only update defaults for basic profiles, not when performance apps are active
-    // Don't update if we're in low battery mode (power-saver is forced)
-    if (lowBattery || this._perfAppTracker?.hasActiveApps) {
-      return;
-    }
-
-    // Update the appropriate default based on current power state
-    if (onAC && this._settings.acProfile !== profile) {
-      this._settings.acProfile = profile;
-      this._notifier?.notify(
-        _(
-          `Power profile '%s' will now be used by default when connected to AC power`
-        ).format(profile),
-        { isTransient: true }
-      );
-    } else if (onBattery && this._settings.batteryProfile !== profile) {
-      this._settings.batteryProfile = profile;
-      this._notifier?.notify(
-        _(
-          `Power profile '%s' will now be used by default when running on battery`
-        ).format(profile),
-        { isTransient: true }
-      );
-    }
-  };
-
   _onProfileChange = (p, properties) => {
-    if (!this._powerProfilesDbus) {
+    if (!this._powerProfilesProxy) {
       return;
     }
     const payload = properties?.deep_unpack();
-    const powerState = this._getConfiguredPowerState();
-
-    if (!powerState) {
-      return;
-    }
+    const powerConditions = this._getPowerConditions();
 
     if (payload?.ActiveProfile) {
       if (this._perfDebounceTimerId) {
@@ -155,46 +258,31 @@ export default class AutoPowerProfile extends Extension {
         this._perfDebounceTimerId = null;
       }
       if (!payload?.PerformanceDegraded) {
-        this._currentProfile = this._powerProfilesDbus.activeProfile;
-        this._currentPowerState = powerState;
-
-        if (this._currentProfile === this._requestedProfile) {
-          // This was our requested change - mark as complete
-          this._requestedProfile = null;
-        } else {
-          // This appears to be a user-initiated change
-          this._onUserProfileChange(this._currentProfile, powerState);
-          this._requestedProfile = null;
-        }
+        this._transition.report({
+          effectiveProfile: this._powerProfilesProxy.ActiveProfile,
+          ...powerConditions,
+        });
       }
     }
 
-    if (powerState.onAC && payload?.PerformanceDegraded) {
+    if (powerConditions.onAC && payload?.PerformanceDegraded) {
       try {
         const reason = payload?.PerformanceDegraded?.unpack();
 
-        if (reason === "lap-detected") {
-          // the computer is sitting on the user's lap
-          // has false triggers when device sits stationary on a bit shaky stand/arm
-          // try to re-apply performance profile
-          if (this._perfDebounceTimerId) {
-            GLib.Source.remove(this._perfDebounceTimerId);
-          }
+        if (reason === "lap-detected" && this._settingsCache.lapmode) {
           this._perfDebounceTimerId = GLib.timeout_add_seconds(
             GLib.PRIORITY_DEFAULT,
-            this._perfDebounceTimeout,
+            5,
             () => {
-              this._clearCurrentPowerState();
+              this._transition.report({});
               this._checkProfile();
               this._perfDebounceTimerId = null;
               return GLib.SOURCE_REMOVE;
             }
           );
         } else if (reason) {
-          // the computer is close to overheating ("high-operating-temperature")
-          // and other values potentially might be added in newer versions of dbus interface
           console.log(
-            `ActiveProfile: ${this._powerProfilesDbus.activeProfile}, PerformanceDegraded: ${reason}`
+            `ActiveProfile: ${this._powerProfilesProxy.ActiveProfile}, PerformanceDegraded: ${reason}`
           );
         }
       } catch (e) {
@@ -204,100 +292,100 @@ export default class AutoPowerProfile extends Extension {
   };
 
   _onSettingsChange = () => {
-    this._clearCurrentPowerState();
-    this._perfAppTracker?.setPerformanceApps(this._settings.performanceApps);
+    this._settingsCache = {
+      ACDefault: this._settings.get_string("ac"),
+      batteryDefault: this._settings.get_string("bat"),
+      batteryThreshold: this._settings.get_int("threshold"),
+      lapmode: this._settings.get_boolean("lapmode"),
+    };
+    this._transition.report({});
     this._checkProfile();
   };
 
-  /**
-   * Determine the configured profile based on power state and performance apps
-   * @returns {Object} Extended power state with configured profile
-   */
-  _getConfiguredPowerState() {
-    if (!this._upowerDbus || !this._powerProfilesDbus) {
-      return null;
-    }
-
-    const powerState = this._upowerDbus.getPowerState();
-    const perfAppsActive = this._perfAppTracker?.hasActiveApps ?? false;
+  _getPowerConditions = () => {
     let configuredProfile = "balanced";
 
-    const gnomeLowBatteryEnabled =
-      this._settings?.powerSaverOnLowBatteryEnabled ?? true;
+    const hasBattery = !(
+      this._powerManagerProxy?.State === UPower.DeviceState.UNKNOWN ||
+      this._powerManagerProxy?.Percentage === undefined
+    );
 
-    // Determine configured profile based on power state
-    if (powerState.onBattery === false) {
-      configuredProfile = this._settings.acProfile;
-    } else if (powerState.lowBattery && gnomeLowBatteryEnabled) {
+    const onBattery =
+      this._powerManagerProxy?.State === UPower.DeviceState.PENDING_DISCHARGE ||
+      this._powerManagerProxy?.State === UPower.DeviceState.DISCHARGING;
+
+    const lowBattery =
+      this._settingsCache?.batteryThreshold >=
+      this._powerManagerProxy?.Percentage;
+
+    if (onBattery === false) {
+      configuredProfile = this._settingsCache?.ACDefault;
+    } else if (onBattery === true && lowBattery) {
       configuredProfile = "power-saver";
-    } else if (powerState.onBattery && !powerState.lowBattery) {
-      configuredProfile = this._settings.batteryProfile;
-    } else if (powerState.lowBattery && !gnomeLowBatteryEnabled) {
-      configuredProfile = this._settings.batteryProfile;
-    }
-
-    // Override with performance app settings if performance apps are active
-    if (perfAppsActive && powerState.onBattery) {
-      configuredProfile = this._settings.performanceAppsBatteryMode;
-    } else if (perfAppsActive && !powerState.onBattery) {
-      configuredProfile = this._settings.performanceAppsACMode;
+    } else if (onBattery === true && !lowBattery) {
+      configuredProfile = this._settingsCache?.batteryDefault;
     }
 
     return {
-      ...powerState,
-      perfApps: perfAppsActive,
-      configuredProfile
+      hasBattery,
+      onBattery,
+      onAC: onBattery === false,
+      lowBattery: onBattery === true && lowBattery,
+      configuredProfile,
     };
-  }
+  };
 
-  _clearCurrentPowerState() {
-    this._currentProfile = null;
-    this._requestedProfile = null;
-    this._currentPowerState = {};
-  }
-
-  _checkProfile = () => {
-    const newState = this._getConfiguredPowerState();
-
-    if (!newState || !this._powerProfilesDbus) {
+  _switchProfile = (profile) => {
+    if (profile === this._powerProfilesProxy?.ActiveProfile) {
       return;
     }
 
-    const hasPowerConditionChanged =
-      this._currentPowerState.onBattery !== newState.onBattery ||
-      this._currentPowerState.lowBattery !== newState.lowBattery ||
-      this._currentPowerState.perfApps !== newState.perfApps;
+    const canSwitch = this._powerProfilesProxy?.Profiles?.some(
+      (p) => p.Profile.unpack() === profile
+    );
+    if (!canSwitch) {
+      console.error(`Profile ${profile} is not in list of available profiles`);
+      return;
+    }
+    this._powerProfilesProxy.ActiveProfile = profile;
+  };
 
-    if (
-      hasPowerConditionChanged &&
-      this._currentProfile === newState.configuredProfile
-    ) {
-      // handling edge case where user-initiated profile matches target
-      this._currentPowerState = newState;
-    } else if (hasPowerConditionChanged || !this._currentProfile) {
-      this._requestedProfile = newState.configuredProfile;
-      this._powerProfilesDbus.switchProfile(this._requestedProfile);
+  _checkProfile = () => {
+    const powerConditions = this._getPowerConditions();
+    const allowed = this._transition.request(powerConditions);
+
+    if (allowed) {
+      this._switchProfile(powerConditions.configuredProfile);
     }
   };
 
-  _validateDrivers() {
-    const { active, hasDrivers } = this._powerProfilesDbus.validateDrivers();
+  _isValidDrivers() {
+    const active = this._powerProfilesProxy.ActiveProfile;
+    const profile = this._powerProfilesProxy?.Profiles?.find(
+      (x) => x.Profile?.unpack() === active
+    );
 
-    if (!active) {
-      this._notifier.notify(
-        _(
-          "Power profile management is not available - this extension will have no effect on your system"
-        )
-      );
-    } else if (!hasDrivers) {
-      this._notifier.notify(
-        _(
-          "Power profile switching may not work properly on this device - energy savings will be limited. Your system may need updates to enable full functionality"
-        ),
-        {
-          uri: "https://upower.pages.freedesktop.org/power-profiles-daemon/power-profiles-daemon-Platform-Profile-Drivers.html"
-        }
-      );
-    }
+    const driver = profile?.Driver?.get_string()?.[0];
+    const platformDriver = profile?.PlatformDriver?.get_string()?.[0];
+    const cpuDriver = profile?.CpuDriver?.get_string()?.[0];
+    const drivers = [driver, platformDriver, cpuDriver];
+
+    return drivers.some((x) => x && x !== "placeholder");
   }
+}
+
+let inst = null;
+
+function init() {
+  ExtensionUtils.initTranslations(Me.metadata.uuid);
+}
+
+function enable() {
+  inst = new AutoPowerProfile();
+  inst.enable();
+}
+
+function disable() {
+  inst.disable();
+  inst = null;
 }
