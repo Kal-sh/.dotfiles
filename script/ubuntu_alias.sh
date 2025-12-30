@@ -38,7 +38,7 @@ alias psyu="paru -Syu"
 alias sys="sudo systemctl"
 alias q="exit"
 alias cl="clear"
-#alias fn="fdfind --type d --hidden --exclude .git | fzf-tmux -p -w 90% --reverse --preview 'ls -la --color=always {}' | xargs -I {} xdg-open '{}'"
+alias fdn="fdfind --type d --hidden --exclude .git | fzf-tmux -p -w 90% --reverse --preview 'ls -la --color=always {}' | xargs -I {} xdg-open '{}'"
 
 
 # ─────────────────────────────────────────
