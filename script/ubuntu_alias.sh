@@ -96,6 +96,7 @@ alias trs="trash-restore"
 alias gc="grepcat"
 alias gits="git global-status"
 alias fn="fd_dir"
+alias fdn="fdn_dir"
 alias ff="fd_file"
 
 

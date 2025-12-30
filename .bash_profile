@@ -17,6 +17,15 @@ fd_dir() {
     fi
 }
 
+fdn_dir() {
+    local selected_dir
+    selected_dir=$(fdfind --type d --hidden --exclude .git | fzf-tmux -p -w 90% --reverse --preview 'ls -la --color=always {}')
+    
+    if [[ -n "$selected_dir" ]]; then
+        cd "$selected_dir"
+    fi
+}
+
 fd_file() {
     local selected_file
     selected_file=$(fdfind --type f --hidden --exclude .git | fzf-tmux -p -w 90% --reverse --preview "batcat --color=always {}")
