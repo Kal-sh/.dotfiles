@@ -112,7 +112,7 @@
     "133e1c05-56c9-45ef-af93-767c424f54bb": {
         "id": "133e1c05-56c9-45ef-af93-767c424f54bb",
         "name": "Startpage",
-        "keyword": "st",
+        "keyword": "s",
         "cmd": "https://www.startpage.com/do/search?q=%s",
         "icon": "~/Pictures/Wallpapers/PNG/startpage-512px.png",
         "is_default_search": true,

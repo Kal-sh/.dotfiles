@@ -38,9 +38,6 @@ alias psyu="paru -Syu"
 alias sys="sudo systemctl"
 alias q="exit"
 alias cl="clear"
-alias fn="fd --type d --hidden --exclude .git | fzf-tmux -p -w 90% --reverse --preview 'bat --color=always {}' | xargs -I {} xdg-open '{}'"
-#alias fn="fd --type f --hidden --exclude .git | fzf-tmux -p -w 90% --reverse --preview 'bat --color=always {}' | xargs nvim"
-alias ff='fd --type f --hidden --exclude .git | fzf-tmux -p -w 90% --reverse --preview "bat --color=always {}" | { read -r file && [ -n "$file" ] && case "$file" in *.pdf) xdg-open "$file" ;; *.ppt|*.pptx) xdg-open "$file" ;; *.doc|*.docx) xdg-open "$file" ;; *.jpg|*.jpeg|*.png) xdg-open "$file" ;; *.mp4|*.mkv|*.webm) xdg-open "$file" ;; *) nvim "$file" ;; esac }'
 
 # ─────────────────────────────────────────
 # Toolbox / Distrobox
@@ -96,6 +93,9 @@ alias trs="trash-restore"
 # ─────────────────────────────────────────
 alias gc="grepcat"
 alias gits="git global-status"
+alias fn="fd_dir"
+alias fdn="fdn_dir"
+alias ff="fd_file"
 
 # ─────────────────────────────────────────
 # Find directories by name

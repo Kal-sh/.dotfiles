@@ -56,6 +56,7 @@ arch | cachyos)
     git
     ufw
     stow
+    tmux
     ttf-hack-nerd
     ghostty
     nvim
@@ -81,7 +82,7 @@ arch | cachyos)
   # AUR packages via paru (preinstalled as you said)
   aur_apps=(
     ulauncher
-    opencode
+    opencode-bin
     gnome-shell-pomodoro
   )
 
