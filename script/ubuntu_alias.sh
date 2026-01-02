@@ -18,28 +18,11 @@ alias repo="apt list --installed"
 alias rip="grep 'install ' /var/log/apt/history.log | sort | tail -200 | nl"
 
 # ─────────────────────────────────────────
-# CachyOS pacman wrapper (for Ubuntu)
-# ─────────────────────────────────────────
-# These commands won't be relevant for Ubuntu (pacman-specific), so we can leave them as is for now
-
-# ─────────────────────────────────────────
-# AUR helper (paru)
-# ─────────────────────────────────────────
-alias p="paru"  # Leave the AUR helper alias if you're using something like Arch-based distros or want to keep it for other uses
-alias pi="paru -S"
-alias piy="paru -Sy"
-alias pss="paru -Ss"
-alias pru="paru -Rs"
-alias psyu="paru -Syu"
-
-# ─────────────────────────────────────────
 # System / General
 # ─────────────────────────────────────────
 alias sys="sudo systemctl"
 alias q="exit"
 alias cl="clear"
-alias fdn="fdfind --type d --hidden --exclude .git | fzf-tmux -p -w 90% --reverse --preview 'ls -la --color=always {}' | xargs -I {} xdg-open '{}'"
-
 
 # ─────────────────────────────────────────
 # Toolbox / Distrobox

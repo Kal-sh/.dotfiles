@@ -10,7 +10,7 @@ grepcat() {
 
 fd_dir() {
     local selected_dir
-    selected_dir=$(fdfind --type d --hidden --exclude .git | fzf-tmux -p -w 90% --reverse --preview 'ls -la --color=always {}')
+    selected_dir=$(fdfind --type d --hidden --exclude .git | fzf-tmux -p -w 90% --reverse --preview 'exa -la --color=always {}')
     
     if [[ -n "$selected_dir" ]]; then
         cd "$selected_dir"
@@ -19,10 +19,10 @@ fd_dir() {
 
 fdn_dir() {
     local selected_dir
-    selected_dir=$(fdfind --type d --hidden --exclude .git | fzf-tmux -p -w 90% --reverse --preview 'ls -la --color=always {}')
+    selected_dir=$(fdfind --type d --hidden --exclude .git | fzf-tmux -p -w 90% --reverse --preview 'exa -la --color=always {}')
     
     if [[ -n "$selected_dir" ]]; then
-        cd "$selected_dir"
+        xdg-open "$selected_dir"
     fi
 }
 
