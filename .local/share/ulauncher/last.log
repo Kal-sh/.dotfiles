@@ -1,335 +1,116 @@
-2026-01-01 02:21:43,545 | INFO | ulauncher: main() | Ulauncher version 5.15.15
-2026-01-01 02:21:43,545 | INFO | ulauncher: main() | Extension API version 2.0.0
-2026-01-01 02:21:43,545 | INFO | ulauncher: main() | GTK+ 3.24.51
-2026-01-01 02:21:43,545 | INFO | ulauncher: main() | Is Wayland: True
-2026-01-01 02:21:43,545 | INFO | ulauncher: main() | Wayland compatibility: off
-2026-01-01 02:21:43,558 | DEBUG | ulauncher.ui.windows.Builder: __init__() | consider using a pythonic name instead of design name 'input-box'
-2026-01-01 02:21:43,569 | DEBUG | ulauncher.ui.windows.Builder: do_connect() | connect builder by name 'ulauncher_window','destroy', 'on_destroy'
-2026-01-01 02:21:43,569 | DEBUG | ulauncher.ui.windows.Builder: do_connect() | connect builder by name 'ulauncher_window','focus_in_event', 'on_focus_in_event'
-2026-01-01 02:21:43,569 | DEBUG | ulauncher.ui.windows.Builder: do_connect() | connect builder by name 'ulauncher_window','focus_out_event', 'on_focus_out_event'
-2026-01-01 02:21:43,571 | DEBUG | ulauncher.ui.windows.Builder: do_connect() | connect builder by name 'input','key_press_event', 'on_input_key_press_event'
-2026-01-01 02:21:43,571 | DEBUG | ulauncher.ui.windows.Builder: log_unconnected_functions() | Not connected to builder 'on_input_changed'
-2026-01-01 02:21:43,571 | DEBUG | ulauncher.ui.windows.Builder: log_unconnected_functions() | Not connected to builder 'on_mnu_about_activate'
-2026-01-01 02:21:43,571 | DEBUG | ulauncher.ui.windows.Builder: log_unconnected_functions() | Not connected to builder 'on_mnu_close_activate'
-2026-01-01 02:21:43,572 | DEBUG | ulauncher.ui.windows.Builder: log_unconnected_functions() | Not connected to builder 'on_mnu_preferences_activate'
-2026-01-01 02:21:43,572 | DEBUG | ulauncher.ui.windows.Builder: log_unconnected_functions() | Not connected to builder 'on_preferences_dialog_destroyed'
-2026-01-01 02:21:43,573 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
-2026-01-01 02:21:43,573 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
-2026-01-01 02:21:43,620 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
-2026-01-01 02:21:43,623 | INFO | ulauncher.search.apps.app_watcher: start() | Started scanning desktop dirs
-2026-01-01 02:21:43,624 | INFO | ulauncher.api.server.ExtensionServer: _start_thread() | Starting WS server on port 5054
-2026-01-01 02:21:43,639 | INFO | ulauncher.api.server.ExtensionRunner: _run_process() | Extension "com.github.andr3slelouch.ulauncher-gnome-extensions-prefs" started. PID 71505
-2026-01-01 02:21:43,641 | INFO | ulauncher.api.server.ExtensionRunner: _run_process() | Extension "com.github.barathbheeman.vsw-extension" started. PID 71506
-2026-01-01 02:21:43,646 | INFO | ulauncher.api.server.ExtensionRunner: _run_process() | Extension "com.github.dhelmr.ulauncher-tldr" started. PID 71508
-2026-01-01 02:21:43,653 | INFO | ulauncher.api.server.ExtensionRunner: _run_process() | Extension "com.github.friday.ulauncher-gnome-settings" started. PID 71510
-2026-01-01 02:21:43,657 | INFO | ulauncher.api.server.ExtensionRunner: _run_process() | Extension "com.github.hillaryychan.ulauncher-fzf" started. PID 71512
-2026-01-01 02:21:43,661 | INFO | ulauncher.api.server.ExtensionRunner: _run_process() | Extension "com.github.iboyperson.ulauncher-system" started. PID 71514
-2026-01-01 02:21:43,670 | INFO | ulauncher.api.server.ExtensionRunner: _run_process() | Extension "com.github.katacarbix.ulauncher-dict-en" started. PID 71516
-2026-01-01 02:21:43,677 | INFO | ulauncher.api.server.ExtensionRunner: _run_process() | Extension "com.github.kcoovi.ulauncher-link-opener" started. PID 71518
-2026-01-01 02:21:43,680 | INFO | ulauncher.api.server.ExtensionRunner: _run_process() | Extension "com.github.ulauncher.ulauncher-emoji" started. PID 71520
-2026-01-01 02:21:43,685 | INFO | ulauncher.api.server.ExtensionRunner: _run_process() | Extension "com.github.ulauncher.ulauncher-kill" started. PID 71522
-2026-01-01 02:21:43,692 | INFO | ulauncher.api.server.ExtensionRunner: _run_process() | Extension "com.github.zensoup.ulauncher-unicode" started. PID 71524
-2026-01-01 02:21:43,718 | INFO | ulauncher.utils.desktop.reader: find_apps_cached() | Found 82 apps in cache
-2026-01-01 02:21:43,728 | INFO | ulauncher.ui.windows.UlauncherWindow: bind_show_app_hotkey() | Trying to bind app hotkey: <Primary>space
-2026-01-01 02:21:43,860 | INFO | ulauncher.utils.desktop.reader: find_apps_cached() | Found 82 apps in the system
-2026-01-01 02:21:43,860 | INFO | ulauncher.search.apps.app_watcher: start() | Scanned desktop dirs in 0.24 seconds
-2026-01-01 02:21:43,904 | DEBUG | ulauncher.search.apps.app_watcher: start() | Start watching desktop files...
-2026-01-01 02:21:44,278 | INFO | ulauncher.api.server.ExtensionController: handleConnected() | Extension "com.github.friday.ulauncher-gnome-settings" connected
-2026-01-01 02:21:44,279 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event PreferencesEvent to "com.github.friday.ulauncher-gnome-settings"
-2026-01-01 02:21:44,949 | INFO | ulauncher.api.server.ExtensionController: handleConnected() | Extension "com.github.andr3slelouch.ulauncher-gnome-extensions-prefs" connected
-2026-01-01 02:21:44,949 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event PreferencesEvent to "com.github.andr3slelouch.ulauncher-gnome-extensions-prefs"
-2026-01-01 02:21:45,111 | INFO | ulauncher.api.server.ExtensionController: handleConnected() | Extension "com.github.kcoovi.ulauncher-link-opener" connected
-2026-01-01 02:21:45,111 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event PreferencesEvent to "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:21:45,112 | INFO | ulauncher.api.server.ExtensionController: handleConnected() | Extension "com.github.iboyperson.ulauncher-system" connected
-2026-01-01 02:21:45,113 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event PreferencesEvent to "com.github.iboyperson.ulauncher-system"
-2026-01-01 02:21:45,146 | INFO | ulauncher.api.server.ExtensionController: handleConnected() | Extension "com.github.ulauncher.ulauncher-emoji" connected
-2026-01-01 02:21:45,147 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event PreferencesEvent to "com.github.ulauncher.ulauncher-emoji"
-2026-01-01 02:21:45,158 | INFO | ulauncher.api.server.ExtensionController: handleConnected() | Extension "com.github.barathbheeman.vsw-extension" connected
-2026-01-01 02:21:45,158 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event PreferencesEvent to "com.github.barathbheeman.vsw-extension"
-2026-01-01 02:21:45,168 | INFO | ulauncher.api.server.ExtensionController: handleConnected() | Extension "com.github.hillaryychan.ulauncher-fzf" connected
-2026-01-01 02:21:45,168 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event PreferencesEvent to "com.github.hillaryychan.ulauncher-fzf"
-2026-01-01 02:21:45,282 | INFO | ulauncher.api.server.ExtensionController: handleConnected() | Extension "com.github.dhelmr.ulauncher-tldr" connected
-2026-01-01 02:21:45,282 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event PreferencesEvent to "com.github.dhelmr.ulauncher-tldr"
-2026-01-01 02:21:45,358 | INFO | ulauncher.api.server.ExtensionController: handleConnected() | Extension "com.github.ulauncher.ulauncher-kill" connected
-2026-01-01 02:21:45,360 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event PreferencesEvent to "com.github.ulauncher.ulauncher-kill"
-2026-01-01 02:21:45,456 | INFO | ulauncher.api.server.ExtensionController: handleConnected() | Extension "com.github.zensoup.ulauncher-unicode" connected
-2026-01-01 02:21:45,456 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event PreferencesEvent to "com.github.zensoup.ulauncher-unicode"
-2026-01-01 02:21:45,473 | INFO | ulauncher.api.server.ExtensionController: handleConnected() | Extension "com.github.katacarbix.ulauncher-dict-en" connected
-2026-01-01 02:21:45,474 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event PreferencesEvent to "com.github.katacarbix.ulauncher-dict-en"
-2026-01-01 02:21:48,707 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
-2026-01-01 02:21:48,708 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
-2026-01-01 02:21:48,708 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
-2026-01-01 02:22:04,111 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
-2026-01-01 02:22:04,112 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
-2026-01-01 02:22:04,113 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
-2026-01-01 02:22:11,911 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
-2026-01-01 02:22:11,911 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
-2026-01-01 02:22:11,912 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
-2026-01-01 02:22:23,235 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
-2026-01-01 02:22:23,235 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
-2026-01-01 02:22:23,235 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
-2026-01-01 02:23:01,671 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
-2026-01-01 02:23:01,671 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
-2026-01-01 02:23:01,672 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
-2026-01-01 02:23:11,251 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
-2026-01-01 02:23:11,251 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
-2026-01-01 02:23:11,253 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
-2026-01-01 02:23:16,915 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
-2026-01-01 02:23:16,915 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
-2026-01-01 02:23:16,915 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
-2026-01-01 02:23:17,613 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
-2026-01-01 02:23:17,613 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
-2026-01-01 02:23:17,614 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
-2026-01-01 02:23:18,136 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
-2026-01-01 02:23:18,137 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
-2026-01-01 02:23:18,138 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
-2026-01-01 02:23:18,359 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
-2026-01-01 02:23:18,359 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
-2026-01-01 02:23:18,360 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
-2026-01-01 02:23:18,532 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
-2026-01-01 02:23:18,533 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
-2026-01-01 02:23:18,534 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
-2026-01-01 02:23:18,692 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
-2026-01-01 02:23:18,693 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
-2026-01-01 02:23:18,694 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
-2026-01-01 02:23:19,192 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
-2026-01-01 02:23:19,193 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
-2026-01-01 02:23:19,195 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
-2026-01-01 02:23:19,240 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
-2026-01-01 02:23:19,240 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
-2026-01-01 02:23:19,241 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
-2026-01-01 02:23:19,345 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
-2026-01-01 02:23:19,345 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
-2026-01-01 02:23:19,346 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
-2026-01-01 02:23:19,387 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
-2026-01-01 02:23:19,387 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
-2026-01-01 02:23:19,389 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
-2026-01-01 02:23:19,427 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
-2026-01-01 02:23:19,428 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
-2026-01-01 02:23:19,428 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
-2026-01-01 02:23:19,483 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
-2026-01-01 02:23:19,483 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
-2026-01-01 02:23:19,484 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
-2026-01-01 02:23:19,547 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
-2026-01-01 02:23:19,547 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
-2026-01-01 02:23:19,547 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
-2026-01-01 02:23:19,605 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
-2026-01-01 02:23:19,605 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
-2026-01-01 02:23:19,605 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
-2026-01-01 02:23:19,631 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
-2026-01-01 02:23:19,631 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
-2026-01-01 02:23:19,632 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
-2026-01-01 02:23:19,677 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
-2026-01-01 02:23:19,677 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
-2026-01-01 02:23:19,677 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
-2026-01-01 02:23:19,728 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
-2026-01-01 02:23:19,729 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
-2026-01-01 02:23:19,729 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
-2026-01-01 02:23:19,792 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
-2026-01-01 02:23:19,792 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
-2026-01-01 02:23:19,793 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
-2026-01-01 02:23:19,840 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
-2026-01-01 02:23:19,840 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
-2026-01-01 02:23:19,840 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
-2026-01-01 02:23:19,901 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
-2026-01-01 02:23:19,901 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
-2026-01-01 02:23:19,901 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
-2026-01-01 02:23:19,975 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
-2026-01-01 02:23:19,975 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
-2026-01-01 02:23:19,976 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
-2026-01-01 02:23:20,002 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
-2026-01-01 02:23:20,002 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
-2026-01-01 02:23:20,002 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
-2026-01-01 02:23:20,071 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
-2026-01-01 02:23:20,071 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
-2026-01-01 02:23:20,072 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
-2026-01-01 02:23:20,147 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
-2026-01-01 02:23:20,147 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
-2026-01-01 02:23:20,147 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
-2026-01-01 02:23:20,186 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
-2026-01-01 02:23:20,186 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
-2026-01-01 02:23:20,187 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
-2026-01-01 02:24:08,249 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
-2026-01-01 02:24:08,249 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
-2026-01-01 02:24:08,250 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
-2026-01-01 02:24:09,717 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
-2026-01-01 02:24:09,717 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
-2026-01-01 02:24:09,718 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
-2026-01-01 02:24:18,906 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
-2026-01-01 02:24:18,906 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
-2026-01-01 02:24:18,907 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
-2026-01-01 02:24:33,625 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
-2026-01-01 02:24:33,625 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
-2026-01-01 02:24:33,626 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
-2026-01-01 02:24:37,675 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
-2026-01-01 02:24:37,675 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
-2026-01-01 02:24:37,676 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
-2026-01-01 02:24:39,596 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
-2026-01-01 02:24:39,596 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
-2026-01-01 02:24:39,598 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
-2026-01-01 02:25:03,094 | WARNING | ulauncher.utils.image_loader: check_icon_name() | Icon theme is broken or incomplete. Substituting "Alacritty" for "Alacritty"
-2026-01-01 02:25:03,262 | WARNING | ulauncher.utils.image_loader: check_icon_name() | Icon theme is broken or incomplete. Substituting "vscodium" for "vscodium"
-2026-01-01 02:25:03,284 | WARNING | ulauncher.utils.image_loader: check_icon_name() | Icon theme is broken or incomplete. Substituting "vscodium" for "vscodium"
-2026-01-01 02:25:03,354 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 4 results
-2026-01-01 02:25:03,364 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 3 results
-2026-01-01 02:25:04,257 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 4 results
-2026-01-01 02:25:04,445 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
-2026-01-01 02:25:16,241 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
-2026-01-01 02:25:16,241 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
-2026-01-01 02:25:16,244 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
-2026-01-01 02:25:16,849 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 8 results
-2026-01-01 02:25:16,900 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 9 results
-2026-01-01 02:25:17,112 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 8 results
-2026-01-01 02:25:17,316 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 2 results
-2026-01-01 02:25:17,826 | INFO | ulauncher.api.shared.action.LaunchAppAction: run() | Run application Disks (/usr/share/applications/org.gnome.DiskUtility.desktop) Exec ['gapplication', 'launch', 'org.gnome.DiskUtility']
-2026-01-01 02:25:17,839 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
-2026-01-01 02:28:25,758 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
-2026-01-01 02:28:25,758 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
-2026-01-01 02:28:25,759 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
-2026-01-01 02:40:49,397 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
-2026-01-01 02:40:49,398 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
-2026-01-01 02:40:49,399 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
-2026-01-01 02:40:54,736 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
-2026-01-01 02:40:54,736 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
-2026-01-01 02:40:54,738 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
-2026-01-01 02:40:56,447 | DEBUG | ulauncher.ui.windows.UlauncherWindow: activate_preferences() | create new preferences_dialog
-2026-01-01 02:40:56,495 | DEBUG | ulauncher.ui.windows.Builder: log_unconnected_functions() | Not connected to builder 'on_hotkey_set'
-2026-01-01 02:40:56,496 | DEBUG | ulauncher.ui.windows.Builder: log_unconnected_functions() | Not connected to builder 'on_scheme_callback'
-2026-01-01 02:40:56,657 | DEBUG | ulauncher.ui.windows.Builder: __init__() | consider using a pythonic name instead of design name 'hotkey-dialog-vbox1'
-2026-01-01 02:40:56,657 | DEBUG | ulauncher.ui.windows.Builder: __init__() | consider using a pythonic name instead of design name 'new-hotkey-label'
-2026-01-01 02:40:56,667 | DEBUG | ulauncher.ui.windows.Builder: do_connect() | connect builder by name 'hotkey_dialog','delete_event', 'on_delete_event'
-2026-01-01 02:40:56,671 | DEBUG | ulauncher.ui.windows.Builder: do_connect() | connect builder by name 'hotkey_input','key_press_event', 'on_hotkey_input_key_press_event'
-2026-01-01 02:40:57,215 | INFO | ulauncher.ui.windows.PreferencesUlauncherDialog: prefs_get_all() | API call /get/all
-2026-01-01 02:41:01,261 | INFO | ulauncher.ui.windows.PreferencesUlauncherDialog: prefs_shortcut_get_all() | Handling /shortcut/get-all
-2026-01-01 02:41:02,565 | INFO | ulauncher.ui.windows.PreferencesUlauncherDialog: prefs_extension_get_all() | Handling /extension/get-all
-2026-01-01 02:41:13,334 | DEBUG | ulauncher.ui.windows.UlauncherWindow: on_preferences_dialog_destroyed() | on_preferences_dialog_destroyed
-2026-01-01 02:41:23,753 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
-2026-01-01 02:41:23,754 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
-2026-01-01 02:41:23,755 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
-2026-01-01 02:41:25,706 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 3 results
-2026-01-01 02:41:27,277 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event KeywordQueryEvent to "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:27,364 | DEBUG | ulauncher.api.server.ExtensionController: handleMessage() | Incoming response (KeywordQueryEvent, RenderResultListAction) from "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:27,369 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 1 results
-2026-01-01 02:41:29,150 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event KeywordQueryEvent to "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:29,180 | DEBUG | ulauncher.api.server.ExtensionController: handleMessage() | Incoming response (KeywordQueryEvent, RenderResultListAction) from "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:29,184 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 1 results
-2026-01-01 02:41:29,296 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event KeywordQueryEvent to "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:29,386 | DEBUG | ulauncher.api.server.ExtensionController: handleMessage() | Incoming response (KeywordQueryEvent, RenderResultListAction) from "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:29,398 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 4 results
-2026-01-01 02:41:29,498 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event KeywordQueryEvent to "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:29,579 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event KeywordQueryEvent to "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:29,592 | DEBUG | ulauncher.api.server.ExtensionController: handleMessage() | Incoming response (KeywordQueryEvent, RenderResultListAction) from "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:29,595 | DEBUG | ulauncher.api.server.ExtensionController: handleMessage() | Incoming response (KeywordQueryEvent, RenderResultListAction) from "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:29,608 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 4 results
-2026-01-01 02:41:29,725 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event KeywordQueryEvent to "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:29,801 | DEBUG | ulauncher.api.server.ExtensionController: handleMessage() | Incoming response (KeywordQueryEvent, RenderResultListAction) from "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:29,814 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 4 results
-2026-01-01 02:41:30,405 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event KeywordQueryEvent to "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:30,510 | DEBUG | ulauncher.api.server.ExtensionController: handleMessage() | Incoming response (KeywordQueryEvent, RenderResultListAction) from "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:30,515 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 1 results
-2026-01-01 02:41:31,484 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event KeywordQueryEvent to "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:31,519 | DEBUG | ulauncher.api.server.ExtensionController: handleMessage() | Incoming response (KeywordQueryEvent, RenderResultListAction) from "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:31,524 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 1 results
-2026-01-01 02:41:31,642 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event KeywordQueryEvent to "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:31,724 | DEBUG | ulauncher.api.server.ExtensionController: handleMessage() | Incoming response (KeywordQueryEvent, RenderResultListAction) from "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:31,731 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 2 results
-2026-01-01 02:41:32,060 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event KeywordQueryEvent to "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:32,131 | DEBUG | ulauncher.api.server.ExtensionController: handleMessage() | Incoming response (KeywordQueryEvent, RenderResultListAction) from "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:32,183 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event KeywordQueryEvent to "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:32,235 | DEBUG | ulauncher.api.server.ExtensionController: handleMessage() | Incoming response (KeywordQueryEvent, RenderResultListAction) from "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:32,243 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 2 results
-2026-01-01 02:41:32,343 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event KeywordQueryEvent to "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:32,441 | DEBUG | ulauncher.api.server.ExtensionController: handleMessage() | Incoming response (KeywordQueryEvent, RenderResultListAction) from "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:32,448 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 2 results
-2026-01-01 02:41:32,561 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event KeywordQueryEvent to "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:32,646 | DEBUG | ulauncher.api.server.ExtensionController: handleMessage() | Incoming response (KeywordQueryEvent, RenderResultListAction) from "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:32,655 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 2 results
-2026-01-01 02:41:32,708 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event KeywordQueryEvent to "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:32,752 | DEBUG | ulauncher.api.server.ExtensionController: handleMessage() | Incoming response (KeywordQueryEvent, RenderResultListAction) from "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:32,759 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 2 results
-2026-01-01 02:41:32,870 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event KeywordQueryEvent to "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:32,957 | DEBUG | ulauncher.api.server.ExtensionController: handleMessage() | Incoming response (KeywordQueryEvent, RenderResultListAction) from "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:32,965 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 2 results
-2026-01-01 02:41:33,296 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event KeywordQueryEvent to "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:33,363 | DEBUG | ulauncher.api.server.ExtensionController: handleMessage() | Incoming response (KeywordQueryEvent, RenderResultListAction) from "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:33,371 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 2 results
-2026-01-01 02:41:33,641 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event KeywordQueryEvent to "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:33,669 | DEBUG | ulauncher.api.server.ExtensionController: handleMessage() | Incoming response (KeywordQueryEvent, RenderResultListAction) from "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:33,677 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 2 results
-2026-01-01 02:41:33,744 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event KeywordQueryEvent to "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:33,775 | DEBUG | ulauncher.api.server.ExtensionController: handleMessage() | Incoming response (KeywordQueryEvent, RenderResultListAction) from "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:33,782 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 2 results
-2026-01-01 02:41:33,910 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event KeywordQueryEvent to "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:33,980 | DEBUG | ulauncher.api.server.ExtensionController: handleMessage() | Incoming response (KeywordQueryEvent, RenderResultListAction) from "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:33,988 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 2 results
-2026-01-01 02:41:34,297 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event KeywordQueryEvent to "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:34,386 | DEBUG | ulauncher.api.server.ExtensionController: handleMessage() | Incoming response (KeywordQueryEvent, RenderResultListAction) from "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:34,394 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 2 results
-2026-01-01 02:41:34,622 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event KeywordQueryEvent to "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:34,692 | DEBUG | ulauncher.api.server.ExtensionController: handleMessage() | Incoming response (KeywordQueryEvent, RenderResultListAction) from "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:34,700 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 2 results
-2026-01-01 02:41:34,803 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event KeywordQueryEvent to "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:34,903 | DEBUG | ulauncher.api.server.ExtensionController: handleMessage() | Incoming response (KeywordQueryEvent, RenderResultListAction) from "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:34,911 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 2 results
-2026-01-01 02:41:35,084 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event KeywordQueryEvent to "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:35,108 | DEBUG | ulauncher.api.server.ExtensionController: handleMessage() | Incoming response (KeywordQueryEvent, RenderResultListAction) from "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:35,116 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 2 results
-2026-01-01 02:41:35,622 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event KeywordQueryEvent to "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:35,716 | DEBUG | ulauncher.api.server.ExtensionController: handleMessage() | Incoming response (KeywordQueryEvent, RenderResultListAction) from "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:35,724 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 2 results
-2026-01-01 02:41:35,863 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event KeywordQueryEvent to "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:35,921 | DEBUG | ulauncher.api.server.ExtensionController: handleMessage() | Incoming response (KeywordQueryEvent, RenderResultListAction) from "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:35,929 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 2 results
-2026-01-01 02:41:36,064 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event KeywordQueryEvent to "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:36,127 | DEBUG | ulauncher.api.server.ExtensionController: handleMessage() | Incoming response (KeywordQueryEvent, RenderResultListAction) from "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:36,135 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 2 results
-2026-01-01 02:41:36,593 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event KeywordQueryEvent to "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:36,634 | DEBUG | ulauncher.api.server.ExtensionController: handleMessage() | Incoming response (KeywordQueryEvent, RenderResultListAction) from "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:36,642 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 2 results
-2026-01-01 02:41:36,844 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event KeywordQueryEvent to "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:36,940 | DEBUG | ulauncher.api.server.ExtensionController: handleMessage() | Incoming response (KeywordQueryEvent, RenderResultListAction) from "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:36,948 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 2 results
-2026-01-01 02:41:37,086 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event KeywordQueryEvent to "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:37,145 | DEBUG | ulauncher.api.server.ExtensionController: handleMessage() | Incoming response (KeywordQueryEvent, RenderResultListAction) from "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:37,154 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 2 results
-2026-01-01 02:41:37,683 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event KeywordQueryEvent to "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:37,754 | DEBUG | ulauncher.api.server.ExtensionController: handleMessage() | Incoming response (KeywordQueryEvent, RenderResultListAction) from "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:37,762 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 2 results
-2026-01-01 02:41:38,834 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event KeywordQueryEvent to "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:38,865 | DEBUG | ulauncher.api.server.ExtensionController: handleMessage() | Incoming response (KeywordQueryEvent, RenderResultListAction) from "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:38,878 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 2 results
-2026-01-01 02:41:40,642 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event KeywordQueryEvent to "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:40,681 | DEBUG | ulauncher.api.server.ExtensionController: handleMessage() | Incoming response (KeywordQueryEvent, RenderResultListAction) from "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:40,689 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 2 results
-2026-01-01 02:41:41,182 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event KeywordQueryEvent to "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:41,188 | DEBUG | ulauncher.api.server.ExtensionController: handleMessage() | Incoming response (KeywordQueryEvent, RenderResultListAction) from "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:41,196 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 2 results
-2026-01-01 02:41:41,646 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event KeywordQueryEvent to "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:41,696 | DEBUG | ulauncher.api.server.ExtensionController: handleMessage() | Incoming response (KeywordQueryEvent, RenderResultListAction) from "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:41,704 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 2 results
-2026-01-01 02:41:42,003 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event KeywordQueryEvent to "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:42,102 | DEBUG | ulauncher.api.server.ExtensionController: handleMessage() | Incoming response (KeywordQueryEvent, RenderResultListAction) from "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:42,131 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event KeywordQueryEvent to "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:42,207 | DEBUG | ulauncher.api.server.ExtensionController: handleMessage() | Incoming response (KeywordQueryEvent, RenderResultListAction) from "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:42,215 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 2 results
-2026-01-01 02:41:42,835 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event KeywordQueryEvent to "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:42,916 | DEBUG | ulauncher.api.server.ExtensionController: handleMessage() | Incoming response (KeywordQueryEvent, RenderResultListAction) from "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:42,924 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 2 results
-2026-01-01 02:41:43,553 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event KeywordQueryEvent to "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:43,624 | DEBUG | ulauncher.api.server.ExtensionController: handleMessage() | Incoming response (KeywordQueryEvent, RenderResultListAction) from "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:43,632 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 2 results
-2026-01-01 02:41:43,754 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event KeywordQueryEvent to "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:43,830 | DEBUG | ulauncher.api.server.ExtensionController: handleMessage() | Incoming response (KeywordQueryEvent, RenderResultListAction) from "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:43,837 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 2 results
-2026-01-01 02:41:43,977 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event KeywordQueryEvent to "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:44,035 | DEBUG | ulauncher.api.server.ExtensionController: handleMessage() | Incoming response (KeywordQueryEvent, RenderResultListAction) from "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:44,042 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 2 results
-2026-01-01 02:41:44,125 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event KeywordQueryEvent to "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:44,139 | DEBUG | ulauncher.api.server.ExtensionController: handleMessage() | Incoming response (KeywordQueryEvent, RenderResultListAction) from "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:44,147 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 2 results
-2026-01-01 02:41:44,310 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event KeywordQueryEvent to "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:44,345 | DEBUG | ulauncher.api.server.ExtensionController: handleMessage() | Incoming response (KeywordQueryEvent, RenderResultListAction) from "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:44,353 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 2 results
-2026-01-01 02:41:46,971 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
-2026-01-01 02:41:47,013 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event ItemEnterEvent to "com.github.kcoovi.ulauncher-link-opener"
-2026-01-01 02:41:47,144 | DEBUG | ulauncher.api.server.ExtensionController: handleMessage() | Incoming response (ItemEnterEvent, RenderResultListAction) from "com.github.kcoovi.ulauncher-link-opener"
+2026-01-02 12:40:32,415 | INFO | ulauncher: main() | Ulauncher version 5.15.15
+2026-01-02 12:40:32,415 | INFO | ulauncher: main() | Extension API version 2.0.0
+2026-01-02 12:40:32,415 | INFO | ulauncher: main() | GTK+ 3.24.51
+2026-01-02 12:40:32,415 | INFO | ulauncher: main() | Is Wayland: True
+2026-01-02 12:40:32,415 | INFO | ulauncher: main() | Wayland compatibility: off
+2026-01-02 12:40:32,428 | DEBUG | ulauncher.ui.windows.Builder: __init__() | consider using a pythonic name instead of design name 'input-box'
+2026-01-02 12:40:32,434 | DEBUG | ulauncher.ui.windows.Builder: do_connect() | connect builder by name 'ulauncher_window','destroy', 'on_destroy'
+2026-01-02 12:40:32,435 | DEBUG | ulauncher.ui.windows.Builder: do_connect() | connect builder by name 'ulauncher_window','focus_in_event', 'on_focus_in_event'
+2026-01-02 12:40:32,435 | DEBUG | ulauncher.ui.windows.Builder: do_connect() | connect builder by name 'ulauncher_window','focus_out_event', 'on_focus_out_event'
+2026-01-02 12:40:32,436 | DEBUG | ulauncher.ui.windows.Builder: do_connect() | connect builder by name 'input','key_press_event', 'on_input_key_press_event'
+2026-01-02 12:40:32,437 | DEBUG | ulauncher.ui.windows.Builder: log_unconnected_functions() | Not connected to builder 'on_input_changed'
+2026-01-02 12:40:32,438 | DEBUG | ulauncher.ui.windows.Builder: log_unconnected_functions() | Not connected to builder 'on_mnu_about_activate'
+2026-01-02 12:40:32,438 | DEBUG | ulauncher.ui.windows.Builder: log_unconnected_functions() | Not connected to builder 'on_mnu_close_activate'
+2026-01-02 12:40:32,438 | DEBUG | ulauncher.ui.windows.Builder: log_unconnected_functions() | Not connected to builder 'on_mnu_preferences_activate'
+2026-01-02 12:40:32,438 | DEBUG | ulauncher.ui.windows.Builder: log_unconnected_functions() | Not connected to builder 'on_preferences_dialog_destroyed'
+2026-01-02 12:40:32,439 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
+2026-01-02 12:40:32,440 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
+2026-01-02 12:40:32,492 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
+2026-01-02 12:40:32,495 | INFO | ulauncher.search.apps.app_watcher: start() | Started scanning desktop dirs
+2026-01-02 12:40:32,496 | INFO | ulauncher.api.server.ExtensionServer: _start_thread() | Starting WS server on port 5054
+2026-01-02 12:40:32,502 | INFO | ulauncher.utils.desktop.reader: read_desktop_file() | Could not read "/home/kal/.local/share/applications/com.github.amezin.ddterm.desktop": constructor returned NULL
+2026-01-02 12:40:32,512 | INFO | ulauncher.api.server.ExtensionRunner: _run_process() | Extension "com.github.dhelmr.ulauncher-tldr" started. PID 59020
+2026-01-02 12:40:32,513 | INFO | ulauncher.api.server.ExtensionRunner: _run_process() | Extension "com.github.andr3slelouch.ulauncher-gnome-extensions-prefs" started. PID 59018
+2026-01-02 12:40:32,516 | INFO | ulauncher.api.server.ExtensionRunner: _run_process() | Extension "com.github.barathbheeman.vsw-extension" started. PID 59021
+2026-01-02 12:40:32,521 | INFO | ulauncher.api.server.ExtensionRunner: _run_process() | Extension "com.github.friday.ulauncher-gnome-settings" started. PID 59023
+2026-01-02 12:40:32,528 | INFO | ulauncher.api.server.ExtensionRunner: _run_process() | Extension "com.github.hillaryychan.ulauncher-fzf" started. PID 59025
+2026-01-02 12:40:32,531 | INFO | ulauncher.api.server.ExtensionRunner: _run_process() | Extension "com.github.iboyperson.ulauncher-system" started. PID 59027
+2026-01-02 12:40:32,536 | INFO | ulauncher.api.server.ExtensionRunner: _run_process() | Extension "com.github.katacarbix.ulauncher-dict-en" started. PID 59030
+2026-01-02 12:40:32,646 | INFO | ulauncher.api.server.ExtensionRunner: _run_process() | Extension "com.github.kcoovi.ulauncher-link-opener" started. PID 59031
+2026-01-02 12:40:32,653 | INFO | ulauncher.api.server.ExtensionRunner: _run_process() | Extension "com.github.ulauncher.ulauncher-emoji" started. PID 59037
+2026-01-02 12:40:32,657 | INFO | ulauncher.api.server.ExtensionRunner: _run_process() | Extension "com.github.ulauncher.ulauncher-kill" started. PID 59039
+2026-01-02 12:40:32,662 | INFO | ulauncher.api.server.ExtensionRunner: _run_process() | Extension "com.github.zensoup.ulauncher-unicode" started. PID 59041
+2026-01-02 12:40:32,736 | INFO | ulauncher.utils.desktop.reader: find_apps_cached() | Found 83 apps in cache
+2026-01-02 12:40:32,824 | INFO | ulauncher.ui.windows.UlauncherWindow: bind_show_app_hotkey() | Trying to bind app hotkey: <Primary>space
+2026-01-02 12:40:32,873 | INFO | ulauncher.utils.desktop.reader: find_apps_cached() | Found 82 apps in the system
+2026-01-02 12:40:32,873 | INFO | ulauncher.search.apps.app_watcher: start() | Scanned desktop dirs in 0.38 seconds
+2026-01-02 12:40:32,905 | DEBUG | ulauncher.search.apps.app_watcher: start() | Start watching desktop files...
+2026-01-02 12:40:33,172 | INFO | ulauncher.api.server.ExtensionController: handleConnected() | Extension "com.github.friday.ulauncher-gnome-settings" connected
+2026-01-02 12:40:33,173 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event PreferencesEvent to "com.github.friday.ulauncher-gnome-settings"
+2026-01-02 12:40:33,373 | INFO | ulauncher.api.server.ExtensionController: handleConnected() | Extension "com.github.barathbheeman.vsw-extension" connected
+2026-01-02 12:40:33,374 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event PreferencesEvent to "com.github.barathbheeman.vsw-extension"
+2026-01-02 12:40:33,595 | INFO | ulauncher.api.server.ExtensionController: handleConnected() | Extension "com.github.iboyperson.ulauncher-system" connected
+2026-01-02 12:40:33,596 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event PreferencesEvent to "com.github.iboyperson.ulauncher-system"
+2026-01-02 12:40:33,603 | INFO | ulauncher.api.server.ExtensionController: handleConnected() | Extension "com.github.hillaryychan.ulauncher-fzf" connected
+2026-01-02 12:40:33,603 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event PreferencesEvent to "com.github.hillaryychan.ulauncher-fzf"
+2026-01-02 12:40:33,635 | INFO | ulauncher.api.server.ExtensionController: handleConnected() | Extension "com.github.kcoovi.ulauncher-link-opener" connected
+2026-01-02 12:40:33,635 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event PreferencesEvent to "com.github.kcoovi.ulauncher-link-opener"
+2026-01-02 12:40:33,814 | INFO | ulauncher.api.server.ExtensionController: handleConnected() | Extension "com.github.dhelmr.ulauncher-tldr" connected
+2026-01-02 12:40:33,815 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event PreferencesEvent to "com.github.dhelmr.ulauncher-tldr"
+2026-01-02 12:40:33,860 | INFO | ulauncher.api.server.ExtensionController: handleConnected() | Extension "com.github.ulauncher.ulauncher-emoji" connected
+2026-01-02 12:40:33,860 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event PreferencesEvent to "com.github.ulauncher.ulauncher-emoji"
+2026-01-02 12:40:33,878 | INFO | ulauncher.api.server.ExtensionController: handleConnected() | Extension "com.github.andr3slelouch.ulauncher-gnome-extensions-prefs" connected
+2026-01-02 12:40:33,878 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event PreferencesEvent to "com.github.andr3slelouch.ulauncher-gnome-extensions-prefs"
+2026-01-02 12:40:33,881 | INFO | ulauncher.api.server.ExtensionController: handleConnected() | Extension "com.github.ulauncher.ulauncher-kill" connected
+2026-01-02 12:40:33,881 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event PreferencesEvent to "com.github.ulauncher.ulauncher-kill"
+2026-01-02 12:40:33,984 | INFO | ulauncher.api.server.ExtensionController: handleConnected() | Extension "com.github.zensoup.ulauncher-unicode" connected
+2026-01-02 12:40:33,985 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event PreferencesEvent to "com.github.zensoup.ulauncher-unicode"
+2026-01-02 12:40:34,163 | INFO | ulauncher.api.server.ExtensionController: handleConnected() | Extension "com.github.katacarbix.ulauncher-dict-en" connected
+2026-01-02 12:40:34,163 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event PreferencesEvent to "com.github.katacarbix.ulauncher-dict-en"
+2026-01-02 12:40:40,904 | INFO | ulauncher.search.apps.app_watcher: _add_file_sync() | New app was added "ddterm" (/home/kal/.local/share/applications/com.github.amezin.ddterm.desktop)
+2026-01-02 12:41:18,836 | INFO | ulauncher.search.apps.app_watcher: _remove_file() | App was removed (/usr/share/applications/vim.desktop)
+2026-01-02 12:41:24,914 | INFO | ulauncher.search.apps.app_watcher: _add_file_sync() | New app was added "Vim" (/usr/share/applications/vim.desktop)
+2026-01-02 12:49:33,245 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
+2026-01-02 12:49:33,245 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
+2026-01-02 12:49:33,246 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
+2026-01-02 12:49:33,815 | WARNING | ulauncher.utils.image_loader: check_icon_name() | Icon theme is broken or incomplete. Substituting "Alacritty" for "Alacritty"
+2026-01-02 12:49:33,986 | WARNING | ulauncher.utils.image_loader: check_icon_name() | Icon theme is broken or incomplete. Substituting "vscodium" for "vscodium"
+2026-01-02 12:49:34,009 | WARNING | ulauncher.utils.image_loader: check_icon_name() | Icon theme is broken or incomplete. Substituting "vscodium" for "vscodium"
+2026-01-02 12:49:34,108 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 3 results
+2026-01-02 12:49:38,040 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
+2026-01-02 12:49:49,661 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
+2026-01-02 12:49:49,661 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
+2026-01-02 12:49:49,663 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
+2026-01-02 12:49:50,247 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 3 results
+2026-01-02 12:49:51,310 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
+2026-01-02 12:49:53,034 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 8 results
+2026-01-02 12:49:59,474 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
+2026-01-02 12:49:59,475 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
+2026-01-02 12:49:59,488 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
+2026-01-02 12:49:59,990 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 3 results
+2026-01-02 12:50:00,874 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
+2026-01-02 12:57:38,933 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
+2026-01-02 12:57:38,933 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
+2026-01-02 12:57:38,934 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
+2026-01-02 12:57:39,407 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 3 results
+2026-01-02 12:57:42,024 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
+2026-01-02 12:57:52,235 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
+2026-01-02 12:57:52,236 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
+2026-01-02 12:57:52,237 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
+2026-01-02 12:57:53,020 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 3 results
+2026-01-02 12:57:54,562 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
+2026-01-02 13:00:03,729 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
+2026-01-02 13:00:03,730 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
+2026-01-02 13:00:03,731 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
+2026-01-02 13:00:06,564 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 8 results
+2026-01-02 13:00:06,696 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 9 results
+2026-01-02 13:00:06,736 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 3 results
+2026-01-02 13:00:06,952 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 1 results
+2026-01-02 13:00:07,136 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 1 results
+2026-01-02 13:00:08,085 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
+2026-01-02 13:01:36,101 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
+2026-01-02 13:01:36,101 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
+2026-01-02 13:01:36,101 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
+2026-01-02 13:01:36,679 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 9 results
+2026-01-02 13:01:37,966 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 2 results
+2026-01-02 13:01:38,008 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 5 results
+2026-01-02 13:01:38,164 | INFO | ulauncher.api.shared.action.LaunchAppAction: run() | Run application Tweaks (/usr/share/applications/org.gnome.tweaks.desktop) Exec ['gapplication', 'launch', 'org.gnome.tweaks']
+2026-01-02 13:01:38,183 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
+2026-01-02 13:04:20,100 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
+2026-01-02 13:04:20,100 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
+2026-01-02 13:04:20,100 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
+2026-01-02 13:04:20,677 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 9 results
+2026-01-02 13:04:22,073 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 3 results
+2026-01-02 13:04:22,250 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 2 results
+2026-01-02 13:04:22,882 | INFO | ulauncher.api.shared.action.LaunchAppAction: run() | Run application Spotify (/var/lib/flatpak/exports/share/applications/com.spotify.Client.desktop) Exec ['/usr/bin/flatpak', 'run', '--branch=stable', '--arch=x86_64', '--command=spotify', '--file-forwarding', 'com.spotify.Client', '@@u', '@@']
+2026-01-02 13:04:22,911 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
