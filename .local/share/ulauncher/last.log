@@ -114,3 +114,23 @@
 2026-01-02 13:04:22,250 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 2 results
 2026-01-02 13:04:22,882 | INFO | ulauncher.api.shared.action.LaunchAppAction: run() | Run application Spotify (/var/lib/flatpak/exports/share/applications/com.spotify.Client.desktop) Exec ['/usr/bin/flatpak', 'run', '--branch=stable', '--arch=x86_64', '--command=spotify', '--file-forwarding', 'com.spotify.Client', '@@u', '@@']
 2026-01-02 13:04:22,911 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
+2026-01-02 13:06:17,918 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
+2026-01-02 13:06:17,918 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
+2026-01-02 13:06:17,920 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
+2026-01-02 13:06:18,434 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 9 results
+2026-01-02 13:06:18,487 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 6 results
+2026-01-02 13:06:18,729 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event KeywordQueryEvent to "com.github.iboyperson.ulauncher-system"
+2026-01-02 13:06:18,775 | DEBUG | ulauncher.api.server.ExtensionController: handleMessage() | Incoming response (KeywordQueryEvent, RenderResultListAction) from "com.github.iboyperson.ulauncher-system"
+2026-01-02 13:06:18,803 | WARNING | ulauncher.utils.image_loader: load_image() | Could not load image /home/kal/.local/share/ulauncher/extensions/com.github.iboyperson.ulauncher-system/. E: gdk-pixbuf-error-quark: Couldn’t recognize the image file format for file “/home/kal/.local/share/ulauncher/extensions/com.github.iboyperson.ulauncher-system/” (3)
+2026-01-02 13:06:18,833 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 7 results
+2026-01-02 13:06:22,975 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
+2026-01-02 13:06:22,975 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
+2026-01-02 13:06:22,989 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
+2026-01-02 13:06:24,120 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 9 results
+2026-01-02 13:06:24,258 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 6 results
+2026-01-02 13:06:24,576 | DEBUG | ulauncher.api.server.ExtensionController: _send_event() | Send event KeywordQueryEvent to "com.github.iboyperson.ulauncher-system"
+2026-01-02 13:06:24,597 | DEBUG | ulauncher.api.server.ExtensionController: handleMessage() | Incoming response (KeywordQueryEvent, RenderResultListAction) from "com.github.iboyperson.ulauncher-system"
+2026-01-02 13:06:24,615 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 7 results
+2026-01-02 13:07:29,601 | DEBUG | ulauncher.utils.display: get_screens() | Found 1 monitor(s)
+2026-01-02 13:07:29,601 | DEBUG | ulauncher.utils.display: get_screens() |   Monitor 0 - X: 0, Y: 0, W: 1920, H: 1080
+2026-01-02 13:07:29,610 | DEBUG | ulauncher.ui.windows.UlauncherWindow: show_results() | render 0 results
