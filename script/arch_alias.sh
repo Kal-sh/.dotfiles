@@ -5,7 +5,7 @@
 # ─────────────────────────────────────────
 # Pacman
 # ─────────────────────────────────────────
-alias update="sudo pacman -Syu"
+#alias update="update"
 alias s="pacman -Ss"
 alias i="sudo pacman -S"
 alias iy="sudo pacman -Sy"
@@ -96,6 +96,8 @@ alias gits="git global-status"
 alias fn="fd_dir"
 alias fdn="fdn_dir"
 alias ff="fd_file"
+alias sp="searchpkg"
+alias upd="update"
 
 # ─────────────────────────────────────────
 # Find directories by name

@@ -88,13 +88,9 @@
 	},
 	*/
   //* Theme
-  //"workbench.productIconTheme": "fluent-icons",
-  // "dayNightThemeSwitcher.dayTheme": "Bearded Theme Milkshake Blueberry",
-  // "dayNightThemeSwitcher.nightTheme": "Bearded Theme Black & Ruby",
-  // "workbench.colorTheme": "Bearded Theme Black & Ruby",
-  "vscode-auto-light-dark-theme.lightTheme": "Bearded Theme Milkshake Blueberry",
-  "vscode-auto-light-dark-theme.darkTheme": "Bearded Theme Black & Amethyst",
-  "vscode-auto-light-dark-theme.autoToggle": false,
+  "workbench.colorTheme": "Bearded Theme Black & Amethyst",
+  "workbench.preferredLightColorTheme": "Bearded Theme Milkshake Blueberry",
+  "workbench.preferredDarkColorTheme": "Bearded Theme Black & Amethyst",
   "workbench.iconTheme": "material-icon-theme",
   "workbench.colorCustomizations": {},
   //* Terminal
@@ -198,8 +194,7 @@
   "database-client.capitalizeKeywordsWhenFormatting": true,
   "containers.containerClient": "com.microsoft.visualstudio.containers.podman",
   "containers.orchestratorClient": "com.microsoft.visualstudio.orchestrators.podmancompose",
-  "workbench.colorTheme": "Bearded Theme Black & Amethyst",
-  //* New
+  /* New
   // "vsicons.dontShowNewVersionMessage": true,
   /**
 	//* Code snap

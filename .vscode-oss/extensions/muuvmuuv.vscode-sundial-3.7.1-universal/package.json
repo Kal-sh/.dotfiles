@@ -1,0 +1,190 @@
+{
+	"name": "vscode-sundial",
+	"displayName": "Sundial – Automatic night mode and settings switch",
+	"version": "3.7.1",
+	"description": "Automatically change your theme and settings based on your sunset, sunrise, system appearance or other preferences!",
+	"icon": "assets/icon.png",
+	"publisher": "muuvmuuv",
+	"qna": "https://github.com/muuvmuuv/vscode-sundial/issues/new/choose",
+	"categories": [
+		"Other"
+	],
+	"keywords": [
+		"auto",
+		"day",
+		"night",
+		"switch",
+		"settings"
+	],
+	"homepage": "https://github.com/muuvmuuv/vscode-sundial",
+	"pricing": "Free",
+	"galleryBanner": {
+		"color": "#272c35"
+	},
+	"bugs": {
+		"url": "https://github.com/muuvmuuv/vscode-sundial/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/muuvmuuv/vscode-sundial.git"
+	},
+	"sponsor": {
+		"url": "https://buymeacoffee.com/muuvmuuv"
+	},
+	"license": "GPLv3",
+	"author": {
+		"name": "Marvin Heilemann",
+		"email": "bloggt.raschelt.0m@icloud.com",
+		"url": "https://marvin.digital/"
+	},
+	"main": "dist/extension.js",
+	"scripts": {
+		"dev": "node esbuild.js --watch",
+		"compile": "node esbuild.js",
+		"package": "node esbuild.js --production",
+		"check": "biome check .",
+		"format": "biome check . --write",
+		"vscode:prepublish": "npm run package",
+		"release": "release-it"
+	},
+	"dependencies": {
+		"date-fns": "^4.1.0",
+		"suncalc": "^1.8.0"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.0.6",
+		"@commitlint/cli": "^20.1.0",
+		"@commitlint/config-conventional": "^20.0.0",
+		"@release-it/conventional-changelog": "^10.0.0",
+		"@types/node": "22.x",
+		"@types/suncalc": "^1.8.1",
+		"@types/vscode": "^1.105.0",
+		"esbuild": "^0.25.0",
+		"lefthook": "^2.0.0",
+		"release-it": "^19.0.5",
+		"typescript": "^6.0.0-dev.20251021"
+	},
+	"engines": {
+		"vscode": "^1.105.0"
+	},
+	"activationEvents": [
+		"onStartupFinished"
+	],
+	"contributes": {
+		"commands": [
+			{
+				"command": "sundial.switchToNightTheme",
+				"title": "Sundial: Switch to night theme 🌑"
+			},
+			{
+				"command": "sundial.switchToDayTheme",
+				"title": "Sundial: Switch to day theme 🌕"
+			},
+			{
+				"command": "sundial.toggleDayNightTheme",
+				"title": "Sundial: Toggle Day/Night Theme"
+			},
+			{
+				"command": "sundial.enableExtension",
+				"title": "Sundial: Enable extension"
+			},
+			{
+				"command": "sundial.disableExtension",
+				"title": "Sundial: Disable extension"
+			}
+		],
+		"keybindings": [
+			{
+				"command": "sundial.toggleDayNightTheme",
+				"key": "ctrl+alt+t",
+				"mac": "ctrl+cmd+t"
+			}
+		],
+		"configuration": {
+			"type": "object",
+			"title": "Sundial Configurations",
+			"properties": {
+				"sundial.sunrise": {
+					"type": "string",
+					"default": "07:00",
+					"description": "Set the sunrise time. (24 hour format)"
+				},
+				"sundial.sunset": {
+					"type": "string",
+					"default": "19:00",
+					"description": "Set the sunset time. (24 hour format)"
+				},
+				"sundial.latitude": {
+					"type": "string",
+					"description": "Latitude of your location to get sunset and sunrise."
+				},
+				"sundial.longitude": {
+					"type": "string",
+					"description": "Latitude of your location to get sunset and sunrise."
+				},
+				"sundial.autoLocale": {
+					"type": "boolean",
+					"default": false,
+					"description": "Automatically set your sunset and sunrise based on your public ip location."
+				},
+				"sundial.dayVariable": {
+					"type": "number",
+					"default": 0,
+					"description": "Set a variable to change the theme X minutes before or after sunrise."
+				},
+				"sundial.nightVariable": {
+					"type": "number",
+					"default": 0,
+					"description": "Set a variable to change the theme X minutes before or after sunset."
+				},
+				"sundial.daySettings": {
+					"type": "object",
+					"default": {},
+					"description": "Set some VSCode settings you would like to override during the day."
+				},
+				"sundial.nightSettings": {
+					"type": "object",
+					"default": {},
+					"description": "Set some VSCode settings you would like to override during the night."
+				},
+				"sundial.statusBarItemPriority": {
+					"type": "number",
+					"default": 100,
+					"description": "Set the position of the status bar item (higher mean more on the left)."
+				},
+				"sundial.interval": {
+					"type": "number",
+					"default": 5,
+					"description": "Set in which interval Sundial should check the time. (in minutes)"
+				}
+			}
+		}
+	},
+	"badges": [
+		{
+			"description": "Snyk monitored",
+			"url": "https://snyk.io/test/github/muuvmuuv/vscode-sundial/badge.svg",
+			"href": "https://snyk.io/test/github/muuvmuuv/vscode-sundial"
+		},
+		{
+			"description": "Maintainability",
+			"url": "https://api.codeclimate.com/v1/badges/52f93dc5f852410ef448/maintainability",
+			"href": "https://codeclimate.com/github/muuvmuuv/vscode-sundial/maintainability"
+		},
+		{
+			"description": "CI Status",
+			"url": "https://github.com/muuvmuuv/vscode-sundial/actions/workflows/main.yml/badge.svg",
+			"href": "https://github.com/muuvmuuv/vscode-sundial/actions"
+		}
+	],
+	"commitlint": {
+		"extends": [
+			"@commitlint/config-conventional"
+		]
+	},
+	"__metadata": {
+		"installedTimestamp": 1767631853751,
+		"targetPlatform": "universal",
+		"size": 348254
+	}
+}

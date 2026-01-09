@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+	<PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
+		<Metadata>
+			<Identity Language="en-US" Id="vscode-sundial" Version="3.7.1" Publisher="muuvmuuv" />
+			<DisplayName>Sundial – Automatic night mode and settings switch</DisplayName>
+			<Description xml:space="preserve">Automatically change your theme and settings based on your sunset, sunrise, system appearance or other preferences!</Description>
+			<Tags>auto,day,night,switch,settings,keybindings,__sponsor_extension</Tags>
+			<Categories>Other</Categories>
+			<GalleryFlags>Public</GalleryFlags>
+			<Badges><Badge Link="https://snyk.io/test/github/muuvmuuv/vscode-sundial" ImgUri="https://snyk.io/test/github/muuvmuuv/vscode-sundial/badge.svg" Description="Snyk monitored" />
+<Badge Link="https://codeclimate.com/github/muuvmuuv/vscode-sundial/maintainability" ImgUri="https://api.codeclimate.com/v1/badges/52f93dc5f852410ef448/maintainability" Description="Maintainability" />
+<Badge Link="https://github.com/muuvmuuv/vscode-sundial/actions" ImgUri="https://github.com/muuvmuuv/vscode-sundial/actions/workflows/main.yml/badge.svg" Description="CI Status" /></Badges>
+			<Properties>
+				<Property Id="Microsoft.VisualStudio.Code.Engine" Value="^1.105.0" />
+				<Property Id="Microsoft.VisualStudio.Code.ExtensionDependencies" Value="" />
+				<Property Id="Microsoft.VisualStudio.Code.ExtensionPack" Value="" />
+				<Property Id="Microsoft.VisualStudio.Code.ExtensionKind" Value="workspace" />
+				<Property Id="Microsoft.VisualStudio.Code.LocalizedLanguages" Value="" />
+				<Property Id="Microsoft.VisualStudio.Code.EnabledApiProposals" Value="" />
+				
+				<Property Id="Microsoft.VisualStudio.Code.ExecutesCode" Value="true" />
+				<Property Id="Microsoft.VisualStudio.Code.SponsorLink" Value="https://buymeacoffee.com/muuvmuuv" />
+				<Property Id="Microsoft.VisualStudio.Services.Links.Source" Value="https://github.com/muuvmuuv/vscode-sundial.git" />
+				<Property Id="Microsoft.VisualStudio.Services.Links.Getstarted" Value="https://github.com/muuvmuuv/vscode-sundial.git" />
+				<Property Id="Microsoft.VisualStudio.Services.Links.GitHub" Value="https://github.com/muuvmuuv/vscode-sundial.git" />
+				<Property Id="Microsoft.VisualStudio.Services.Links.Support" Value="https://github.com/muuvmuuv/vscode-sundial/issues" />
+				<Property Id="Microsoft.VisualStudio.Services.Links.Learn" Value="https://github.com/muuvmuuv/vscode-sundial" />
+				<Property Id="Microsoft.VisualStudio.Services.Branding.Color" Value="#272c35" />
+				
+				<Property Id="Microsoft.VisualStudio.Services.GitHubFlavoredMarkdown" Value="true" />
+				<Property Id="Microsoft.VisualStudio.Services.Content.Pricing" Value="Free"/>
+
+				
+				<Property Id="Microsoft.VisualStudio.Services.CustomerQnALink" Value="https://github.com/muuvmuuv/vscode-sundial/issues/new/choose" />
+			</Properties>
+			<License>extension/LICENSE.md</License>
+			<Icon>extension/assets/icon.png</Icon>
+		</Metadata>
+		<Installation>
+			<InstallationTarget Id="Microsoft.VisualStudio.Code"/>
+		</Installation>
+		<Dependencies/>
+		<Assets>
+			<Asset Type="Microsoft.VisualStudio.Code.Manifest" Path="extension/package.json" Addressable="true" />
+			<Asset Type="Microsoft.VisualStudio.Services.Content.Details" Path="extension/readme.md" Addressable="true" />
+<Asset Type="Microsoft.VisualStudio.Services.Content.Changelog" Path="extension/changelog.md" Addressable="true" />
+<Asset Type="Microsoft.VisualStudio.Services.Content.License" Path="extension/LICENSE.md" Addressable="true" />
+<Asset Type="Microsoft.VisualStudio.Services.Icons.Default" Path="extension/assets/icon.png" Addressable="true" />
+		</Assets>
+	</PackageManifest>
