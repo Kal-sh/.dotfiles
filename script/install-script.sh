@@ -64,6 +64,7 @@ arch | cachyos)
     ncdu
     nethogs
     tor
+    wl-clipboard
     gnome-tweaks
     tree-sitter-cli 
     #glow

@@ -20,6 +20,8 @@ update() {
   sudo pacman -Syu
   echo "=== Paru ==="
   paru -Sua
+  echo "=== flatpak ==="
+  flatpak update
 }
 
 fd_dir() {
