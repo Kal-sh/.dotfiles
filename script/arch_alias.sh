@@ -5,8 +5,6 @@
 # ─────────────────────────────────────────
 # Pacman
 # ─────────────────────────────────────────
-#alias update="update"
-alias s="pacman -Ss"
 alias i="sudo pacman -S"
 alias iy="sudo pacman -Sy"
 alias rmi="sudo pacman -Rs"
@@ -20,17 +18,22 @@ alias rip="expac --timefmt='%Y-%m-%d %T' '%l\t%n %v' | sort | tail -200 | nl"
 # ─────────────────────────────────────────
 # CachyOS pacman wrapper
 # ─────────────────────────────────────────
-alias ref="sudo pacman -Fy" # update file database
+
+# update file database
+alias ref="sudo pacman -Fy"
+
+# Get fastest mirrors
+alias mirror="sudo cachyos-rate-mirrors"
+
+# fix pacman after snapper restore
+alias fixpacman="sudo rm /var/lib/pacman/db.lck"
 
 # ─────────────────────────────────────────
 # AUR helper (paru)
 # ─────────────────────────────────────────
-alias p="paru"
 alias pi="paru -S"
 alias piy="paru -Sy"
-alias pss="paru -Ss"
-alias pru="paru -Rs"
-alias psyu="paru -Syu"
+alias prm="paru -Rs"
 
 # ─────────────────────────────────────────
 # System / General
@@ -57,8 +60,6 @@ alias drm="distrobox rm -f"
 # ─────────────────────────────────────────
 # CLI Tools
 # ─────────────────────────────────────────
-alias ls="lsd -A"
-alias lsa="lsd -lA"
 alias bp="bpytop"
 alias td="tldr"
 alias st="curl -s https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest.py | python3 -"
@@ -91,8 +92,12 @@ alias trs="trash-restore"
 # ─────────────────────────────────────────
 # User custom commands
 # ─────────────────────────────────────────
-alias gc="grepcat"
+
+# @ .gitconfig
 alias gits="git global-status"
+
+# @ .bash_profile
+alias gc="grepcat"
 alias fn="fd_dir"
 alias fdn="fdn_dir"
 alias ff="fd_file"
@@ -100,9 +105,53 @@ alias sp="searchpkg"
 alias upd="update"
 
 # ─────────────────────────────────────────
-# Find directories by name
+# Stolen from CachyOS fish config
 # ─────────────────────────────────────────
-alias f="sudo find / -type d -name"
+
+# Replace ls with eza
+alias ls='eza -a --color=always --group-directories-first --icons'  # preferred listing
+alias ll='eza -al --color=always --group-directories-first --icons' # long format
+alias lt='eza -aT --color=always --group-directories-first --icons' # tree listing
+alias l.="eza -a | grep -e '^\.'"                                   # show only dotfiles
+
+# Grub update
+alias grubup="sudo grub-mkconfig -o /boot/grub/grub.cfg"
+
+# Tar
+alias tarnow='tar -acf '
+alias untar='tar -zxvf '
+
+alias wget='wget -c '
+
+# Processes
+alias psmem='ps auxf | sort -nr -k 4'
+alias psmem10='ps auxf | sort -nr -k 4 | head -10'
+
+# Directory related
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ....='cd ../../..'
+alias .....='cd ../../../..'
+alias ......='cd ../../../../..'
+alias dir='dir --color=auto'
+alias vdir='vdir --color=auto'
+
+# Grep
+alias grep='grep --color=auto'
+alias fgrep='fgrep --color=auto'
+alias egrep='egrep --color=auto'
+
+# Hardware Info
+alias hw='hwinfo --short'
+
+# Sort installed packages according to size in MB
+alias big="expac -H M '%m\t%n' | sort -h | nl"
+
+# List amount of -git packages
+alias gitpkg='pacman -Q | grep -i "\-git" | wc -l'
+
+# Get the error messages from journalctl
+alias jctl="journalctl -p 3 -xb"
 
 # ─────────────────────────────────────────
 # Mount media
@@ -172,7 +221,7 @@ alias polq3="podman exec -it ollama ollama run qwen2.5-Coder:3b"
 setopt correct
 
 # ─────────────────────────────────────────
-# VSCode Permission Fix
+# VSCode change ownership
 # ─────────────────────────────────────────
 alias vso="sudo chown -R $(whoami) /usr/share/vscodium"
 
