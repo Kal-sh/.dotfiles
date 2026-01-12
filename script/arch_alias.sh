@@ -135,11 +135,6 @@ alias nh="sudo nethogs"
 alias wget='wget -c '
 alias st="curl -s https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest.py | python3 -"
 
-# Grep colorized Output
-alias grep='grep --color=auto'
-alias fgrep='fgrep --color=auto'
-alias egrep='egrep --color=auto'
-
 # Help & Quick Access
 alias td="tldr"
 alias xd="xdg-open"
@@ -152,6 +147,19 @@ alias trl="trash-list"
 alias trm="trash-rm"
 alias trs="trash-restore"
 
+# Git
+alias g="git"
+alias gs="git status"
+alias gss="git status -s"
+alias ga="git add -A"
+alias gc="git commit -m"
+alias gp="git push"
+alias gpl="git pull"
+alias gco="git checkout"
+alias gcb="git checkout -b"
+alias gl="git log --oneline -10"
+alias gd="git diff"
+
 # ─────────────────────────────────────────
 # Custom Functions
 # ─────────────────────────────────────────
@@ -160,7 +168,7 @@ alias trs="trash-restore"
 alias gits="git global-status"
 
 # .bash_profile
-alias gc="grepcat"
+alias gr="grepcat"
 alias fn="fd_dir"
 alias fdn="fdn_dir"
 alias ff="fd_file"

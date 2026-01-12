@@ -5,7 +5,7 @@
 [[ -f ~/.bashrc ]] && . ~/.bashrc
 
 grepcat() {
-  cat "$1" | grep "$2"
+  grep "$1" "$2"
 }
 
 searchpkg() {
