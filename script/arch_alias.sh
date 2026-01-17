@@ -101,8 +101,8 @@ alias .....='cd ../../../..'
 alias ......='cd ../../../../..'
 
 # Archives
-alias tarnow='tar -acf '
-alias untar='tar -zxvf '
+alias tarnow='tar -acf'
+alias untar='tar -zxvf'
 
 # ─────────────────────────────────────────
 # DEVELOPMENT

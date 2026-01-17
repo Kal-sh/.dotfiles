@@ -8,7 +8,7 @@ sudo apt update && sudo apt upgrade -y
 echo "Installing required dependencies..."
 sudo apt install -y python3 python3-pip build-essential wget git python3-dev libpq-dev \
   libxml2-dev libxslt1-dev libldap2-dev libsasl2-dev libjpeg-dev libssl-dev \
-  libffi-dev zlib1g-dev postgresql:14
+  libffi-dev zlib1g-dev postgresql
 
 # Step 3: Verify PostgreSQL installation and configure it
 echo "Configuring PostgreSQL..."

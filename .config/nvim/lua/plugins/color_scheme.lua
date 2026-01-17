@@ -1,3 +1,4 @@
+--[[ catppuccin colorscheme
 return {
   { "catppuccin/nvim", name = "catppuccin" },
 
@@ -8,8 +9,9 @@ return {
     },
   },
 }
+]]
 
---[[
+-- transparent colorscheme
 return {
   {
     "folke/tokyonight.nvim",
@@ -29,4 +31,3 @@ return {
     },
   },
 }
-]]
