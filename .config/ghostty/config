@@ -49,17 +49,26 @@
 # resize-overlay-duration = 4s 200ms
 
 # user_config
+# Theme and visual appearance
 theme = Aura
-window-decoration = "none"
-background-opacity = 0.80
-cursor-style = "bar"
-cursor-style-blink = true
+
+# Color scheme
 foreground = #F5C211
 background = #000000
+
+# Window styling
+window-decoration = "none"
+background-opacity = 0.80
+window-padding-x = 4
+window-padding-balance = true
+
+# Cursor configuration
+cursor-style = "bar"
+cursor-style-blink = true
+
+# Startup behavior
 command = "tmux attach || tmux"
+
+# window dimensions
 #window-width = 100
 #window-height = 30
-#window-padding-y = 2
-window-padding-x = 4
-
-window-padding-balance = true

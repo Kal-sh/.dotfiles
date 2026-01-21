@@ -8,6 +8,14 @@ grepcat() {
   grep "$1" "$2"
 }
 
+jctl_err() {
+  journalctl -u "$1" -p err -n 5
+}
+
+jctl_live() {
+  journalctl -u "$1" -f
+}
+
 searchpkg() {
   echo "=== Pacman ==="
   pacman -Ss "$1" | grep -w "$1"

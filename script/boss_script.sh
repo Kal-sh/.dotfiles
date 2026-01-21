@@ -2,8 +2,11 @@
 
 echo "🚀 Starting all scripts at $(date)..."
 
+DOTFILES_DIR="$HOME/.dotfiles"
+ALIAS_DEST="$HOME/.aliases.sh"
+
 echo "📦 Cloning git repo …"
-git clone "https://github.com/Kal-sh/.dotfiles.git" "$HOME/.dotfiles"
+git clone "https://github.com/Kal-sh/.dotfiles.git" "DOTFILES_DIR"
 
 run_script() {
   echo "⏱️  [$(date)] ➤ Running $1…"
@@ -11,12 +14,13 @@ run_script() {
   echo "🎯 [$(date)] ✔ Finished $1."
 }
 
-cd "$HOME/.dotfiles"
+cd "DOTFILES_DIR"
 
 echo "📦 adding git remote origin"
 git remote add origin git@github.com:Kal-sh/.dotfiles.git
+git remote set-url origin git@github.com:Kal-sh/.dotfiles.git
 
-cd "$HOME/.dotfiles/script/"
+cd "DOTFILES_DIR/script/"
 
 echo "👉 Now running install-script.sh"
 run_script install-script.sh
@@ -40,9 +44,6 @@ if [[ -f /etc/os-release ]]; then
 else
   DISTRO="unknown"
 fi
-
-DOTFILES_DIR="$HOME/.dotfiles"
-ALIAS_DEST="$HOME/.aliases.sh"
 
 echo "🔍 Deploying distro-specific alias file for $DISTRO…"
 case "$DISTRO" in
@@ -74,7 +75,16 @@ fi
 echo "🧹 Removing conflicting files in HOME before stow…"
 # Remove files that would conflict with stow
 # Only remove if they are regular files or symlinks
-for f in .zshrc .zshenv .bashrc .bash_profile .p10k.zsh .gitconfig .icons .theme; do
+files=(
+  .zshrc
+  .zshenv
+  .bashrc
+  .bash_profile
+  .p10k.zsh
+  .gitconfig
+)
+
+for f in "${files[@]}"; do
   if [[ -e "$HOME/$f" || -L "$HOME/$f" ]]; then
     echo "🗑️  Removing ~/${f}"
     rm -rf "$HOME/$f"

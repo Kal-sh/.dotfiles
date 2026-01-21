@@ -169,6 +169,8 @@ alias gits="git global-status"
 
 # .bash_profile
 alias gr="grepcat"
+alias jr="jctl_err"
+alias jf="jctl_live"
 alias fn="fd_dir"
 alias fdn="fdn_dir"
 alias ff="fd_file"
@@ -199,6 +201,6 @@ current_shell=$(ps -p $$ -o comm=)
 if [[ "$current_shell" == "zsh" ]]; then
     exec zsh
 else
-    source ~/.bashrc
+    exec bash
 fi
 '
