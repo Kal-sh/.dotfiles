@@ -1,0 +1,163 @@
+-- Sidekick AI Assistant Configuration for LazyVim
+
+-- Configuration variables for easy tweaking
+local window_width = 80
+local window_height = 25
+
+return {
+  "folke/sidekick.nvim",
+  dependencies = {
+    { "folke/snacks.nvim", opts = { input = { enabled = true } } },
+  },
+  cmd = { "Sidekick" },
+  keys = {
+    -- Sidekick toggle (main command)
+    { "<leader>o", nil, desc = "+sidekick", mode = { "n", "v" } },
+    {
+      "<leader>oo",
+      function()
+        require("sidekick.cli").toggle()
+      end,
+      desc = "Sidekick Toggle CLI",
+    },
+
+    -- CLI management
+    {
+      "<leader>os",
+      function()
+        require("sidekick.cli").select()
+      end,
+      desc = "Select AI Tool",
+    },
+    {
+      "<leader>od",
+      function()
+        require("sidekick.cli").close()
+      end,
+      desc = "Detach CLI Session",
+    },
+
+    -- Send actions
+    {
+      "<leader>oc",
+      function()
+        require("sidekick.cli").send({ msg = "{this}" })
+      end,
+      desc = "Send This",
+      mode = { "x", "n" },
+    },
+    {
+      "<leader>of",
+      function()
+        require("sidekick.cli").send({ msg = "{file}" })
+      end,
+      desc = "Send File",
+    },
+    {
+      "<leader>ov",
+      function()
+        require("sidekick.cli").send({ msg = "{selection}" })
+      end,
+      desc = "Send Selection",
+      mode = { "x" },
+    },
+    {
+      "<leader>op",
+      function()
+        require("sidekick.cli").prompt()
+      end,
+      desc = "Select Prompt",
+      mode = { "n", "x" },
+    },
+
+    -- NES (Next Edit Suggestions) - AI inline suggestions
+    {
+      "<Tab>",
+      function()
+        local Nes = require("sidekick.nes")
+        if not Nes.have() then
+          return false
+        end
+        if Nes.jump() then
+          return true
+        end
+        return Nes.apply()
+      end,
+      desc = "AI Next Edit",
+      mode = { "n" },
+      expr = true,
+    },
+  },
+  opts = function()
+    -- Conditionally add tools if they are executable
+    local tools = {}
+    if vim.fn.executable("gemini") == 1 then
+      tools.gemini = {
+        cmd = "gemini",
+        -- The prompt will be piped to stdin
+      }
+    end
+    if vim.fn.executable("opencode") == 1 then
+      tools.opencode = {
+        cmd = "opencode",
+        args = { "-a" }, -- -a for ask, prompt will be piped to stdin
+      }
+    end
+
+
+
+    return {
+      tools = tools,
+      nes = {
+        enabled = true,
+        auto_jump = false,
+        auto_apply = false,
+      },
+      -- Configure sidekick window using variables from the top of the file
+      window = {
+        width = window_width,
+        height = window_height,
+        border = "rounded",
+      },
+
+    }
+  end,
+  config = function(_, opts)
+    require("sidekick").setup(opts)
+
+    -- Add snacks.nvim integration for better picker support
+    if package.loaded["snacks"] then
+      require("snacks").setup({
+        picker = {
+          actions = {
+            sidekick_send = function(...)
+              return require("sidekick.cli.picker.snacks").send(...)
+            end,
+          },
+          win = {
+            input = {
+              keys = {
+                ["<cr>"] = { "sidekick_send", mode = { "n", "i" } },
+              },
+            },
+          },
+        },
+      })
+    end
+
+    -- Toggle for NES
+    require("snacks")
+      .toggle({
+        name = "Sidekick NES",
+        get = function()
+          return require("sidekick.nes").enabled
+        end,
+        set = function(state)
+          require("sidekick.nes").enable(state)
+        end,
+      })
+      :map("<leader>on")
+
+    vim.notify("✅ Sidekick AI assistant loaded", vim.log.levels.INFO)
+  end,
+}
