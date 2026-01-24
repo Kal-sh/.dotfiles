@@ -15,4 +15,7 @@ export default class {
     getSpacing() {
         return this.#settings.get_int("window-spacing");
     }
+    getAutoMaximize() {
+        return this.#settings.get_boolean("auto-maximize");
+    }
 }

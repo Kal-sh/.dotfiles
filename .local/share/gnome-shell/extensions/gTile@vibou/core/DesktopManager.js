@@ -94,8 +94,15 @@ export default class {
         });
     }
     applySelection(target, monitorIdx, gridSize, selection) {
-        const projectedArea = this.selectionToArea(selection, gridSize, monitorIdx);
-        this.#fit(target, projectedArea);
+        const gridArea = gridSize.cols * gridSize.rows, selectionArea = (Math.abs(selection.target.col - selection.anchor.col) + 1) *
+            (Math.abs(selection.target.row - selection.anchor.row) + 1);
+        if (this.#userPreferences.getAutoMaximize() && gridArea === selectionArea) {
+            target.maximize();
+        }
+        else {
+            const projection = this.selectionToArea(selection, gridSize, monitorIdx);
+            this.#fit(target, projection);
+        }
     }
     selectionToArea(selection, gridSize, monitorIdx, preview = false) {
         const { cols, rows } = gridSize, relX = Math.min(selection.anchor.col, selection.target.col) / cols, relY = Math.min(selection.anchor.row, selection.target.row) / rows, relW = (Math.abs(selection.anchor.col - selection.target.col) + 1) / cols, relH = (Math.abs(selection.anchor.row - selection.target.row) + 1) / rows, workArea = this.#workArea(monitorIdx), spacing = preview ? this.#userPreferences.getSpacing() : 0;
@@ -150,13 +157,15 @@ export default class {
         this.#fit(target, this.#findBest(root));
     }
     autotile(spec, monitorIdx) {
-        const [dedicated, dynamic] = this.#gridSpecToAreas(spec);
+        const [dedicated, dynamic, dynamicAxis] = this.#gridSpecToAreas(spec);
         const workArea = this.#workArea(monitorIdx);
         const windows = this.#workspaceManager.get_active_workspace().list_windows()
             .filter(win => !(win.minimized ||
+            win.is_above() ||
             win.get_monitor() !== monitorIdx ||
             win.get_frame_type() !== Meta.FrameType.NORMAL ||
-            TitleBlacklist.some(p => p.test(win.title ?? ""))));
+            TitleBlacklist.some(p => p.test(win.title ?? ""))))
+            .toSorted((w1, w2) => w1.has_focus() ? -1 : w2.has_focus() ? 1 : 0);
         const project = (rect, canvas) => ({
             x: canvas.x + canvas.width * rect.x,
             y: canvas.y + canvas.height * rect.y,
@@ -164,7 +173,7 @@ export default class {
             height: canvas.height * rect.height,
         });
         const focusedIdx = windows.findIndex(w => w.has_focus());
-        if (focusedIdx && dedicated.length > 0) {
+        if (focusedIdx >= 0 && dedicated.length > 0) {
             const [largestIdx] = dedicated.reduce(([accuIdx, accuArea], rect, idx) => rect.width * rect.height > accuArea
                 ? [idx, rect.width * rect.height]
                 : [accuIdx, accuArea], [-1, 0]);
@@ -182,7 +191,7 @@ export default class {
             const mustTakeOverflowWindow = i < (windows.length % dynamic.length);
             const n = mustFitAtLeastN + (mustTakeOverflowWindow ? 1 : 0);
             let j = i;
-            for (const area of this.#splitN(dynamic[i], n)) {
+            for (const area of this.#splitN(dynamic[i], n, dynamicAxis[i])) {
                 this.#fit(windows[j], project(area, workArea));
                 j += dynamic.length;
             }
@@ -303,18 +312,22 @@ export default class {
     #gridSpecToAreas(spec, x = 0, y = 0, w = 1, h = 1) {
         const regularCells = [];
         const dynamicCells = [];
+        const dynamixAxes = [];
         const totalWeight = spec.cells.reduce((sum, c) => sum + c.weight, 0);
         for (const cell of spec.cells) {
             const ratio = cell.weight / totalWeight;
             const width = spec.mode === "cols" ? w * ratio : w;
             const height = spec.mode === "rows" ? h * ratio : h;
+            const axis = spec.mode === "cols" ? 'x' : 'y';
             if (cell.child) {
-                const [dedicated, dynamic] = this.#gridSpecToAreas(cell.child, x, y, width, height);
+                const [dedicated, dynamic, dynamicAxes] = this.#gridSpecToAreas(cell.child, x, y, width, height);
                 regularCells.push(...dedicated);
                 dynamicCells.push(...dynamic);
+                dynamixAxes.push(...dynamicAxes);
             }
             else if (cell.dynamic) {
                 dynamicCells.push({ x, y, width, height });
+                dynamixAxes.push(axis);
             }
             else {
                 regularCells.push({ x, y, width, height });
@@ -324,12 +337,11 @@ export default class {
             if (spec.mode === "rows")
                 y += height;
         }
-        return [regularCells, dynamicCells];
+        return [regularCells, dynamicCells, dynamixAxes];
     }
     #splitN(rect, n, axis) {
         const result = [];
         const { width, height } = rect;
-        axis = axis ?? width > height ? "x" : "y";
         let i = n, { x, y } = rect;
         while (i--) {
             result.push({

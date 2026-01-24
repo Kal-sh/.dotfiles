@@ -1,8 +1,4 @@
-#
-# ~/.bash_profile
-#
-
-[[ -f ~/.bashrc ]] && . ~/.bashrc
+# Custom functions
 
 grepcat() {
   grep "$1" "$2"
