@@ -2,11 +2,8 @@
 
 echo "🚀 Starting all scripts at $(date)..."
 
-DOTFILES_DIR="$HOME/.dotfiles"
-ALIAS_DEST="$HOME/.aliases.sh"
-
 echo "📦 Cloning git repo …"
-git clone "https://github.com/Kal-sh/.dotfiles.git" "DOTFILES_DIR"
+git clone "https://github.com/Kal-sh/.dotfiles.git" "$HOME/.dotfiles"
 
 run_script() {
   echo "⏱️  [$(date)] ➤ Running $1…"
@@ -14,13 +11,13 @@ run_script() {
   echo "🎯 [$(date)] ✔ Finished $1."
 }
 
-cd "DOTFILES_DIR"
+cd "$HOME/.dotfiles"
 
 echo "📦 adding git remote origin"
 git remote add origin git@github.com:Kal-sh/.dotfiles.git
 git remote set-url origin git@github.com:Kal-sh/.dotfiles.git
 
-cd "DOTFILES_DIR/script/"
+cd "$HOME/.dotfiles/script/"
 
 echo "👉 Now running install-script.sh"
 run_script install-script.sh
@@ -44,6 +41,9 @@ if [[ -f /etc/os-release ]]; then
 else
   DISTRO="unknown"
 fi
+
+DOTFILES_DIR="$HOME/.dotfiles"
+ALIAS_DEST="$HOME/.aliases.sh"
 
 echo "🔍 Deploying distro-specific alias file for $DISTRO…"
 case "$DISTRO" in

@@ -11,3 +11,9 @@ PS1='[\u@\h \W]\$ '
 
 
 source ~/.aliases.sh
+
+# Added by LM Studio CLI (lms)
+#export PATH="$PATH:$HOME/.lmstudio/bin"
+# End of LM Studio CLI section
+
+
