@@ -5,7 +5,7 @@
         "keyword": "g",
         "cmd": "https://google.com/search?q=%s",
         "icon": "/usr/share/ulauncher/media/google-search-icon.png",
-        "is_default_search": true,
+        "is_default_search": false,
         "run_without_argument": false,
         "added": 1762643687.8880103
     },
@@ -99,16 +99,6 @@
         "run_without_argument": false,
         "added": 1763268620.1714344
     },
-    "d69a99f4-e6af-45d1-b1c5-3e961f8595c8": {
-        "id": "d69a99f4-e6af-45d1-b1c5-3e961f8595c8",
-        "name": "Invidious",
-        "keyword": "v",
-        "cmd": "https://yewtu.be/search?q=%s",
-        "icon": "~/Pictures/Wallpapers/PNG/icons8-youtube-100.png",
-        "is_default_search": true,
-        "run_without_argument": false,
-        "added": 1764496379.1775403
-    },
     "133e1c05-56c9-45ef-af93-767c424f54bb": {
         "id": "133e1c05-56c9-45ef-af93-767c424f54bb",
         "name": "Startpage",
@@ -116,7 +106,17 @@
         "cmd": "https://www.startpage.com/do/search?q=%s",
         "icon": "~/Pictures/Wallpapers/PNG/startpage-512px.png",
         "is_default_search": true,
-        "run_without_argument": false,
+        "run_without_argument": true,
         "added": 1765669305.7471666
+    },
+    "31b97227-dc8b-432b-9f18-aa71ea67f56c": {
+        "id": "31b97227-dc8b-432b-9f18-aa71ea67f56c",
+        "name": "Invidious",
+        "keyword": "v",
+        "cmd": "https://yewtu.be/search?q=%s",
+        "icon": "~/Pictures/Wallpapers/PNG/icons8-youtube-100.png",
+        "is_default_search": true,
+        "run_without_argument": false,
+        "added": 1769620345.376554
     }
 }
