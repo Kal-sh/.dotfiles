@@ -16,6 +16,7 @@ alias ref="sudo pacman -Fy"
 # CachyOS
 alias mirror="sudo cachyos-rate-mirrors"
 alias fixpacman="sudo rm /var/lib/pacman/db.lck"
+alias grubup="sudo grub-mkconfig -o /boot/grub/grub.cfg"
 
 # AUR Helper (paru)
 alias pi="paru -S"
