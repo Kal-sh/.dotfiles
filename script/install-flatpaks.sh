@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 # install-flatpaks.sh
 
 flatpaks=(
@@ -17,6 +18,8 @@ flatpaks=(
   io.github.brunofin.Cohesion
   io.gitlab.news_flash.NewsFlash
   org.gnome.gitlab.somas.Apostrophe
+  com.github.tchx84.Flatseal
+  com.github.neithern.g4music
   #com.protonvpn.www
   #org.videolan.VLC
   #io.github.kolunmi.Bazaar

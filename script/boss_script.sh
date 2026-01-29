@@ -98,6 +98,9 @@ stow . --ignore='^script$' || {
   exit 1
 }
 
+echo "💩 dump extensions setting into dconf"
+dconf load /org/gnome/shell/extensions/ <~/.dotfiles/script/extensions.conf
+
 echo "🎉 Alias linking and stow complete!"
 
 wait

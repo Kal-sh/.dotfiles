@@ -3,6 +3,6 @@
 	email = kalecherinet@gmail.com
 
 [alias]
-	global-status = "!f() { find ~/Documents ~/.dotfiles -type d -name \".git\" | while read dir; do echo \"Checking status in $dir\"; (cd \"$dir/..\" && git status); done }; f"
+	global-status = "!f() { find ~/Documents/Github ~/.dotfiles -type d -name \".git\" | while read dir; do echo \"Checking status in $dir\"; (cd \"$dir/..\" && git status); done }; f"
 
 
