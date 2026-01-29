@@ -3,7 +3,7 @@
 echo "🚀 Starting all scripts at $(date)..."
 
 echo "📦 Cloning git repo …"
-git clone "https://github.com/Kal-sh/.dotfiles.git" "$HOME/.dotfiles"
+git clone "git@github.com:Kal-sh/.dotfiles.git" "$HOME/.dotfiles"
 
 run_script() {
   echo "⏱️  [$(date)] ➤ Running $1…"
@@ -98,10 +98,20 @@ stow . --ignore='^script$' || {
   exit 1
 }
 
+echo "🎉 Alias linking and stow complete!"
+
 echo "💩 dump extensions setting into dconf"
 dconf load /org/gnome/shell/extensions/ <~/.dotfiles/script/extensions.conf
 
-echo "🎉 Alias linking and stow complete!"
+echo "📦 Cloning git repo …"
+mkdir -p ~/Documents/Github
+cd ~/Documents/Github
+git clone "git@github.com:Kal-sh/VS-Code-.git" "$HOME/Documents/Github/VS-Code-/"
+
+echo "📦 adding git remote origin"
+git remote add origin git@github.com:Kal-sh/VS-Code-.git
+git remote set-url origin git@github.com:Kal-sh/VS-Code-.git
+git switch In-progress
 
 wait
 echo "🏁 All done at $(date)! 🎉"
