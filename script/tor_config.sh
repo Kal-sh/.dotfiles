@@ -1,5 +1,5 @@
 echo "👉 Copying torrc to /etc/tor/"
-sudo cp torrc /etc/tor/torrc
+sudo cp ~/.dotfiles/script/torrc /etc/tor/torrc
 
 echo "👉 systemctl config for tor"
 systemctl enable tor

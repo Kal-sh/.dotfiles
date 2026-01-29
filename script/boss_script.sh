@@ -104,7 +104,7 @@ stow . --ignore='^script$' || {
 echo "🎉 Alias linking and stow complete!"
 
 echo "💩 dump extensions setting into dconf"
-dconf load /org/gnome/shell/extensions/ <~/.dotfiles/script/extensions.conf
+dconf load /org/gnome <~/.dotfiles/script/extensions.conf
 
 echo "📦 Cloning git repo …"
 mkdir -p ~/Documents/Github
