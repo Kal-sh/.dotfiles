@@ -25,6 +25,9 @@ run_script install-script.sh
 echo "👉 Now running install-flatpaks.sh"
 run_script install-flatpaks.sh
 
+echo "👉 Now running install-script.sh"
+run_script tor_config.sh
+
 #echo "👉 Now running zsh4humans.sh"
 #run_script zsh4humans.sh
 

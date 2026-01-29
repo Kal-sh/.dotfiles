@@ -17,7 +17,7 @@ User tor
 ## configure one below. Set "SOCKSPort 0" if you plan to run Tor only
 ## as a relay, and not make any local application connections yourself.
 SOCKSPort 9050 # Default: Bind to localhost:9050 for local connections.
-SOCKSPort 9052 # System-wide proxy for GNOME
+SOCKSPort 9052 # for Zen Browser 
 #SOCKSPort 192.168.0.1:9100 # Bind to this address:port too.
 
 ## Entry policies to allow/deny SOCKS requests based on IP address.
@@ -57,25 +57,35 @@ DataDirectory /var/lib/tor
 
 ## The port on which Tor will listen for local connections from Tor
 ## controller applications, as documented in control-spec.txt.
-ControlPort 9051
+#ControlPort 9051
 ## If you enable the controlport, be sure to enable one of these
 ## authentication methods, to prevent attackers from accessing it.
-#HashedControlPassword 16:872860B76453A77D60CA2BB8C1A7042072093276A3D701AD684053EC4C
-CookieAuthentication 1
-CookieAuthFile /var/lib/tor/control_auth_cookie
-CookieAuthFileGroupReadable 1
-DataDirectoryGroupReadable 1
+#CookieAuthentication 1
+#CookieAuthFile /var/lib/tor/control_auth_cookie
+#CookieAuthFileGroupReadable 1
+#DataDirectoryGroupReadable 1
 
-#HashedControlPassword 16:BE71830C354AAD8660203F584C093B7773C45C1E4ACC416852695F4ED6
-ControlSocket /var/lib/tor/control_socket
-ControlSocketsGroupWritable 1
-CacheDirectoryGroupReadable 1
+#ControlSocket /var/lib/tor/control_socket
+#ControlSocketsGroupWritable 1
+#CacheDirectoryGroupReadable 1
+
+CircuitBuildTimeout 30
+GuardLifetime 4 weeks
+MaxCircuitDirtiness 600
+
+# Disable IPv6
+IPv6Exit 0
+
+# DNS leak protection
+SafeSocks 1
+
+# security hardening
+DisableDebuggerAttachment 1
+FetchDirInfoEarly 1
+FetchDirInfoExtraEarly 1
 
 # Prevent connection to known bad exit nodes
 #AvoidDiskWrites 1
-
-# Make Tor more resilient to timing attacks
-#HashPasswordSetting 1
 
 ############### This section is just for location-hidden services ###
 
