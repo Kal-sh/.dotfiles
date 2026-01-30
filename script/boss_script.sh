@@ -3,7 +3,7 @@
 echo "🚀 Starting all scripts at $(date)..."
 
 echo "📦 Cloning git repo …"
-git clone "git@github.com:Kal-sh/.dotfiles.git" "$HOME/.dotfiles"
+git clone "https://github.com/Kal-sh/.dotfiles.git" "$HOME/.dotfiles"
 
 run_script() {
   echo "⏱️  [$(date)] ➤ Running $1…"
@@ -85,6 +85,7 @@ files=(
   .bash_profile
   .p10k.zsh
   .gitconfig
+  .local/share/ulauncher/extensions
 )
 
 for f in "${files[@]}"; do
@@ -109,7 +110,7 @@ dconf load /org/gnome <~/.dotfiles/script/extensions.conf
 echo "📦 Cloning git repo …"
 mkdir -p ~/Documents/Github
 cd ~/Documents/Github
-git clone "git@github.com:Kal-sh/VS-Code-.git" "$HOME/Documents/Github/VS-Code-/"
+git clone "https://github.com/Kal-sh/VS-Code-.git" "$HOME/Documents/Github/VS-Code-/"
 
 echo "📦 adding git remote origin"
 git remote add origin git@github.com:Kal-sh/VS-Code-.git
