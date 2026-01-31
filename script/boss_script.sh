@@ -13,8 +13,7 @@ run_script() {
 
 cd "$HOME/.dotfiles"
 
-echo "📦 adding git remote origin"
-git remote add origin git@github.com:Kal-sh/.dotfiles.git
+echo "📦 changing git remote to SSH"
 git remote set-url origin git@github.com:Kal-sh/.dotfiles.git
 
 cd "$HOME/.dotfiles/script/"
@@ -28,8 +27,9 @@ run_script install-flatpaks.sh
 echo "👉 Now running install-script.sh"
 run_script tor_config.sh
 
-#echo "👉 Now running zsh4humans.sh"
-#run_script zsh4humans.sh
+echo "👉 Now running zsh4humans.sh (interactive - isolated terminal)"
+script -q -c "./zsh4humans.sh" /dev/null
+echo "🎯 zsh4humans installation complete."
 
 # —————————————
 # Alias linking + Stow (added as requested)
@@ -86,6 +86,8 @@ files=(
   .p10k.zsh
   .gitconfig
   .local/share/ulauncher/extensions
+  .config/VSCodium/User/keybindings.json
+  .config/VSCodium/User/settings.json
 )
 
 for f in "${files[@]}"; do
@@ -105,15 +107,13 @@ stow . --ignore='^script$' || {
 echo "🎉 Alias linking and stow complete!"
 
 echo "💩 dump extensions setting into dconf"
-dconf load /org/gnome <~/.dotfiles/script/extensions.conf
+dconf load /org/gnome <~/.dotfiles/script/extensions.conf || echo "⚠️  dconf load failed (extensions may not be installed yet)"
 
 echo "📦 Cloning git repo …"
-mkdir -p ~/Documents/Github
-cd ~/Documents/Github
 git clone "https://github.com/Kal-sh/VS-Code-.git" "$HOME/Documents/Github/VS-Code-/"
 
-echo "📦 adding git remote origin"
-git remote add origin git@github.com:Kal-sh/VS-Code-.git
+echo "📦 changing git remote to SSH"
+cd ~/Documents/Github/VS-Code-/
 git remote set-url origin git@github.com:Kal-sh/VS-Code-.git
 git switch In-progress
 
