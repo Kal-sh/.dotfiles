@@ -41,6 +41,11 @@ Untested on Linux and VSCode forks (like Cursor, WindSurf, etc.), and I currentl
 
 Available CSS Variables:
 
+- `--cus-mono`: Target monospace font family
+- `--cus-sans`: Target sans-serif font family
+
+Deprecated variables:
+
 - `--cus-monospace-font`: Target monospace font family
 - `--cus-sans-font`: Target sans-serif font family
 
@@ -315,10 +320,11 @@ In some VSCode forks like Cursor, the extension detail panel may not render due 
 
 <!-- commands -->
 
-| Command                    | Title                     |
-| -------------------------- | ------------------------- |
-| `custom-ui-style.reload`   | Custom UI Style: Reload   |
-| `custom-ui-style.rollback` | Custom UI Style: Rollback |
+| Command                    | Title                                                    |
+| -------------------------- | -------------------------------------------------------- |
+| `custom-ui-style.reload`   | Custom UI Style: Reload                                  |
+| `custom-ui-style.rollback` | Custom UI Style: Rollback                                |
+| `custom-ui-style.cleanup`  | Custom UI Style: Rollback, cleanup and restart instantly |
 
 <!-- commands -->
 

@@ -13,7 +13,7 @@
     "**/*.class": true,
     "**/*.code-workspace": true,
     "**/*.css.map": true,
-    "**/*.exe": true
+    "**/*.exe": true,
   },
   "window.title": "${dirty}${activeEditorShort}",
   "workbench.startupEditor": "newUntitledFile",
@@ -53,16 +53,16 @@
 	*/
   "[python]": {
     "editor.defaultFormatter": "ms-python.autopep8",
-    "diffEditor.ignoreTrimWhitespace": true
+    "diffEditor.ignoreTrimWhitespace": true,
   },
   "[sql]": {
-    "editor.defaultFormatter": "cweijan.vscode-database-client2"
+    "editor.defaultFormatter": "cweijan.vscode-database-client2",
   },
   "[java]": {
-    "editor.defaultFormatter": null
+    "editor.defaultFormatter": null,
   },
   "[csharp]": {
-    "editor.defaultFormatter": null
+    "editor.defaultFormatter": null,
   },
   //* Python
   "python.languageServer": "Jedi",
@@ -106,7 +106,7 @@
   "git.enableSmartCommit": true,
   //* Custome css and js styles
   "custom-ui-style.external.imports": [
-    "file:///home/kal/Documents/Github/.vscode_styles/custom-vscode.css"
+    "file:///home/kal/Documents/Github/.vscode_styles/custom-vscode.css",
     // s"file:///home/kal/Documents/Github/.vscode_styles/vscode-script.js"
   ],
   /*
@@ -140,53 +140,34 @@
   "vim.hlsearch": true,
   "vim.insertModeKeyBindings": [
     {
-      "before": [
-        "j",
-        "j"
-      ],
-      "after": [
-        "<Esc>"
-      ]
-    }
+      "before": ["j", "j"],
+      "after": ["<Esc>"],
+    },
   ],
   "vim.normalModeKeyBindingsNonRecursive": [
     {
-      "before": [
-        "<leader>",
-        "d"
-      ],
-      "after": [
-        "d",
-        "d"
-      ]
+      "before": ["<leader>", "d"],
+      "after": ["d", "d"],
     },
     {
-      "before": [
-        "<C-n>"
-      ],
-      "commands": [
-        ":nohl"
-      ]
+      "before": ["<C-n>"],
+      "commands": [":nohl"],
     },
     {
-      "before": [
-        "K"
-      ],
-      "commands": [
-        "lineBreakInsert"
-      ],
-      "silent": true
-    }
+      "before": ["K"],
+      "commands": ["lineBreakInsert"],
+      "silent": true,
+    },
   ],
   "vim.leader": "<space>",
   "vim.handleKeys": {
     "<C-a>": false,
     "<C-f>": false,
-    "<C-w>": false
+    "<C-w>": false,
   },
   // To improve performance
   "extensions.experimental.affinity": {
-    "vscodevim.vim": 1
+    "vscodevim.vim": 1,
   },
   //* Container and Database config
   "database-client.telemetry.usesOnlineServices": false,
@@ -194,6 +175,10 @@
   "database-client.capitalizeKeywordsWhenFormatting": true,
   "containers.containerClient": "com.microsoft.visualstudio.containers.podman",
   "containers.orchestratorClient": "com.microsoft.visualstudio.orchestrators.podmancompose",
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+  },
+  "liveServer.settings.donotShowInfoMsg": true,
   /* New
   // "vsicons.dontShowNewVersionMessage": true,
   /**

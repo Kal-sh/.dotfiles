@@ -2,7 +2,8 @@
 	"publisher": "subframe7536",
 	"name": "custom-ui-style",
 	"displayName": "Custom UI Style",
-	"version": "0.6.6",
+	"type": "commonjs",
+	"version": "0.6.7",
 	"private": true,
 	"packageManager": "pnpm@10.12.1",
 	"description": "Custom ui css style in both editor and webview, unify global font family, setup background image",
@@ -45,6 +46,11 @@
 			{
 				"command": "custom-ui-style.rollback",
 				"title": "Rollback",
+				"category": "Custom UI Style"
+			},
+			{
+				"command": "custom-ui-style.cleanup",
+				"title": "Rollback, cleanup and restart instantly",
 				"category": "Custom UI Style"
 			}
 		],
@@ -278,8 +284,8 @@
 		]
 	},
 	"__metadata": {
-		"installedTimestamp": 1764438188924,
+		"installedTimestamp": 1769871948268,
 		"targetPlatform": "universal",
-		"size": 89481
+		"size": 90181
 	}
 }

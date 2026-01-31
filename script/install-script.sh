@@ -28,7 +28,7 @@ ubuntu | debian)
     opencode
     ncdu
     nethogs
-    tree-sitter-cli 
+    tree-sitter-cli
     nvim
     gnome-tweaks
     ulauncher
@@ -66,7 +66,8 @@ arch | cachyos)
     tor
     wl-clipboard
     gnome-tweaks
-    tree-sitter-cli 
+    tree-sitter-cli
+    pnpm
     #glow
     vscodium
   )
@@ -115,7 +116,7 @@ fedora)
     ncdu
     nethogs
     gnome-tweaks
-    tree-sitter-cli 
+    tree-sitter-cli
     ulauncher
     vscodium
   )

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 	<PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
 		<Metadata>
-			<Identity Language="en-US" Id="custom-ui-style" Version="0.6.6" Publisher="subframe7536" />
+			<Identity Language="en-US" Id="custom-ui-style" Version="0.6.7" Publisher="subframe7536" />
 			<DisplayName>Custom UI Style</DisplayName>
 			<Description xml:space="preserve">Custom ui css style in both editor and webview, unify global font family, setup background image</Description>
 			<Tags>css</Tags>
