@@ -27,9 +27,9 @@ run_script install-flatpaks.sh
 echo "👉 Now running install-script.sh"
 run_script tor_config.sh
 
-echo "👉 Now running zsh4humans.sh (interactive - isolated terminal)"
-script -q -c "./zsh4humans.sh" /dev/null
-echo "🎯 zsh4humans installation complete."
+#echo "👉 Now running zsh4humans.sh (interactive - isolated terminal)"
+#script -q -c "./zsh4humans.sh" /dev/null
+#echo "🎯 zsh4humans installation complete."
 
 # —————————————
 # Alias linking + Stow (added as requested)
