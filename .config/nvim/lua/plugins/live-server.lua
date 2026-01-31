@@ -18,9 +18,5 @@ return {
       },
       ignore_patterns = { "node_modules", ".git", "__pycache__" },
     })
-
-    -- Keybindings
-    vim.keymap.set("n", "<leader>ps", ":LiveServerStart<CR>", { desc = "Start Live Server" })
-    vim.keymap.set("n", "<leader>pc", ":LiveServerStop<CR>", { desc = "Stop Live Server" })
   end,
 }
