@@ -27,6 +27,13 @@ export var OverviewNavigationState;
     OverviewNavigationState[OverviewNavigationState["WINDOW_PICKER_ONLY"] = 2] = "WINDOW_PICKER_ONLY";
 })(OverviewNavigationState || (OverviewNavigationState = {}));
 
+export var WorkspaceSwitchingState;
+
+(function (WorkspaceSwitchingState) {
+    WorkspaceSwitchingState[WorkspaceSwitchingState["DEFAULT"] = 0] = "DEFAULT";
+    WorkspaceSwitchingState[WorkspaceSwitchingState["CYCLIC"] = 1] = "CYCLIC";
+})(WorkspaceSwitchingState || (WorkspaceSwitchingState = {}));
+
 export var ForwardBackKeyBinds;
 
 (function (ForwardBackKeyBinds) {

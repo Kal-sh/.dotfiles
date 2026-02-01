@@ -4,36 +4,78 @@ import Shell from 'gi://Shell';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import { ExtSettings, OverviewControlsState } from '../constants.js';
 import { createSwipeTracker, TouchpadSwipeGesture } from './swipeTracker.js';
+import { WorkspaceSwitchingState } from '../common/settings.js';
 
-/**
- *
- * @param tracker
- */
-function connectTouchpadEventToTracker(tracker) {
+function connectTouchpadEventToTracker(touchpadGesture) {
      
-    global.stage.connectObject('captured-event::touchpad', tracker._handleEvent.bind(tracker), tracker);
+    global.stage.connectObject('captured-event::touchpad', touchpadGesture._handleEvent.bind(touchpadGesture), touchpadGesture);
 }
 
-/**
- *
- * @param tracker
- */
-function disconnectTouchpadEventFromTracker(tracker) {
+function disconnectTouchpadEventFromTracker(touchpadGesture) {
      
-    global.stage.disconnectObject(tracker);
+    global.stage.disconnectObject(touchpadGesture);
 }
 
-class SwipeTrackerEndPointsModifer {
+class WorkspaceAnimationModifier {
 
-    constructor() {
+    constructor(workspaceSwitchingStates, nfingers, wm, orientation) {
         this._firstVal = 0;
         this._lastVal = 0;
+        this._progress = 0;
+        this._workspaceAnimation = wm._workspaceAnimation;
+        this._swipeTracker = createSwipeTracker(global.stage, nfingers, Shell.ActionMode.NORMAL, orientation ?? Clutter.Orientation.HORIZONTAL, ExtSettings.FOLLOW_NATURAL_SCROLL, 1);
+        this._workspaceSwitchingStates = workspaceSwitchingStates;
     }
 
     apply() {
+        if (this._workspaceAnimation._swipeTracker._touchpadGesture)
+            disconnectTouchpadEventFromTracker(this._workspaceAnimation._swipeTracker._touchpadGesture);
         this._swipeTracker.connect('begin', this._gestureBegin.bind(this));
         this._swipeTracker.connect('update', this._gestureUpdate.bind(this));
         this._swipeTracker.connect('end', this._gestureEnd.bind(this));
+    }
+
+    _gestureBegin(tracker, monitor) {
+        this._modifySnapPoints(tracker, shallowTracker => {
+            this._workspaceAnimation._switchWorkspaceBegin(shallowTracker, monitor);
+        });
+    }
+
+    _gestureUpdate(tracker, progress) {
+        if (progress < this._firstVal)
+            progress = this._firstVal - (this._firstVal - progress) * 0.05;
+        else if (progress > this._lastVal)
+            progress = this._lastVal + (progress - this._lastVal) * 0.05;
+        this._progress = progress;
+        this._workspaceAnimation._switchWorkspaceUpdate(tracker, progress);
+    }
+
+    _gestureEnd(tracker, duration, progress) {
+        switch (this._workspaceSwitchingStates) {
+            case WorkspaceSwitchingState.CYCLIC:
+                if (this._progress < this._firstVal) {
+                    progress =
+                        progress >= this._firstVal
+                            ? this._firstVal
+                            : this._lastVal;
+                }
+                else if (this._progress > this._lastVal) {
+                    progress =
+                        progress <= this._lastVal
+                            ? this._lastVal
+                            : this._firstVal;
+                }
+                else {
+                    progress = Math.clamp(progress, this._firstVal, this._lastVal);
+                }
+
+                break;
+            case WorkspaceSwitchingState.DEFAULT:
+                progress = Math.clamp(progress, this._firstVal, this._lastVal);
+                break;
+        }
+
+        this._workspaceAnimation._switchWorkspaceEnd(tracker, duration, progress);
     }
 
     _modifySnapPoints(tracker, callback) {
@@ -51,61 +93,26 @@ class SwipeTrackerEndPointsModifer {
     }
 
     destroy() {
+        const swipeTracker = this._workspaceAnimation._swipeTracker;
+        if (swipeTracker._touchpadGesture)
+            connectTouchpadEventToTracker(swipeTracker._touchpadGesture);
+
         if (this._swipeTracker) {
+            this._swipeTracker.destroy();
             this._swipeTracker.enabled = false;
         }
     }
 
 }
 
-class WorkspaceAnimationModifier extends SwipeTrackerEndPointsModifer {
-
-    constructor(nfingers, wm, orientation) {
-        super();
-        this._workspaceAnimation = wm._workspaceAnimation;
-        this._swipeTracker = createSwipeTracker(global.stage, nfingers, Shell.ActionMode.NORMAL, orientation ?? Clutter.Orientation.HORIZONTAL, ExtSettings.FOLLOW_NATURAL_SCROLL, 1, { allowTouch: false });
-    }
-
-    apply() {
-        if (this._workspaceAnimation._swipeTracker._touchpadGesture)
-            disconnectTouchpadEventFromTracker(this._workspaceAnimation._swipeTracker._touchpadGesture);
-        super.apply();
-    }
-
-    _gestureBegin(tracker, monitor) {
-        super._modifySnapPoints(tracker, shallowTracker => {
-            this._workspaceAnimation._switchWorkspaceBegin(shallowTracker, monitor);
-        });
-    }
-
-    _gestureUpdate(tracker, progress) {
-        if (progress < this._firstVal)
-            progress = this._firstVal - (this._firstVal - progress) * 0.05;
-        else if (progress > this._lastVal)
-            progress = this._lastVal + (progress - this._lastVal) * 0.05;
-        this._workspaceAnimation._switchWorkspaceUpdate(tracker, progress);
-    }
-
-    _gestureEnd(tracker, duration, progress) {
-        progress = Math.clamp(progress, this._firstVal, this._lastVal);
-        this._workspaceAnimation._switchWorkspaceEnd(tracker, duration, progress);
-    }
-
-    destroy() {
-        this._swipeTracker.destroy();
-        const swipeTracker = this._workspaceAnimation._swipeTracker;
-        if (swipeTracker._touchpadGesture)
-            connectTouchpadEventToTracker(swipeTracker._touchpadGesture);
-        super.destroy();
-    }
-
-}
-
-export class GestureExtension {
+export class WorkspaceSwitchingExtension {
 
     constructor() {
         this._stateAdjustment =
             Main.overview._overview._controls._stateAdjustment;
+
+        // First tracker controls workspace switching in overview
+        // Second tracker controls app page switching in app grid
         this._swipeTrackers = [
             {
                 swipeTracker: Main.overview._overview._controls._workspacesDisplay
@@ -143,14 +150,14 @@ export class GestureExtension {
         ];
     }
 
-    setVerticalWorkspceAnimationModifier(nfingers) {
+    setVerticalWorkspceAnimationModifier(nfingers, workspaceSwitchingState) {
         this._verticalWorkspaceAnimationModifier =
-            new WorkspaceAnimationModifier(nfingers, Main.wm, Clutter.Orientation.VERTICAL);
+            new WorkspaceAnimationModifier(workspaceSwitchingState, nfingers, Main.wm, Clutter.Orientation.VERTICAL);
     }
 
-    setHorizontalWorkspaceAnimationModifier(nfingers) {
+    setHorizontalWorkspaceAnimationModifier(nfingers, workspaceSwitchingState) {
         this._horizontalWorkspaceAnimationModifier =
-            new WorkspaceAnimationModifier(nfingers, Main.wm, Clutter.Orientation.HORIZONTAL);
+            new WorkspaceAnimationModifier(workspaceSwitchingState, nfingers, Main.wm, Clutter.Orientation.HORIZONTAL);
     }
 
     apply() {
@@ -184,8 +191,8 @@ export class GestureExtension {
         }
 
         swipeTracker._touchpadGesture = touchpadSwipeGesture;
-        swipeTracker._touchpadGesture.connect('begin', swipeTracker._beginGesture.bind(swipeTracker));
-        swipeTracker._touchpadGesture.connect('update', swipeTracker._updateGesture.bind(swipeTracker));
+        swipeTracker._touchpadGesture.connect('begin', swipeTracker._beginTouchpadGesture.bind(swipeTracker));
+        swipeTracker._touchpadGesture.connect('update', swipeTracker._updateTouchpadGesture.bind(swipeTracker));
         swipeTracker._touchpadGesture.connect('end', swipeTracker._endTouchpadGesture.bind(swipeTracker));
         swipeTracker.bind_property('enabled', swipeTracker._touchpadGesture, 'enabled', 0);
         swipeTracker.bind_property('orientation', swipeTracker._touchpadGesture, 'orientation', GObject.BindingFlags.SYNC_CREATE);

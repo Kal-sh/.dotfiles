@@ -1,9 +1,9 @@
 import GLib from 'gi://GLib';
-import { Extension, } from 'resource:///org/gnome/shell/extensions/extension.js';
+import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
 import { PinchGestureType, SwipeGestureType, } from './common/settings.js';
 import * as Constants from './constants.js';
 import { OverviewRoundTripGestureExtension } from './src/overviewRoundTrip.js';
-import { GestureExtension } from './src/gestures.js';
+import { WorkspaceSwitchingExtension } from './src/workspaceSwitching.js';
 import AltTabGestureExtension from './src/altTab.js';
 import { ForwardBackGestureExtension, } from './src/forwardBack.js';
 import * as VKeyboard from './src/utils/keyboard.js';
@@ -14,7 +14,7 @@ import { VolumeControlGestureExtension } from './src/volumeControl.js';
 import { BrightnessControlGestureExtension } from './src/brightnessControl.js';
 
 export default class TouchpadGestureCustomization extends Extension {
-
+     
     constructor(metadata) {
         super(metadata);
         this._settingChangedId = 0;
@@ -95,18 +95,19 @@ export default class TouchpadGestureCustomization extends Extension {
         // TODO: match workspace navigation control in overview mode and normal mode
         const verticalWorkspaceNavigationFingers = verticalSwipeToFingersMap.get(SwipeGestureType.WORKSPACE_SWITCHING);
         const horizontalWorkspaceNavigationFingers = horizontalSwipeToFingersMap.get(SwipeGestureType.WORKSPACE_SWITCHING);
-        const gestureExtension = new GestureExtension();
+        const gestureExtension = new WorkspaceSwitchingExtension();
+        const workspaceSwitchingState = this.settings.get_enum('workspace-switching-states');
 
         // Disable default workspace navigation using horizontal swipe
-        gestureExtension.setHorizontalWorkspaceAnimationModifier([]);
+        gestureExtension.setHorizontalWorkspaceAnimationModifier([], workspaceSwitchingState);
 
         // Enable vertical swipe for workspace navigation
         if (verticalWorkspaceNavigationFingers?.length)
-            gestureExtension.setVerticalWorkspceAnimationModifier(verticalWorkspaceNavigationFingers);
+            gestureExtension.setVerticalWorkspceAnimationModifier(verticalWorkspaceNavigationFingers, workspaceSwitchingState);
 
         // Enable horizontal swipe for workspace navigation
         if (horizontalWorkspaceNavigationFingers?.length)
-            gestureExtension.setHorizontalWorkspaceAnimationModifier(horizontalWorkspaceNavigationFingers);
+            gestureExtension.setHorizontalWorkspaceAnimationModifier(horizontalWorkspaceNavigationFingers, workspaceSwitchingState);
         this._extensions.push(gestureExtension);
 
         /**

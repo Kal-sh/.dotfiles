@@ -2,26 +2,34 @@ import Clutter from 'gi://Clutter';
 import Shell from 'gi://Shell';
 import Gio from 'gi://Gio';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import { loadInterfaceXML } from 'resource:///org/gnome/shell/misc/fileUtils.js';
 import { createSwipeTracker } from './swipeTracker.js';
 import { ExtSettings, TouchpadConstants } from '../constants.js';
 
-const BrightnessProxy = Gio.DBusProxy.makeProxyWrapper(loadInterfaceXML('org.gnome.SettingsDaemon.Power.Screen'));
+const BRIGHTNESS_OSD_FPS_CAP_MS = 1000 / 30;
 export class BrightnessControlGestureExtension {
 
     constructor() {
         this._lastOsdShowTimestamp = 0;
+        this._managerChangedId = null;
     }
 
     apply() {
-        this._brightnessProxy = new BrightnessProxy(Gio.DBus.session, 'org.gnome.SettingsDaemon.Power', '/org/gnome/SettingsDaemon/Power', (proxy, error) => {
-            if (error)
-                console.error(`Failed to connect to the ${proxy.g_interface_name} D-Bus interface`, error);
-        });
+        this._manager = Main.brightnessManager;
+
+        // Keep in sync if manager changes (defensive)
+        if (this._manager) {
+            this._managerChangedId = this._manager.connect('changed', () => {
+                // no-op: we read manager state when gestures start/update
+            });
+        }
     }
 
     destroy() {
-        delete this._brightnessProxy;
+        if (this._manager && this._managerChangedId !== null) {
+            this._manager.disconnect(this._managerChangedId);
+            this._managerChangedId = null;
+        }
+
         this._verticalConnectHandlers?.forEach(handle => this._verticalSwipeTracker?.disconnect(handle));
         this._verticalConnectHandlers = undefined;
         this._verticalSwipeTracker?.destroy();
@@ -48,32 +56,37 @@ export class BrightnessControlGestureExtension {
         ];
     }
 
-    get _brightness() {
-        return this._brightnessProxy?.Brightness ?? 0;
-    }
-
-    set _brightness(value) {
-        if (this._brightnessProxy === undefined ||
-            this._brightnessProxy.Brightness === null) {
-            return;
-        }
-
-        this._brightnessProxy.Brightness = value;
-    }
-
     _showOsd(brightness) {
         // If osd is updated too frequently, it may lag or freeze, so cap it to 30 fps
-        const nowTimestamp = new Date().getTime();
+        const nowTimestamp = Date.now();
 
-        if (nowTimestamp - this._lastOsdShowTimestamp < 1000 / 30) {
+        if (nowTimestamp - this._lastOsdShowTimestamp <
+            BRIGHTNESS_OSD_FPS_CAP_MS) {
             return;
         }
 
         this._lastOsdShowTimestamp = nowTimestamp;
-        const percentage = brightness / 100;
-        const monitor = -1; // Display volume window on all monitors
+        const level = brightness / 100;
         const icon = Gio.Icon.new_for_string('display-brightness-symbolic');
-        Main.osdWindowManager.show(monitor, icon, null, percentage);
+        Main.osdWindowManager.showAll(icon, null, level, 1);
+    }
+
+    // Read current global brightness as 0..100
+    get _brightness() {
+        if (!this._manager)
+            return 0;
+
+        // globalScale is a scale object; its value is 0..1
+        const gs = this._manager._globalScale;
+        return gs ? Math.round(gs._value * 100) : 0;
+    }
+
+    // Set global brightness using manager; accepts 0..100
+    set _brightness(value) {
+        if (!this._manager)
+            return;
+        const clamped = Math.max(0, Math.min(100, Math.round(value)));
+        this._manager._globalScale._setValue(clamped / 100);
     }
 
     _gestureBegin(_tracker) {

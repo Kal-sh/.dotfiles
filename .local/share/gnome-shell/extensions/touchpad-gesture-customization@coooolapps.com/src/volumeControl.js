@@ -21,6 +21,7 @@ export class VolumeControlGestureExtension {
     apply() {
         this._controller = Volume.getMixerControl();
         this._maxVolume = this._controller.get_vol_max_norm();
+        console.log('Max Volume: ' + this._maxVolume);
         this._sink = this._controller.get_default_sink();
         this._sinkChangeBinding = this._controller.connect('default-sink-changed', this._handleSinkChange.bind(this));
     }
@@ -61,19 +62,19 @@ export class VolumeControlGestureExtension {
 
     _showOsd(volume) {
         // If osd is updated too frequently, it may lag or freeze, so cap it to 30 fps
-        const nowTimestamp = new Date().getTime();
+        const nowTimestamp = Date.now();
 
         if (nowTimestamp - this._lastOsdShowTimestamp < 1000 / 30) {
             return;
         }
 
         this._lastOsdShowTimestamp = nowTimestamp;
-        const percentage = volume / this._maxVolume;
-        const iconIndex = volume === 0 ? 0 : Math.clamp(Math.floor(3 * percentage + 1), 1, 3);
-        const monitor = -1; // Display volume window on all monitors
+        const level = volume / this._maxVolume;
+        const iconIndex = volume === 0 ? 0 : Math.clamp(Math.floor(3 * level + 1), 1, 3);
         const icon = Gio.Icon.new_for_string(VolumeIcons[iconIndex]);
-        const label = this._sink?.get_port().human_port ?? '';
-        Main.osdWindowManager.show(monitor, icon, label, percentage);
+
+        // const label = this._sink?.get_port().human_port ?? '';
+        Main.osdWindowManager.showAll(icon, null, level, 1);
     }
 
     _gestureBegin(_tracker) {

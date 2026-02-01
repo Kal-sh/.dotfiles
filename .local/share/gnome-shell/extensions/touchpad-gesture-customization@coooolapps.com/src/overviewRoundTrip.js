@@ -21,8 +21,8 @@ export class OverviewRoundTripGestureExtension {
         this._shownEventId = 0;
         this._hiddenEventId = 0;
         this._navigationStates = navigationStates;
-        this._overviewControls = Main.overview._overview._controls;
-        this._stateAdjustment = this._overviewControls._stateAdjustment;
+        this._stateAdjustment =
+            Main.overview._overview._controls._stateAdjustment;
         this._oldGetStateTransitionParams =
             this._stateAdjustment.getStateTransitionParams;
         this._progress = 0;
