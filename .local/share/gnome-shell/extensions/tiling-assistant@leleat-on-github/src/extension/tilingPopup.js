@@ -1,11 +1,15 @@
-import { Clutter, GObject, Meta, St } from '../dependencies/gi.js';
+import { Clutter, GObject, St } from '../dependencies/gi.js';
 import { Main } from '../dependencies/shell.js';
-import * as SwitcherPopup from '../dependencies/unexported/switcherPopup.js';
+import * as SwitcherPopup49 from '../dependencies/unexported/switcherPopup.js';
+import * as SwitcherPopup48 from '../dependencies/unexported/switcherPopup-48.js';
 
 import { Direction, Orientation } from '../common.js';
 import { Util } from './utility.js';
 import { TilingWindowManager as Twm } from './tilingWindowManager.js';
 import * as AltTab from './altTab.js';
+
+const [MajorShellVersion] = Util.getShellVersion();
+const SwitcherPopup = MajorShellVersion < 49 ? SwitcherPopup48 : SwitcherPopup49;
 
 /**
  * Classes for the Tiling Popup, which opens when tiling a window
@@ -52,7 +56,7 @@ export const TilingSwitcherPopup = GObject.registerClass({
 
         // Destroy popup when touching outside of popup
         this.connect('touch-event', () => {
-            if (Meta.is_wayland_compositor())
+            if (Util.is_wayland_compositor())
                 this.fadeAndDestroy();
 
             return Clutter.EVENT_PROPAGATE;
@@ -72,10 +76,13 @@ export const TilingSwitcherPopup = GObject.registerClass({
             return false;
 
         const grab = Main.pushModal(this);
-        // We expect at least a keyboard grab here
-        if ((grab.get_seat_state() & Clutter.GrabState.KEYBOARD) === 0) {
-            Main.popModal(grab);
-            return false;
+
+        if (MajorShellVersion < 50) {
+            // We expect at least a keyboard grab here
+            if ((grab.get_seat_state() & Clutter.GrabState.KEYBOARD) === 0) {
+                Main.popModal(grab);
+                return false;
+            }
         }
 
         this._grab = grab;
@@ -214,7 +221,8 @@ export const TilingSwitcherPopup = GObject.registerClass({
             return Clutter.EVENT_PROPAGATE;
         }
 
-        return super.vfunc_button_press_event(buttonEvent);
+        if (MajorShellVersion < 49)
+            return super.vfunc_button_press_event(buttonEvent);
     }
 
     _keyPressHandler(keysym) {

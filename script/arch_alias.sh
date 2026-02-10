@@ -95,6 +95,7 @@ alias vdir='vdir --color=auto'
 alias mt="cd /run/media/$USER && ls"
 
 # Directory Navigation
+alias cd="z"
 alias ..='cd ..'
 alias ...='cd ../..'
 alias ....='cd ../../..'
@@ -170,10 +171,13 @@ alias gits="git global-status"
 
 # .bash_profile
 alias gr="grepcat"
+alias def="word"
 alias jr="jctl_err"
 alias jf="jctl_live"
+alias wp="watch_port"
 alias fn="fd_dir"
 alias fdn="fdn_dir"
+alias fe="fn_file"
 alias ff="fd_file"
 alias sp="searchpkg"
 alias upd="update"

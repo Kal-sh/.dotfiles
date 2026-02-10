@@ -67,6 +67,8 @@ arch | cachyos)
     wl-clipboard
     gnome-tweaks
     tree-sitter-cli
+    zoxide
+    lazygit
     pnpm
     #glow
     vscodium

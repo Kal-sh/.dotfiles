@@ -4,13 +4,9 @@
   "name": "Touchpad Gesture Customization",
   "settings-schema": "org.gnome.shell.extensions.touchpad-gesture-customization",
   "shell-version": [
-    "45",
-    "46",
-    "47",
-    "48",
     "49"
   ],
   "url": "https://github.com/HieuTNg/touchpad-gesture-customization",
   "uuid": "touchpad-gesture-customization@coooolapps.com",
-  "version": 9
+  "version": 10
 }

@@ -10,12 +10,26 @@ grepcat() {
   grep "$1" "$2"
 }
 
+define() {
+  local word="$*"
+  curl -s "dict://dict.org/d:${word}" | grep -v '^[0-9]' | head -20
+}
+word() {
+  local word="$*"
+  curl -s "https://api.dictionaryapi.dev/api/v2/entries/en/${word}" |
+    jq -r '.[0].meanings[].definitions[].definition' 2>/dev/null
+}
+
 jctl_err() {
   journalctl -u "$1" -p err -n 5
 }
 
 jctl_live() {
   journalctl -u "$1" -f
+}
+
+watch_port() {
+  watch "ss -tnp | grep $1"
 }
 
 searchpkg() {
@@ -49,6 +63,17 @@ fdn_dir() {
 
   if [[ -n "$selected_dir" ]]; then
     xdg-open "$selected_dir"
+  fi
+}
+
+fn_file() {
+  local selected_file
+  selected_file=$(fd --type f --hidden --exclude .git | fzf-tmux -p -w 90% --reverse --preview 'ls -la --color=always {}')
+
+  if [[ -n "$selected_file" ]]; then
+    # Get the directory of the selected file
+    selected_dir=$(dirname "$selected_file")
+    cd "$selected_dir"
   fi
 }
 
