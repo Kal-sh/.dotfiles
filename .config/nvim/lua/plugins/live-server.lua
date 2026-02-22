@@ -11,14 +11,14 @@ return {
     "svelte",
   },
   config = function()
-    -- Configure live-server with custom options
     require("live-server").setup({
+      host = "0.0.0.0", -- 🔑 bind to all interfaces
       port = 5555,
-      browser = nil, -- nil uses system default browser
-      open = true, -- auto-open browser on start
+      browser = nil, -- use system default browser
+      open = true, -- try to auto open browser (but often not supported in containers)
       ignore_patterns = { "node_modules", ".git", "__pycache__" },
     })
-    -- Keybindings
+
     vim.keymap.set("n", "<leader>ps", ":LiveServerStart<CR>", { desc = "Start Live Server" })
     vim.keymap.set("n", "<leader>pc", ":LiveServerStop<CR>", { desc = "Stop Live Server" })
   end,

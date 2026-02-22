@@ -1,1 +1,9 @@
-{}
+{
+    "com.github.andresatierf.ulauncher-brave-profiles": {
+        "id": "com.github.andresatierf.ulauncher-brave-profiles",
+        "url": "https://github.com/andresatierf/ulauncher-brave-profiles",
+        "updated_at": "2026-02-19T07:12:11.072888",
+        "last_commit": "91d39b3cf5f72bb58565e53c475ea3540b3c0380",
+        "last_commit_time": "2022-12-23T13:36:49"
+    }
+}
