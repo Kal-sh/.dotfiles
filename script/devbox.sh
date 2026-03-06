@@ -17,8 +17,9 @@ PACKAGES=(
   nodejs
   fd
   fzf
+  eza
   opencode
-  pnpm
+  npm
   ripgrep
 )
 
@@ -49,7 +50,7 @@ distrobox enter "$BOX_NAME" -- bash -c "
   echo '⬇️ Installing global pnpm tools…'
   # Ensure pnpm’s global directory is created and install global tools
   pnpm setup || true
-  pnpm add -g live-server prettier
+  sudo npm install -g live-server 
 
   echo '🎉 Devbox setup finished inside container!'
 "
