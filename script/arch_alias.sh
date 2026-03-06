@@ -60,6 +60,7 @@ alias dbe="distrobox enter"
 alias dbl="distrobox list"
 alias dbs="distrobox stop"
 alias drm="distrobox rm -f"
+alias ddb="distrobox enter devbox"
 
 # Podman Containers
 alias pdps="podman ps -a"

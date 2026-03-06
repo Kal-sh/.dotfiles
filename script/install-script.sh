@@ -69,7 +69,8 @@ arch | cachyos)
     tree-sitter-cli
     zoxide
     lazygit
-    pnpm
+    distrobox
+    #pnpm
     #glow
     vscodium
   )

@@ -9,7 +9,7 @@ return {
 
     -- Auto-format on save
     vim.cmd([[
-      autocmd BufWritePre *.js,*.ts,*.jsx,*.tsx,*.css,*.html,*.json Prettier
+      autocmd BufWritePre *.js,*.ts,*.md,*.jsx,*.tsx,*.css,*.html,*.json Prettier
     ]])
 
     -- Optional: Customize Prettier settings (e.g., tab width, single quote, etc.)

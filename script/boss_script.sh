@@ -1,43 +1,71 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
-echo "🚀 Starting all scripts at $(date)..."
-
-echo "📦 Cloning git repo …"
-git clone "https://github.com/Kal-sh/.dotfiles.git" "$HOME/.dotfiles"
-
-run_script() {
-  echo "⏱️  [$(date)] ➤ Running $1…"
-  ./"$1"
-  echo "🎯 [$(date)] ✔ Finished $1."
+log() { echo "📌 $*"; }
+error() {
+  echo "❌ $*" >&2
+  exit 1
 }
 
-cd "$HOME/.dotfiles"
+DOTFILES_REPO="https://github.com/Kal-sh/.dotfiles.git"
+DOTFILES_SSH="git@github.com:Kal-sh/.dotfiles.git"
+DOTFILES_DIR="$HOME/.dotfiles"
 
-echo "📦 changing git remote to SSH"
-git remote set-url origin git@github.com:Kal-sh/.dotfiles.git
+VS_CODE_REPO="https://github.com/Kal-sh/VS-Code-.git"
+VS_CODE_SSH="git@github.com:Kal-sh/VS-Code-.git"
+VS_CODE_DIR="$HOME/Documents/Github/VS-Code-/"
 
-cd "$HOME/.dotfiles/script/"
+run_script() {
+  local script="$1"
+  log "Running $script"
+  if [[ ! -f "$script" ]]; then
+    error "$script not found!"
+  fi
+  chmod +x "$script"
+  ./"$script"
+  log "Finished $script"
+}
 
-echo "👉 Now running install-script.sh"
+# --- Clone and set SSH remote if needed
+clone_and_set_remote() {
+  local url_https="$1"
+  local url_ssh="$2"
+  local target="$3"
+
+  if [[ -d "$target/.git" ]]; then
+    log "Repo already exists at $target"
+    cd "$target"
+    current=$(git remote get-url origin)
+    if [[ "$current" != "$url_ssh" ]]; then
+      log "Updating remote origin to SSH ($url_ssh)"
+      git remote set-url origin "$url_ssh"
+    else
+      log "Remote origin already uses SSH"
+    fi
+    cd - >/dev/null
+  else
+    log "Cloning $url_https into $target"
+    git clone "$url_https" "$target"
+    cd "$target"
+    log "Switching remote to SSH"
+    git remote set-url origin "$url_ssh"
+    cd - >/dev/null
+  fi
+}
+
+log "🚀 Starting all scripts at $(date)"
+
+# Clone and configure dotfiles
+clone_and_set_remote "$DOTFILES_REPO" "$DOTFILES_SSH" "$DOTFILES_DIR"
+cd "$DOTFILES_DIR"
+
+# Run setup scripts
+cd "$DOTFILES_DIR/script" || error "Script directory not found"
 run_script install-script.sh
-
-echo "👉 Now running install-flatpaks.sh"
 run_script install-flatpaks.sh
 
-echo "👉 Now running install-script.sh"
-run_script tor_config.sh
-
-#echo "👉 Now running zsh4humans.sh (interactive - isolated terminal)"
-#script -q -c "./zsh4humans.sh" /dev/null
-#echo "🎯 zsh4humans installation complete."
-
-# —————————————
-# Alias linking + Stow (added as requested)
-# —————————————
-
-echo "📂 Setting up alias link and running stow…"
-
-# Detect distro
+# --- Distro‑specific alias linking
+log "Setting up distro aliases"
 if [[ -f /etc/os-release ]]; then
   . /etc/os-release
   DISTRO="${ID,,}"
@@ -45,77 +73,57 @@ else
   DISTRO="unknown"
 fi
 
-DOTFILES_DIR="$HOME/.dotfiles"
 ALIAS_DEST="$HOME/.aliases.sh"
-
-echo "🔍 Deploying distro-specific alias file for $DISTRO…"
 case "$DISTRO" in
-arch | cachyos)
-  ALIAS_SRC="$DOTFILES_DIR/script/arch_alias.sh"
-  ;;
-ubuntu | debian)
-  ALIAS_SRC="$DOTFILES_DIR/script/ubuntu_alias.sh"
-  ;;
-fedora)
-  ALIAS_SRC="$DOTFILES_DIR/script/fedora_alias.sh"
-  ;;
-*)
-  ALIAS_SRC=""
-  ;;
+arch | cachyos) ALIAS_SRC="$DOTFILES_DIR/script/arch_alias.sh" ;;
+ubuntu | debian) ALIAS_SRC="$DOTFILES_DIR/script/ubuntu_alias.sh" ;;
+fedora) ALIAS_SRC="$DOTFILES_DIR/script/fedora_alias.sh" ;;
+*) ALIAS_SRC="" ;;
 esac
 
 if [[ -n "$ALIAS_SRC" && -f "$ALIAS_SRC" ]]; then
-  if [[ -e "$ALIAS_DEST" || -L "$ALIAS_DEST" ]]; then
-    echo "🗑️ Removing existing file/link: $ALIAS_DEST"
-    rm -rf "$ALIAS_DEST"
-  fi
-  echo "🔗 Creating symlink: $ALIAS_DEST → $ALIAS_SRC"
+  log "Linking aliases for $DISTRO"
+  rm -f "$ALIAS_DEST"
   ln -s "$ALIAS_SRC" "$ALIAS_DEST"
 else
-  echo "⚠️  No distro-specific alias found for: $DISTRO"
+  log "No alias file found for $DISTRO"
 fi
 
-echo "🧹 Removing conflicting files in HOME before stow…"
-# Remove files that would conflict with stow
-# Only remove if they are regular files or symlinks
-files=(
-  .zshrc
-  .zshenv
-  .bashrc
-  .bash_profile
-  .p10k.zsh
+# --- Remove conflicting files safely
+log "Removing conflicting dotfiles"
+conflicts=(
+  .zshrc .zshenv .bashrc .bash_profile .p10k.zsh
   .gitconfig
   .local/share/ulauncher/extensions
   .config/VSCodium/User/keybindings.json
   .config/VSCodium/User/settings.json
 )
 
-for f in "${files[@]}"; do
-  if [[ -e "$HOME/$f" || -L "$HOME/$f" ]]; then
-    echo "🗑️  Removing ~/${f}"
-    rm -rf "$HOME/$f"
+for f in "${conflicts[@]}"; do
+  target="$HOME/$f"
+  if [[ -e "$target" || -L "$target" ]]; then
+    log "Removing $target"
+    rm -rf "$target"
   fi
 done
 
-echo "🛠️  Running stow for dotfiles…"
+# --- GNU Stow
+log "Running stow"
 cd "$DOTFILES_DIR"
-stow . --ignore='^script$' || {
-  echo "❌ Stow encountered an error!"
-  exit 1
-}
+stow . --ignore='^script$' || error "Stow failed"
 
-echo "🎉 Alias linking and stow complete!"
+# --- Devbox
+cd "$DOTFILES_DIR/script" || error
+run_script devbox.sh
 
-echo "💩 dump extensions setting into dconf"
-dconf load /org/gnome <~/.dotfiles/script/extensions.conf || echo "⚠️  dconf load failed (extensions may not be installed yet)"
+# --- GNOME dconf
+log "Applying dconf settings"
+dconf load /org/gnome <"$DOTFILES_DIR/script/extensions.conf" ||
+  log "dconf failed — maybe extensions not installed yet"
 
-echo "📦 Cloning git repo …"
-git clone "https://github.com/Kal-sh/VS-Code-.git" "$HOME/Documents/Github/VS-Code-/"
+# --- Clone VS Code config
+clone_and_set_remote "$VS_CODE_REPO" "$VS_CODE_SSH" "$VS_CODE_DIR"
+cd "$VS_CODE_DIR"
+git switch In-progress || log "Branch In-progress may not exist"
 
-echo "📦 changing git remote to SSH"
-cd ~/Documents/Github/VS-Code-/
-git remote set-url origin git@github.com:Kal-sh/VS-Code-.git
-git switch In-progress
-
-wait
-echo "🏁 All done at $(date)! 🎉"
+log "🏁 All done at $(date)! 🎉"
