@@ -47,10 +47,12 @@ distrobox enter "$BOX_NAME" -- bash -c "
   echo '📦 Installing needed packages…'
   sudo pacman -S --needed --noconfirm ${PACKAGES[*]}
 
-  echo '⬇️ Installing global pnpm tools…'
+  echo '⬇️ Installing global npm tools…'
   # Ensure pnpm’s global directory is created and install global tools
-  pnpm setup || true
-  sudo npm install -g live-server 
+  npm setup || true
+  mkdir -p ~/.npm-global
+  npm config set prefix "~/.npm-global"
+  npm install -g live-server 
 
   echo '🎉 Devbox setup finished inside container!'
 "

@@ -113,4 +113,5 @@ setopt no_auto_menu  # require an extra TAB press to open the completion menu
 #esac
 # pnpm end
 
+export PATH="$HOME/.npm-global/bin:$PATH"
 eval "$(zoxide init zsh)"

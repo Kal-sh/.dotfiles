@@ -3,6 +3,7 @@ return {
     "michaelb/sniprun",
     build = "bash ./install.sh",
 
+    -- load when editing the following file types
     ft = {
       "markdown",
       "text",
@@ -13,19 +14,8 @@ return {
 
     config = function()
       require("sniprun").setup({
-        selected_interpreters = { "Python3_fifo", "Generic" },
-
-        repl_enable = { "Python3_fifo" },
-
-        interpreter_options = {
-          Generic = {
-            NodeJS = {
-              supported_filetypes = { "javascript", "typescript" },
-              extension = ".js",
-              interpreter = "node",
-            },
-          },
-        },
+        selected_interpreters = { "Python3_fifo", "JS_TS_deno" },
+        repl_enable = { "Python3_fifo", "JS_TS_deno" },
       })
 
       vim.keymap.set("v", "<leader>rs", ":'<,'>SnipRun<CR>", { silent = true })
