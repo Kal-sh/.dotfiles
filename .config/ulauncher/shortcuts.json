@@ -96,7 +96,7 @@
         "cmd": "https://www.startpage.com/do/search?q=%s",
         "icon": "~/Pictures/Wallpapers/PNG/startpage-512px.png",
         "is_default_search": true,
-        "run_without_argument": true,
+        "run_without_argument": false,
         "added": 1765669305.7471666
     },
     "31b97227-dc8b-432b-9f18-aa71ea67f56c": {
@@ -108,5 +108,25 @@
         "is_default_search": true,
         "run_without_argument": false,
         "added": 1769620345.376554
+    },
+    "55e5f98e-058f-44f0-ac3c-4d2cf4c77098": {
+        "id": "55e5f98e-058f-44f0-ac3c-4d2cf4c77098",
+        "name": "Z-Library",
+        "keyword": "z",
+        "cmd": "https://z-library.sk/s/?q=%s",
+        "icon": "~/Pictures/Wallpapers/PNG/icons8-library-80.png",
+        "is_default_search": false,
+        "run_without_argument": false,
+        "added": 1772999310.6648457
+    },
+    "7a33799d-f201-4a83-a22d-2ac4d4b47d52": {
+        "id": "7a33799d-f201-4a83-a22d-2ac4d4b47d52",
+        "name": "Raindrop",
+        "keyword": "r",
+        "cmd": "https://app.raindrop.io/my/0/%s",
+        "icon": "~/Pictures/Wallpapers/PNG/favicon.fe6ac9867aba81553efdf895dbc1f770.ico",
+        "is_default_search": false,
+        "run_without_argument": false,
+        "added": 1772999545.7230692
     }
 }

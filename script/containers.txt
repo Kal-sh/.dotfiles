@@ -1,0 +1,15 @@
+Deemix - deezer music downloader
+
+podman run -d --name Deemix \                                                                                              
+  -v ~/Downloads/new:/downloads \
+  -v ~/Downloads/new:/config \
+  -p 6595:6595 \
+  ghcr.io/bambanah/deemix:latest
+
+mysql container
+
+podman run -d --name mysql-local -e MYSQL_ROOT_PASSWORD=1234 -p 3306:3306 docker.io/library/mysql:latest
+
+postgres container
+
+podman run -d --name postgres-local -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=1234 -p 5432:5432 docker.io/library/postgres:latest
