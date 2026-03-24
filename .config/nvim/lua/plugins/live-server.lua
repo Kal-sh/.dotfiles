@@ -1,6 +1,6 @@
 return {
   "barrett-ruth/live-server.nvim",
-  build = "pnpm install -g live-server",
+  build = "npm install -g live-server",
   cmd = { "LiveServerStart", "LiveServerStop" },
   ft = {
     "html",
@@ -22,6 +22,6 @@ return {
     }
 
     vim.keymap.set("n", "<leader>ps", ":LiveServerStart<CR>", { desc = "Start Live Server" })
-    vim.keymap.set("n", "<leader>pc", ":LiveServerStop<CR>", { desc = "Stop Live Server" })
+    vim.keymap.set("n", "<leader>pz", ":LiveServerStop<CR>", { desc = "Stop Live Server" })
   end,
 }

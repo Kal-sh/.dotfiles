@@ -1,8 +1,8 @@
 Deemix - deezer music downloader
 
 podman run -d --name Deemix \                                                                                              
-  -v ~/Downloads/new:/downloads \
-  -v ~/Downloads/new:/config \
+  -v ~/Downloads/Deemix:/downloads \
+  -v ~/Downloads/Deemix:/config \
   -p 6595:6595 \
   ghcr.io/bambanah/deemix:latest
 
