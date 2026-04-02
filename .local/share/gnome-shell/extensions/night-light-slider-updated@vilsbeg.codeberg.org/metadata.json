@@ -4,9 +4,10 @@
   "name": "Night Light Slider Updated",
   "settings-schema": "org.gnome.shell.extensions.nightlightsliderupdated",
   "shell-version": [
-    "49"
+    "49",
+    "50"
   ],
   "url": "https://codeberg.org/vilsbeg/night-light-slider-updated",
   "uuid": "night-light-slider-updated@vilsbeg.codeberg.org",
-  "version": 15
+  "version": 16
 }

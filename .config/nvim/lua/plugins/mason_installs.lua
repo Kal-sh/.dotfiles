@@ -3,8 +3,9 @@ return {
     "mason-org/mason.nvim",
     opts = {
       ensure_installed = {
-        "python-lsp-server",
         "deno",
+        "python-lsp-server",
+        "typescript-language-server",
       },
     },
   },

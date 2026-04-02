@@ -10,6 +10,7 @@ import * as VKeyboard from './src/utils/keyboard.js';
 import { SnapWindowExtension } from './src/snapWidnow.js';
 import { ShowDesktopExtension } from './src/pinchGestures/showDesktop.js';
 import { CloseWindowExtension } from './src/pinchGestures/closeWindow.js';
+import { ShowNotificationListExtension } from './src/pinchGestures/showNotificationList.js';
 import { VolumeControlGestureExtension } from './src/volumeControl.js';
 import { BrightnessControlGestureExtension } from './src/brightnessControl.js';
 
@@ -153,6 +154,11 @@ export default class TouchpadGestureCustomization extends Extension {
         if (closeDocumentFingers?.length)
             this._extensions.push(new CloseWindowExtension(closeDocumentFingers, PinchGestureType.CLOSE_DOCUMENT));
 
+        // pinch to show notification list
+        const showNotificationListFingers = pinchToFingersMap.get(PinchGestureType.SHOW_NOTIFICATION_LIST);
+        if (showNotificationListFingers?.length)
+            this._extensions.push(new ShowNotificationListExtension(showNotificationListFingers));
+
         // TODO: consider having an option for 'hold and swipe gestures' that can either
         // be set to window tiling or app gesture (need to fix how to activate window tiling with
         // hold and swipe without being blocked by overview navigation)
@@ -279,6 +285,8 @@ export default class TouchpadGestureCustomization extends Extension {
         if (this.settings) {
             Constants.ExtSettings.ALLOW_MINIMIZE_WINDOW =
                 this.settings.get_boolean('allow-minimize-window');
+            Constants.ExtSettings.ALLOW_FULLSCREEN_WINDOW =
+                this.settings.get_boolean('allow-fullscreen-window');
             Constants.ExtSettings.FOLLOW_NATURAL_SCROLL =
                 this.settings.get_boolean('follow-natural-scroll');
             Constants.ExtSettings.DEFAULT_OVERVIEW_GESTURE_DIRECTION =
