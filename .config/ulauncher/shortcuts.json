@@ -128,5 +128,15 @@
         "is_default_search": false,
         "run_without_argument": false,
         "added": 1772999545.7230692
+    },
+    "82c4504c-1c6a-4f52-b7ea-be4f782ae70c": {
+        "id": "82c4504c-1c6a-4f52-b7ea-be4f782ae70c",
+        "name": "Kuroiru",
+        "keyword": "kk",
+        "cmd": "https://kuroiru.co/anime/explore?q=%s",
+        "icon": "~/Pictures/Wallpapers/PNG/kuroiru.png",
+        "is_default_search": false,
+        "run_without_argument": false,
+        "added": 1775510619.6107004
     }
 }
