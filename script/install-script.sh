@@ -111,15 +111,22 @@ fedora)
     git
     ufw
     stow
+    eza
+    tmux
     ttf-hack-nerd
     ghostty
     tor
     nvim
-    opencode-bin
+    opencode
+    gemini
     ncdu
     nethogs
+    wl-clipboard
     gnome-tweaks
     tree-sitter-cli
+    zoxide
+    lazygit
+    distrobox
     ulauncher
     vscodium
   )
