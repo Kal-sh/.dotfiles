@@ -28,7 +28,7 @@ ubuntu | debian)
     opencode
     ncdu
     nethogs
-    tree-sitter-cli
+    tree-sitter
     nvim
     gnome-tweaks
     ulauncher
@@ -111,6 +111,8 @@ fedora)
     git
     ufw
     stow
+    bat
+    ripgrep
     eza
     tmux
     ttf-hack-nerd
