@@ -2,7 +2,8 @@
 set -euo pipefail
 
 BOX_NAME="devbox"
-IMAGE="quay.io/toolbx/arch-toolbox:latest"
+# IMAGE="quay.io/toolbx/arch-toolbox:latest"
+IMAGE="registry.fedoraproject.org/fedora-toolbox:latest"
 
 PACKAGES=(
   curl
@@ -42,10 +43,12 @@ distrobox enter "$BOX_NAME" -- bash -c "
   set -e
 
   echo '🔄 Updating system…'
-  sudo pacman -Syu --noconfirm
+  # sudo pacman -Syu --noconfirm
+  sudo dnf upgrade -y
 
   echo '📦 Installing needed packages…'
-  sudo pacman -S --needed --noconfirm ${PACKAGES[*]}
+  # sudo pacman -S --needed --noconfirm ${PACKAGES[*]}
+  sudo dnf install -y ${PACKAGES[*]}
 
   echo '⬇️ Installing global npm tools…'
   # Ensure pnpm’s global directory is created and install global tools
