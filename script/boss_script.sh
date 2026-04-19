@@ -15,6 +15,10 @@ VS_CODE_REPO="https://github.com/Kal-sh/VS-Code-.git"
 VS_CODE_SSH="git@github.com:Kal-sh/VS-Code-.git"
 VS_CODE_DIR="$HOME/Documents/Github/VS-Code-/"
 
+PROJECT_REPO="https://github.com/Kal-sh/project.git"
+PROJECT_SSH="git@github.com:Kal-sh/project.git"
+PROJECT_DIR="$HOME/Documents/Github/project/"
+
 run_script() {
   local script="$1"
   log "Running $script"
@@ -31,6 +35,8 @@ clone_and_set_remote() {
   local url_https="$1"
   local url_ssh="$2"
   local target="$3"
+
+  mkdir -p "$(dirname "$target")"
 
   if [[ -d "$target/.git" ]]; then
     log "Repo already exists at $target"
@@ -55,16 +61,16 @@ clone_and_set_remote() {
 
 log "🚀 Starting all scripts at $(date)"
 
-# Clone and configure dotfiles
+# --- Clone and configure dotfiles
 clone_and_set_remote "$DOTFILES_REPO" "$DOTFILES_SSH" "$DOTFILES_DIR"
 cd "$DOTFILES_DIR"
 
-# Run setup scripts
+# --- Run setup scripts
 cd "$DOTFILES_DIR/script" || error "Script directory not found"
 run_script install-script.sh
 run_script install-flatpaks.sh
 
-# --- Distro‑specific alias linking
+# --- Distro-specific alias linking
 log "Setting up distro aliases"
 if [[ -f /etc/os-release ]]; then
   . /etc/os-release
@@ -107,6 +113,18 @@ for f in "${conflicts[@]}"; do
   fi
 done
 
+# --- Clone VS Code config
+clone_and_set_remote "$VS_CODE_REPO" "$VS_CODE_SSH" "$VS_CODE_DIR"
+cd "$VS_CODE_DIR"
+git switch In-progress || log "Branch In-progress may not exist"
+cd - >/dev/null
+
+# --- Clone Project repo
+clone_and_set_remote "$PROJECT_REPO" "$PROJECT_SSH" "$PROJECT_DIR"
+cd "$PROJECT_DIR"
+git switch in-progress-proj || log "Branch main may not exist"
+cd - >/dev/null
+
 # --- GNU Stow
 log "Running stow"
 cd "$DOTFILES_DIR"
@@ -120,10 +138,5 @@ run_script devbox.sh
 log "Applying dconf settings"
 dconf load /org/gnome <"$DOTFILES_DIR/script/extensions.conf" ||
   log "dconf failed — maybe extensions not installed yet"
-
-# --- Clone VS Code config
-clone_and_set_remote "$VS_CODE_REPO" "$VS_CODE_SSH" "$VS_CODE_DIR"
-cd "$VS_CODE_DIR"
-git switch In-progress || log "Branch In-progress may not exist"
 
 log "🏁 All done at $(date)! 🎉"
