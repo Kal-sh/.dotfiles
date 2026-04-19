@@ -2,7 +2,42 @@
 set -euo pipefail
 
 BOX_NAME="devbox"
-IMAGE="quay.io/toolbx/arch-toolbox:latest"
+
+# 👇 Detect OS using /etc/os-release (standard way)
+if [ -f /etc/os-release ]; then
+  . /etc/os-release
+  DISTRO=$ID
+else
+  echo "❌ Cannot detect OS"
+  exit 1
+fi
+
+echo "🧠 Detected distro: $DISTRO"
+
+# 👇 Defaults
+IMAGE=""
+UPDATE_CMD=""
+INSTALL_CMD=""
+
+case "$DISTRO" in
+arch)
+  IMAGE="quay.io/toolbx/arch-toolbox:latest"
+  UPDATE_CMD="sudo pacman -Syu --noconfirm"
+  INSTALL_CMD="sudo pacman -S --needed --noconfirm"
+  ;;
+fedora)
+  IMAGE="registry.fedoraproject.org/fedora-toolbox:latest"
+  UPDATE_CMD="sudo dnf upgrade -y"
+  INSTALL_CMD="sudo dnf install -y"
+  ;;
+*)
+  echo "⚠️ Unsupported distro: $DISTRO"
+  echo "👉 Defaulting to Fedora toolbox"
+  IMAGE="registry.fedoraproject.org/fedora-toolbox:latest"
+  UPDATE_CMD="sudo dnf upgrade -y"
+  INSTALL_CMD="sudo dnf install -y"
+  ;;
+esac
 
 PACKAGES=(
   curl
@@ -21,22 +56,17 @@ PACKAGES=(
   opencode
   npm
   ripgrep
-  ttyper
 )
 
-# 👇 apps/binaries you want exported to host
+# 👇 apps to export
 EXPORT_BINS=(
   nvim
   vim
-  git
-  node
-  npm
-  rg
-  fd
-  fzf
   eza
+  stow
+  opencode
   zoxide
-  ttyper
+  gnome-tweaks
 )
 
 echo "📦 Checking if distrobox exists..."
@@ -58,10 +88,10 @@ distrobox enter "$BOX_NAME" -- bash -c "
   set -e
 
   echo '🔄 Updating system…'
-  sudo pacman -Syu --noconfirm
+  $UPDATE_CMD
 
   echo '📦 Installing needed packages…'
-  sudo pacman -S --needed --noconfirm ${PACKAGES[*]}
+  $INSTALL_CMD ${PACKAGES[*]}
 
   echo '⬇️ Installing global npm tools…'
   npm setup || true
@@ -70,7 +100,6 @@ distrobox enter "$BOX_NAME" -- bash -c "
   npm install -g live-server 
 
   echo '📤 Exporting binaries to host…'
-
   for bin in ${EXPORT_BINS[*]}; do
     if command -v \$bin >/dev/null 2>&1; then
       echo \"➡️ Exporting \$bin\"

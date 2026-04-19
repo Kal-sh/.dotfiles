@@ -10,6 +10,7 @@ grepcat() {
   grep "$1" "$2"
 }
 
+# Defination
 define() {
   local word="$*"
   curl -s "dict://dict.org/d:${word}" | grep -v '^[0-9]' | head -20
@@ -20,6 +21,7 @@ word() {
     jq -r '.[0].meanings[].definitions[].definition' 2>/dev/null
 }
 
+# Logging
 jctl_err() {
   journalctl -u "$1" -p err -n 5
 }
@@ -32,22 +34,31 @@ watch_port() {
   watch "ss -tnp | grep $1"
 }
 
-searchpkg() {
-  echo "=== Pacman ==="
-  pacman -Ss "$1" | grep -w "$1"
-  echo "=== Paru ==="
-  paru -Ss "$1" | grep -w "$1"
+# Distrobox
+distrobox_export(){
+  distrobox-export --bin /usr/bin/"$1" --export-path ~/.local/bin
 }
 
-update() {
-  echo "=== Pacman ==="
-  sudo pacman -Syu
-  echo "=== Paru ==="
-  paru -Sua
-  echo "=== flatpak ==="
-  flatpak update
+distrobox_export_remove(){
+  distrobox-export --bin /usr/bin/"$1" --delete
 }
 
+# Arch search and update
+#searchpkg() {
+#  echo "=== Pacman ==="
+#  pacman -Ss "$1" | grep -w "$1"
+#  echo "=== Paru ==="
+#  paru -Ss "$1" | grep -w "$1"
+#}
+
+#update() {
+#  echo "=== dnf ==="
+#  sudo dnf update
+#  echo "=== flatpak ==="
+#  flatpak update
+#}
+
+# File and Directory fuzzy search
 fd_dir() {
   local selected_dir
   selected_dir=$(fd --type d --hidden --exclude .git | fzf-tmux -p -w 90% --reverse --preview 'ls -la --color=always {}')

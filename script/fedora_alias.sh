@@ -3,12 +3,20 @@
 # ─────────────────────────────────────────
 
 # ─────────────────────────────────────────
+# OSTREE
+# ─────────────────────────────────────────
+alias rt="rpm-ostree"
+alias rts="rt status"
+alias rti="rt install"
+alias rtu="rt update"
+alias rtc="rt cleanup -p"
+
+# ─────────────────────────────────────────
 # DNF
 # ─────────────────────────────────────────
 alias update="sudo dnf update"
 alias s="dnf search"
 alias i="sudo dnf install"
-alias iy="sudo dnf install"
 alias rmi="sudo dnf remove"
 alias cc="sudo dnf clean all"
 alias cln="sudo dnf autoremove"
@@ -17,9 +25,15 @@ alias installed="dnf list installed"
 alias repo="dnf repoquery"
 alias rip="dnf history list | tail -200 | nl"
 
+# ─────────────────────────────────────────
+# PACMAN
+# ─────────────────────────────────────────
+alias pi="sudo pacman -S"
+alias prm="sudo pacman -Rns"
+
 # Package Queries
-alias big="expac -H M '%m\t%n' | sort -h | nl"
-alias rip="expac --timefmt='%Y-%m-%d %T' '%l\t%n %v' | sort | tail -200 | nl"
+#alias big="expac -H M '%m\t%n' | sort -h | nl"
+#alias rip="expac --timefmt='%Y-%m-%d %T' '%l\t%n %v' | sort | tail -200 | nl"
 
 # ─────────────────────────────────────────
 # SYSTEM & SERVICES
@@ -120,7 +134,7 @@ alias tta="tmux a -t"
 # ─────────────────────────────────────────
 
 # System Monitors & Tools
-alias bp="bpytop"
+alias bp="btop"
 alias nc="ncdu"
 alias psmem='ps auxf | sort -nr -k 4'
 alias psmem10='ps auxf | sort -nr -k 4 | head -10'
@@ -170,6 +184,8 @@ alias def="word"
 alias jr="jctl_err"
 alias jf="jctl_live"
 alias wp="watch_port"
+alias dx="distrobox_export"
+alias dxr="distrobox_export_remove"
 alias fn="fd_dir"
 alias fdn="fdn_dir"
 alias fe="fn_file"
@@ -194,6 +210,7 @@ setopt correct
 # Shell
 alias q="exit"
 alias cl="clear"
+alias ty="ttyper"
 
 # Source reload
 alias sr='
