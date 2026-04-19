@@ -35,11 +35,11 @@ watch_port() {
 }
 
 # Distrobox
-distrobox_export(){
+distrobox_export() {
   distrobox-export --bin /usr/bin/"$1" --export-path ~/.local/bin
 }
 
-distrobox_export_remove(){
+distrobox_export_remove() {
   distrobox-export --bin /usr/bin/"$1" --delete
 }
 
@@ -52,8 +52,10 @@ distrobox_export_remove(){
 #}
 
 #update() {
-#  echo "=== dnf ==="
-#  sudo dnf update
+#  echo "=== Pacman ==="
+#  sudo pacman -Syu
+#  echo "=== Paru ==="
+#  paru -Sua
 #  echo "=== flatpak ==="
 #  flatpak update
 #}
