@@ -4,57 +4,27 @@
 
 import GObject from 'gi://GObject';
 import Gio from 'gi://Gio';
-import Adw from 'gi://Adw';
+import Gdk from 'gi://Gdk';
+import Gtk from 'gi://Gtk';
 
-import { AnimationWidget } from './animation.js';
-import { BehaviorWidget } from './behavior.js';
-import { ColorsWidget } from './colors.js';
-import { CommandWidget } from './command.js';
-import { CompatibilityWidget } from './compatibility.js';
-import { PanelIconWidget } from './panelicon.js';
-import { PositionSizeWidget } from './positionsize.js';
-import { ScrollingWidget } from './scrolling.js';
-import { ShortcutsWidget } from './shortcuts.js';
-import { TabsWidget } from './tabs.js';
-import { TextWidget } from './text.js';
+import { AnimationGroup } from './animation.js';
+import { BehaviorGroup } from './behavior.js';
+import { ColorsGroup } from './colors.js';
+import { CommandGroup } from './command.js';
+import { CompatibilityGroup } from './compatibility.js';
+import { PanelIconGroup } from './panelicon.js';
+import { PositionSizeGroup } from './positionsize.js';
+import { ScrollingGroup } from './scrolling.js';
+import { GlobalShortcutGroup, ApplicationShortcutGroup, ResetShortcutsGroup } from './shortcuts.js';
+import { TabsGroup } from './tabs.js';
+import { TextGroup } from './text.js';
+import { PreferencesPage } from './util.js';
+import { DisplayConfig } from '../util/displayconfig.js';
 
-const Page = GObject.registerClass({
-    Properties: {
-        'settings': GObject.ParamSpec.object(
-            'settings',
-            null,
-            null,
-            GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
-            Gio.Settings
-        ),
-        'gettext-domain': GObject.ParamSpec.jsobject(
-            'gettext-domain',
-            null,
-            null,
-            GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY
-        ),
-    },
-}, class DDTermPrefsPage extends Adw.PreferencesPage {
-    add_widget(widget_type, extra_properties = {}) {
-        const widget = new widget_type({
-            settings: this.settings,
-            gettext_domain: this.gettext_domain,
-            ...extra_properties,
-        });
+class WindowPage extends PreferencesPage {
+    static [GObject.GTypeName] = 'DDTermWindowPreferencesPage';
 
-        const group = new Adw.PreferencesGroup({
-            title: widget.title,
-        });
-
-        group.add(widget);
-        this.add(group);
-
-        return widget;
-    }
-});
-
-export const WindowPage = GObject.registerClass({
-    Properties: {
+    static [GObject.properties] = {
         'monitors': GObject.ParamSpec.object(
             'monitors',
             null,
@@ -62,8 +32,12 @@ export const WindowPage = GObject.registerClass({
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
             Gio.ListModel
         ),
-    },
-}, class DDTermWindowPrefsPage extends Page {
+    };
+
+    static {
+        GObject.registerClass(this);
+    }
+
     constructor(params) {
         super({
             name: 'window',
@@ -73,18 +47,22 @@ export const WindowPage = GObject.registerClass({
 
         this.title = this.gettext_domain.gettext('Window');
 
-        this.add_widget(PositionSizeWidget, { monitors: this.monitors });
+        const { settings, gettext_domain } = this;
 
-        [
-            BehaviorWidget,
-            AnimationWidget,
-            TabsWidget,
-        ].forEach(widget_type => this.add_widget(widget_type));
+        this.add(new PositionSizeGroup({ settings, gettext_domain, monitors: this.monitors }));
+        this.add(new BehaviorGroup({ settings, gettext_domain }));
+        this.add(new AnimationGroup({ settings, gettext_domain }));
+        this.add(new TabsGroup({ settings, gettext_domain }));
     }
-});
+}
 
-export const TerminalPage = GObject.registerClass({
-}, class DDTermTerminalPrefsPage extends Page {
+class TerminalPage extends PreferencesPage {
+    static [GObject.GTypeName] = 'DDTermTerminalPreferencesPage';
+
+    static {
+        GObject.registerClass(this);
+    }
+
     constructor(params) {
         super({
             name: 'terminal',
@@ -94,18 +72,30 @@ export const TerminalPage = GObject.registerClass({
 
         this.title = this.gettext_domain.gettext('Terminal');
 
-        [
-            TextWidget,
-            ColorsWidget,
-            CommandWidget,
-            ScrollingWidget,
-            CompatibilityWidget,
-        ].forEach(widget_type => this.add_widget(widget_type));
-    }
-});
+        const { settings, gettext_domain } = this;
 
-export const ShortcutsPage = GObject.registerClass({
-}, class DDTermShortcutsPrefsPage extends Page {
+        this.add(new TextGroup({ settings, gettext_domain }));
+        this.add(new ColorsGroup({ settings, gettext_domain }));
+        this.add(new CommandGroup({ settings, gettext_domain }));
+        this.add(new ScrollingGroup({ settings, gettext_domain }));
+        this.add(new CompatibilityGroup({ settings, gettext_domain }));
+    }
+}
+
+class ShortcutsPage extends PreferencesPage {
+    static [GObject.GTypeName] = 'DDTermShortcutsPreferencesPage';
+
+    static [GObject.signals] = {
+        'accelerator-set': {
+            param_types: [GObject.TYPE_UINT, Gdk.ModifierType],
+        },
+        'reset': {},
+    };
+
+    static {
+        GObject.registerClass(this);
+    }
+
     constructor(params) {
         super({
             name: 'shortcuts',
@@ -115,12 +105,63 @@ export const ShortcutsPage = GObject.registerClass({
 
         this.title = this.gettext_domain.gettext('Keyboard Shortcuts');
 
-        this.add_widget(ShortcutsWidget);
-    }
-});
+        const { settings, gettext_domain } = this;
 
-export const MiscPage = GObject.registerClass({
-}, class DDTermMiscPrefsPage extends Page {
+        this.#add_group(new GlobalShortcutGroup({ settings, gettext_domain }));
+        this.#add_group(new ApplicationShortcutGroup({ settings, gettext_domain }));
+
+        const reset_group = new ResetShortcutsGroup({ settings, gettext_domain });
+
+        this.connect('realize', () => {
+            const reset_handler = reset_group.connect('reset', () => {
+                this.emit('reset');
+            });
+
+            const unrealize_handler = this.connect('unrealize', () => {
+                this.disconnect(unrealize_handler);
+                reset_group.disconnect(reset_handler);
+            });
+        });
+
+        this.add(reset_group);
+    }
+
+    #add_group(group) {
+        const conflict_handler = this.connect('accelerator-set', (self, keyval, modifiers) => {
+            group.emit('accelerator-set', keyval, modifiers);
+        });
+
+        this.connect('realize', () => {
+            const accelerator_set_handler = group.connect(
+                'accelerator-set',
+                (_, keyval, modifiers) => {
+                    GObject.signal_handler_block(this, conflict_handler);
+                    this.emit('accelerator-set', keyval, modifiers);
+                    GObject.signal_handler_unblock(this, conflict_handler);
+                }
+            );
+
+            const unrealize_handler = this.connect('unrealize', () => {
+                this.disconnect(unrealize_handler);
+                group.disconnect(accelerator_set_handler);
+            });
+        });
+
+        this.connect('reset', () => {
+            group.emit('reset');
+        });
+
+        this.add(group);
+    }
+}
+
+class MiscPage extends PreferencesPage {
+    static [GObject.GTypeName] = 'DDTermMiscPreferencesPage';
+
+    static {
+        GObject.registerClass(this);
+    }
+
     constructor(params) {
         super({
             name: 'misc',
@@ -130,6 +171,37 @@ export const MiscPage = GObject.registerClass({
 
         this.title = this.gettext_domain.gettext('Miscellaneous');
 
-        this.add_widget(PanelIconWidget);
+        const { settings, gettext_domain } = this;
+
+        this.add(new PanelIconGroup({ settings, gettext_domain }));
     }
-});
+}
+
+export function fill_preferences_window(win, settings, gettext_domain, display_config = null) {
+    if (!display_config) {
+        display_config = DisplayConfig.new();
+
+        if (Gtk.get_major_version() === 3) {
+            win.connect('destroy', () => {
+                display_config.unwatch();
+            });
+        } else {
+            win.connect('close-request', () => {
+                display_config.unwatch();
+                return false;
+            });
+        }
+    }
+
+    win.add(new WindowPage({
+        settings,
+        gettext_domain,
+        monitors: display_config.create_monitor_list(),
+    }));
+
+    win.add(new TerminalPage({ settings, gettext_domain }));
+    win.add(new ShortcutsPage({ settings, gettext_domain }));
+    win.add(new MiscPage({ settings, gettext_domain }));
+
+    win.set_search_enabled(true);
+}

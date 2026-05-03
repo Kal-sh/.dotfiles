@@ -5,38 +5,42 @@ BOX_NAME="devbox"
 IMAGE="quay.io/toolbx/arch-toolbox:latest"
 
 PACKAGES=(
-  curl
-  vim
-  git
-  ttf-hack-nerd
-  neovim
-  wl-clipboard
-  tree-sitter-cli
-  zoxide
-  python
-  nodejs
   fd
-  fzf
   eza
-  opencode
+  fzf
+  git
+  vim
+  curl
+  ncdu
+  neovim
+  nodejs
   npm
-  ripgrep
+  python
   ttyper
+  zoxide
+  lazygit
+  ripgrep
+  opencode
+  tealdeer
+  wl-clipboard
+  ttf-hack-nerd
+  tree-sitter-cli
 )
 
 # 👇 apps/binaries you want exported to host
 EXPORT_BINS=(
-  nvim
-  vim
-  git
-  node
-  npm
   rg
-  fd
-  fzf
   eza
-  zoxide
+  vim
+  nvim
+  ncdu
+  stow
+  tldr
   ttyper
+  zoxide
+  lazygit
+  opencode
+  tealdeer
 )
 
 echo "📦 Checking if distrobox exists..."

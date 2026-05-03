@@ -4,9 +4,10 @@
   "name": "gTile",
   "settings-schema": "org.gnome.shell.extensions.gtile",
   "shell-version": [
-    "49"
+    "49",
+    "50"
   ],
   "url": "https://github.com/gTile",
   "uuid": "gTile@vibou",
-  "version": 64
+  "version": 65
 }

@@ -5,6 +5,7 @@ SPDX-FileCopyrightText: 2020 Aleksandr Mezin <mezin.alexander@gmail.com>
 SPDX-FileContributor: Mohammad Javad Naderi
 SPDX-FileContributor: Juan M. Cruz-Martinez
 SPDX-FileContributor: Jackson Goode
+SPDX-FileContributor: Mike Lei
 
 SPDX-License-Identifier: GPL-3.0-or-later
 -->
@@ -48,8 +49,6 @@ SPDX-License-Identifier: GPL-3.0-or-later
   </enum>
 
   <enum id="com.github.amezin.ddterm.TabPosition">
-    <value nick="left" value="0"/>
-    <value nick="right" value="1"/>
     <value nick="top" value="2"/>
     <value nick="bottom" value="3"/>
   </enum>
@@ -134,13 +133,6 @@ SPDX-License-Identifier: GPL-3.0-or-later
     <value nick="toggle-and-menu-button" value="3"/>
   </enum>
 
-  <enum id="com.github.amezin.ddterm.EllipsizeMode">
-    <value nick="none" value="0"/>
-    <value nick="start" value="1"/>
-    <value nick="middle" value="2"/>
-    <value nick="end" value="3"/>
-  </enum>
-
   <schema path="/com/github/amezin/ddterm/" id="com.github.amezin.ddterm">
     <key name="window-size" type="d">
       <default>0.6</default>
@@ -174,7 +166,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
       <default>true</default>
     </key>
     <key name="hide-when-focus-lost" type="b">
-      <default>false</default>
+      <default>true</default>
     </key>
     <key name="pointer-autohide" type="b">
       <default>false</default>
@@ -213,18 +205,8 @@ SPDX-License-Identifier: GPL-3.0-or-later
     <key name="tab-expand" type="b">
       <default>true</default>
     </key>
-    <key name="tab-close-buttons" type="b">
-      <default>true</default>
-    </key>
     <key name="tab-show-shortcuts" type="b">
       <default>true</default>
-    </key>
-    <key name="tab-label-width" type="d">
-      <default>0.1</default>
-      <range min="0.0" max="0.5"/>
-    </key>
-    <key name="tab-label-ellipsize-mode" enum="com.github.amezin.ddterm.EllipsizeMode">
-      <default>'none'</default>
     </key>
     <key name="new-tab-button" type="b">
       <default>true</default>
@@ -233,9 +215,6 @@ SPDX-License-Identifier: GPL-3.0-or-later
       <default>false</default>
     </key>
     <key name="tab-switcher-popup" type="b">
-      <default>true</default>
-    </key>
-    <key name="notebook-border" type="b">
       <default>true</default>
     </key>
     <key name="save-restore-session" type="b">
@@ -283,6 +262,9 @@ SPDX-License-Identifier: GPL-3.0-or-later
     </key>
     <key name="detect-urls-news-man" type="b">
       <default>true</default>
+    </key>
+    <key name="copy-on-selection" type="b">
+      <default>false</default>
     </key>
 
     <key name="use-theme-colors" type="b">

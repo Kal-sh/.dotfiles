@@ -75,17 +75,17 @@ function create_dbus_interface(
     );
 
     const flush_handler = window_geometry.connect('updated', () => {
-        dbus_interface.dbus.flush();
+        dbus_interface.flush();
     });
 
     rollback.push(() => {
         window_geometry.disconnect(flush_handler);
     });
 
-    dbus_interface.dbus.export(Gio.DBus.session, '/org/gnome/Shell/Extensions/ddterm');
+    dbus_interface.export();
 
     rollback.push(() => {
-        dbus_interface.dbus.unexport();
+        dbus_interface.unexport();
     });
 
     return dbus_interface;
@@ -107,6 +107,10 @@ function create_panel_icon(settings, window_matcher, app_control, icon, gettext_
 
     panel_icon.connect('open-preferences', () => {
         app_control.preferences();
+    });
+
+    panel_icon.connect('show-about-dialog', () => {
+        app_control.about();
     });
 
     window_matcher.connect('notify::current-window', () => {
@@ -197,6 +201,13 @@ function bind_keys(settings, app_control, rollback) {
     });
 }
 
+function is_wayland_compositor() {
+    if (!Meta.is_wayland_compositor)  // Removed in GNOME 50 - Wayland-only
+        return true;
+
+    return Meta.is_wayland_compositor();
+}
+
 class EnabledExtension {
     #disable_callbacks = [];
     #logger;
@@ -255,7 +266,7 @@ class EnabledExtension {
             this.service.unwatch();
         });
 
-        if (Meta.is_wayland_compositor()) {
+        if (is_wayland_compositor()) {
             this.settings.bind(
                 'force-x11-gdk-backend',
                 this.service,

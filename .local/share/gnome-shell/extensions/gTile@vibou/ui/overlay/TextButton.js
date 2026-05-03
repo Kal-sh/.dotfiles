@@ -6,7 +6,7 @@ export default GObject.registerClass({
         "active": GObject.ParamSpec.boolean("active", "Active", "Whether the button state is active", GObject.ParamFlags.READWRITE, false),
     }
 }, class extends St.Button {
-    #active;
+    _active;
     static new_themed({ theme, ...params }) {
         return this.new_styled({
             ...params,
@@ -24,15 +24,15 @@ export default GObject.registerClass({
         return instance;
     }
     set active(b) {
-        this.#active = b;
-        this.#updateState();
+        this._active = b;
+        this._updateState();
         this.notify("active");
     }
     get active() {
-        return this.#active;
+        return this._active;
     }
-    #updateState() {
-        if (this.#active) {
+    _updateState() {
+        if (this._active) {
             this.add_style_pseudo_class("activate");
         }
         else {

@@ -6,6 +6,8 @@ return {
         "deno",
         "python-lsp-server",
         "typescript-language-server",
+        "html-lsp",
+        "css-lsp",
       },
     },
   },

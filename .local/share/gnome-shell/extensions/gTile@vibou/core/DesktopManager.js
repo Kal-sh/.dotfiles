@@ -97,6 +97,7 @@ export default class {
         const gridArea = gridSize.cols * gridSize.rows, selectionArea = (Math.abs(selection.target.col - selection.anchor.col) + 1) *
             (Math.abs(selection.target.row - selection.anchor.row) + 1);
         if (this.#userPreferences.getAutoMaximize() && gridArea === selectionArea) {
+            target.move_to_monitor(monitorIdx);
             target.maximize();
         }
         else {

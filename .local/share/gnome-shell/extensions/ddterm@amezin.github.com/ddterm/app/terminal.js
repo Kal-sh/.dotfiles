@@ -1,5 +1,6 @@
 // SPDX-FileCopyrightText: 2023 Aleksandr Mezin <mezin.alexander@gmail.com>
 // SPDX-FileContributor: Jing Yen Loh
+// SPDX-FileContributor: Mike Lei
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -10,8 +11,17 @@ import Gdk from 'gi://Gdk';
 import Gtk from 'gi://Gtk';
 import Vte from 'gi://Vte';
 
+import { regex_for_match } from './regex.js';
 import { tcgetpgrp, InterpreterNotFoundError } from './tcgetpgrp.js';
-import { UrlDetect } from './urldetect.js';
+
+import {
+    REGEX_URL_AS_IS,
+    REGEX_URL_FILE,
+    REGEX_URL_HTTP,
+    REGEX_URL_VOIP,
+    REGEX_EMAIL,
+    REGEX_NEWS_MAN,
+} from './urldetect_patterns.js';
 
 export function WEXITSTATUS(status) {
     return (status & 0xff00) >> 8;
@@ -24,6 +34,29 @@ export function WTERMSIG(status) {
 export function WIFEXITED(status) {
     return WTERMSIG(status) === 0;
 }
+
+export const URL_REGEX = {
+    'detect-urls-as-is': {
+        regex: regex_for_match(REGEX_URL_AS_IS),
+    },
+    'detect-urls-file': {
+        regex: regex_for_match(REGEX_URL_FILE),
+    },
+    'detect-urls-http': {
+        regex: regex_for_match(REGEX_URL_HTTP),
+        prefix: 'http://',
+    },
+    'detect-urls-voip': {
+        regex: regex_for_match(REGEX_URL_VOIP),
+    },
+    'detect-urls-email': {
+        regex: regex_for_match(REGEX_EMAIL),
+        prefix: 'mailto:',
+    },
+    'detect-urls-news-man': {
+        regex: regex_for_match(REGEX_NEWS_MAN),
+    },
+};
 
 const PANGO_SCALE_XX_SMALL = 0.5787037037037;
 const PANGO_SCALE_X_SMALL = 0.6944444444444;
@@ -97,8 +130,10 @@ function color_pspec(name, flags) {
     );
 }
 
-export const TerminalColors = GObject.registerClass({
-    Properties: Object.fromEntries(
+export class TerminalColors extends GObject.Object {
+    static [GObject.GTypeName] = 'DDTermTerminalColors';
+
+    static [GObject.properties] = Object.fromEntries(
         [
             'foreground',
             'background',
@@ -110,8 +145,12 @@ export const TerminalColors = GObject.registerClass({
                 GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY
             ),
         ])
-    ),
-}, class DDTermTerminalColors extends GObject.Object {
+    );
+
+    static {
+        GObject.registerClass(this);
+    }
+
     get palette() {
         return PALETTE_PROPERTIES.map(prop => this[prop]);
     }
@@ -125,10 +164,12 @@ export const TerminalColors = GObject.registerClass({
             ),
         });
     }
-});
+}
 
-export const TerminalCommand = GObject.registerClass({
-    Properties: {
+export class TerminalCommand extends GObject.Object {
+    static [GObject.GTypeName] = 'DDTermTerminalCommand';
+
+    static [GObject.properties] = {
         'argv': GObject.ParamSpec.boxed(
             'argv',
             null,
@@ -164,8 +205,12 @@ export const TerminalCommand = GObject.registerClass({
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
             false
         ),
-    },
-}, class DDTermTerminalCommand extends GObject.Object {
+    };
+
+    static {
+        GObject.registerClass(this);
+    }
+
     get spawn_flags() {
         let result = GLib.SpawnFlags.DEFAULT;
 
@@ -253,10 +298,12 @@ export const TerminalCommand = GObject.registerClass({
             file_and_argv_zero: dict.lookup('file-and-argv-zero', 'b'),
         });
     }
-});
+}
 
-const TerminalBase = GObject.registerClass({
-    Properties: {
+class TerminalBase extends Vte.Terminal {
+    static [GObject.GTypeName] = 'DDTermTerminalBase';
+
+    static [GObject.properties] = {
         'colors': GObject.ParamSpec.object(
             'colors',
             null,
@@ -329,45 +376,56 @@ const TerminalBase = GObject.registerClass({
             GObject.ParamFlags.READABLE,
             true
         ),
-    },
-}, class DDTermTerminal extends Vte.Terminal {
-    _init(params) {
-        this._foreground_from_style = false;
-        this._background_from_style = false;
-        this._child_pid = 0;
-        this._clicked_filename = null;
-        this._clicked_hyperlink = null;
+        'has-selection': GObject.ParamSpec.boolean(
+            'has-selection',
+            null,
+            null,
+            GObject.ParamFlags.READABLE,
+            false
+        ),
+        'copy-on-selection': GObject.ParamSpec.boolean(
+            'copy-on-selection',
+            null,
+            null,
+            GObject.ParamFlags.READWRITE | GObject.ParamFlags.EXPLICIT_NOTIFY,
+            false
+        ),
+    };
 
-        super._init(params);
+    static [GObject.signals] = {
+        'open-hyperlink': {
+            param_types: [String],
+        },
+    };
+
+    static {
+        GObject.registerClass(this);
+    }
+
+    #child_pid = 0;
+    #has_selection = false;
+    #clicked_filename = null;
+    #clicked_hyperlink = null;
+    #url_prefix;
+    #gdk_atom_primary = null;
+    #foreground_from_style = false;
+    #background_from_style = false;
+    #gesture_single = null;
+
+    constructor(params) {
+        super(params);
 
         this.connect('child-exited', () => {
-            this._child_pid = 0;
+            this.#child_pid = 0;
             this.notify('child-pid');
         });
 
-        this._url_detect = new UrlDetect({
-            terminal: this,
-            enabled_patterns: this.url_detect_patterns,
-        });
-
-        this.bind_property(
-            'url-detect-patterns',
-            this._url_detect,
-            'enabled-patterns',
-            GObject.BindingFlags.DEFAULT
-        );
-
-        this.connect(
-            'button-press-event',
-            this._update_clicked_hyperlink.bind(this)
-        );
-
         this.connect('notify::background-opacity', () => {
-            if (this._background_from_style)
+            if (this.#background_from_style)
                 this.set_color_background(null);
         });
 
-        if (this._background_from_style)
+        if (this.#background_from_style)
             this.set_color_background(null);
 
         this.connect('notify::font-scale', () => {
@@ -375,11 +433,50 @@ const TerminalBase = GObject.registerClass({
             this.notify('can-decrease-font-scale');
         });
 
-        this._gdk_atom_primary = Gdk.Atom.intern('PRIMARY', true);
+        this.connect('selection-changed', () => {
+            const has_selection = this.get_has_selection();
+
+            if (has_selection && this.copy_on_selection)
+                this.copy_clipboard_format(Vte.Format.TEXT);
+
+            if (this.#has_selection !== has_selection) {
+                this.#has_selection = has_selection;
+                this.notify('has-selection');
+            }
+        });
+
+        this.#gdk_atom_primary = Gdk.Atom.intern('PRIMARY', true);
+
+        this.#url_prefix = new Map();
+
+        this.connect('notify::url-detect-patterns', this.#setup_url_detect.bind(this));
+        this.#setup_url_detect();
+
+        this.#gesture_single = new Gtk.GestureSingle({
+            widget: this,
+            button: 0,
+            propagation_phase: Gtk.PropagationPhase.CAPTURE,
+        });
+
+        this.connect('realize', this.#realize.bind(this));
+    }
+
+    #realize() {
+        const handler =
+            this.#gesture_single.connect('begin', this.#hyperlink_click.bind(this));
+
+        const unrealize_handler = this.connect('unrealize', () => {
+            this.disconnect(unrealize_handler);
+            this.#gesture_single.disconnect(handler);
+        });
     }
 
     get child_pid() {
-        return this._child_pid;
+        return this.#child_pid;
+    }
+
+    get has_selection() {
+        return this.#has_selection;
     }
 
     set colors(value) {
@@ -387,10 +484,10 @@ const TerminalBase = GObject.registerClass({
     }
 
     set_colors(foreground, background, palette) {
-        this._foreground_from_style = foreground === null;
-        this._background_from_style = background === null;
+        this.#foreground_from_style = foreground === null;
+        this.#background_from_style = background === null;
 
-        if (this._foreground_from_style || this._background_from_style) {
+        if (this.#foreground_from_style || this.#background_from_style) {
             const style = this.get_style_context();
             const state = style.get_state();
 
@@ -407,9 +504,9 @@ const TerminalBase = GObject.registerClass({
     }
 
     set_color_foreground(value) {
-        this._foreground_from_style = value === null;
+        this.#foreground_from_style = value === null;
 
-        if (this._foreground_from_style) {
+        if (this.#foreground_from_style) {
             const style = this.get_style_context();
             const state = style.get_state();
 
@@ -424,9 +521,9 @@ const TerminalBase = GObject.registerClass({
     }
 
     set_color_background(value) {
-        this._background_from_style = value === null;
+        this.#background_from_style = value === null;
 
-        if (this._background_from_style) {
+        if (this.#background_from_style) {
             const style = this.get_style_context();
             const state = style.get_state();
 
@@ -441,16 +538,16 @@ const TerminalBase = GObject.registerClass({
         // VTE bug? https://github.com/ddterm/gnome-shell-extension-ddterm/issues/674
         this.set_font(this.get_font());
 
-        if (!this._foreground_from_style && !this._background_from_style)
+        if (!this.#foreground_from_style && !this.#background_from_style)
             return;
 
         const style = this.get_style_context();
         const state = style.get_state();
 
-        if (this._foreground_from_style)
+        if (this.#foreground_from_style)
             super.set_color_foreground(style.get_property('color', state));
 
-        if (this._background_from_style) {
+        if (this.#background_from_style) {
             const value = style.get_property('background-color', state);
             value.alpha = this.background_opacity;
             super.set_color_background(value);
@@ -533,7 +630,7 @@ const TerminalBase = GObject.registerClass({
     watch_child(pid) {
         super.watch_child(pid);
 
-        this._child_pid = pid;
+        this.#child_pid = pid;
         this.notify('child-pid');
     }
 
@@ -558,7 +655,7 @@ const TerminalBase = GObject.registerClass({
 
             if (!destroyed) {
                 this.disconnect(destroy_handler);
-                this._child_pid = pid;
+                this.#child_pid = pid;
                 this.notify('child-pid');
             }
 
@@ -601,24 +698,37 @@ const TerminalBase = GObject.registerClass({
     }
 
     get last_clicked_hyperlink() {
-        return this._clicked_hyperlink;
+        return this.#clicked_hyperlink;
     }
 
     get last_clicked_filename() {
-        return this._clicked_filename;
+        return this.#clicked_filename;
     }
 
-    _update_clicked_hyperlink(terminal_, event) {
+    #hyperlink_click(gesture, sequence) {
+        const event = gesture.get_last_event(sequence);
+        const [, state] = event.get_state();
+
         let clicked_hyperlink = this.hyperlink_check_event(event);
 
-        if (!clicked_hyperlink && this._url_detect)
-            clicked_hyperlink = this._url_detect.check_event(event);
+        if (!clicked_hyperlink) {
+            const [url, tag] = this.match_check_event(event);
+
+            if (url && tag !== null && this.#url_prefix.has(tag)) {
+                const prefix = this.#url_prefix.get(tag);
+
+                if (prefix && !url.toLowerCase().startsWith(prefix))
+                    clicked_hyperlink = prefix + url;
+                else
+                    clicked_hyperlink = url;
+            }
+        }
 
         let clicked_filename = null;
 
         if (clicked_hyperlink) {
             try {
-                clicked_filename = GLib.filename_from_uri(clicked_hyperlink)[0];
+                [clicked_filename] = GLib.filename_from_uri(clicked_hyperlink);
             } catch {
             }
         }
@@ -626,17 +736,47 @@ const TerminalBase = GObject.registerClass({
         this.freeze_notify();
 
         try {
-            if (this._clicked_hyperlink !== clicked_hyperlink) {
-                this._clicked_hyperlink = clicked_hyperlink;
+            if (this.#clicked_hyperlink !== clicked_hyperlink) {
+                this.#clicked_hyperlink = clicked_hyperlink;
                 this.notify('last-clicked-hyperlink');
             }
 
-            if (this._clicked_filename !== clicked_filename) {
-                this._clicked_filename = clicked_filename;
+            if (this.#clicked_filename !== clicked_filename) {
+                this.#clicked_filename = clicked_filename;
                 this.notify('last-clicked-filename');
             }
         } finally {
             this.thaw_notify();
+        }
+
+        if (clicked_hyperlink &&
+            (state & Gdk.ModifierType.CONTROL_MASK) &&
+            [Gdk.BUTTON_PRIMARY, Gdk.BUTTON_MIDDLE].includes(gesture.get_current_button())
+        ) {
+            gesture.set_state(Gtk.EventSequenceState.CLAIMED);
+            gesture.reset();
+
+            this.emit('open-hyperlink', clicked_hyperlink);
+
+            return;
+        }
+
+        gesture.set_state(Gtk.EventSequenceState.DENIED);
+    }
+
+    #setup_url_detect() {
+        for (const tag of this.#url_prefix.keys())
+            this.match_remove(tag);
+
+        this.#url_prefix.clear();
+
+        for (const [key, { regex, prefix }] of Object.entries(URL_REGEX)) {
+            if (!this.url_detect_patterns?.includes(key))
+                continue;
+
+            const tag = this.match_add_regex(regex, 0);
+            this.match_set_cursor_name(tag, 'pointer');
+            this.#url_prefix.set(tag, prefix);
         }
     }
 
@@ -647,7 +787,7 @@ const TerminalBase = GObject.registerClass({
         if (!this.get_has_selection())
             return Promise.resolve('');
 
-        const primary_selection = this.get_clipboard(this._gdk_atom_primary);
+        const primary_selection = this.get_clipboard(this.#gdk_atom_primary);
         this.copy_primary();
 
         return new Promise(resolve => {
@@ -675,78 +815,12 @@ const TerminalBase = GObject.registerClass({
 
         return null;
     }
-});
+}
 
-const HAS_CONTEXT_MENU = GObject.Object.find_property.call(Vte.Terminal, 'context-menu-model');
+const TerminalTermprop = 'PropertyId' in Vte ? class extends TerminalBase {
+    static [GObject.GTypeName] = 'DDTermTerminalTermprop';
 
-const TerminalContextMenu = HAS_CONTEXT_MENU ? null : GObject.registerClass({
-    Properties: {
-        'context-menu-model': GObject.ParamSpec.object(
-            'context-menu-model',
-            null,
-            null,
-            GObject.ParamFlags.READWRITE | GObject.ParamFlags.EXPLICIT_NOTIFY,
-            Gio.MenuModel
-        ),
-    },
-}, class DDTermTerminalContextMenu extends TerminalBase {
-    _init(params) {
-        super._init(params);
-
-        this.connect('button-press-event', this._button_press_early.bind(this));
-        this.connect_after('button-press-event', this._button_press_late.bind(this));
-        this.connect('popup-menu', this._popup_menu.bind(this));
-    }
-
-    _create_context_menu() {
-        let menu = Gtk.Menu.new_from_model(this.context_menu_model);
-
-        menu.__heapgraph_name = 'DDTermTerminalContextMenuContextMenu';
-        // https://github.com/ddterm/gnome-shell-extension-ddterm/issues/116
-        menu.get_style_context().add_class(Gtk.STYLE_CLASS_CONTEXT_MENU);
-        menu.attach_to_widget(this, (widget, m) => m.destroy());
-        menu.connect('selection-done', m => m.detach());
-
-        return menu;
-    }
-
-    _button_press_early(terminal, event) {
-        if (!event.triggers_context_menu())
-            return false;
-
-        const state = event.get_state()[1];
-
-        if (!(state & Gdk.ModifierType.SHIFT_MASK))
-            return false;
-
-        if (state & (Gdk.ModifierType.CONTROL_MASK | Gdk.ModifierType.MOD1_MASK))
-            return false;
-
-        this._create_context_menu().popup_at_pointer(event);
-
-        return true;
-    }
-
-    _button_press_late(terminal, event) {
-        if (!event.triggers_context_menu())
-            return false;
-
-        this._create_context_menu().popup_at_pointer(event);
-
-        return true;
-    }
-
-    _popup_menu() {
-        const menu = this._create_context_menu();
-
-        menu.popup_at_widget(this, Gdk.Gravity.SOUTH, Gdk.Gravity.SOUTH, null);
-
-        return true;
-    }
-});
-
-const TerminalTermprop = 'PropertyId' in Vte ? GObject.registerClass({
-    Properties: {
+    static [GObject.properties] = {
         'window-title': GObject.ParamSpec.string(
             'window-title',
             null,
@@ -768,10 +842,14 @@ const TerminalTermprop = 'PropertyId' in Vte ? GObject.registerClass({
             GObject.ParamFlags.READABLE,
             ''
         ),
-    },
-}, class DDTermTerminalTermprop extends TerminalBase {
-    _init(params) {
-        super._init(params);
+    };
+
+    static {
+        GObject.registerClass(this);
+    }
+
+    constructor(params) {
+        super(params);
 
         this.connect(`termprop-changed::${Vte.TERMPROP_XTERM_TITLE}`, () => {
             this.notify('window-title');
@@ -799,6 +877,12 @@ const TerminalTermprop = 'PropertyId' in Vte ? GObject.registerClass({
     get current_file_uri() {
         return this.ref_termprop_uri_by_id(Vte.PropertyId.CURRENT_FILE_URI)?.to_string() ?? '';
     }
-}) : null;
+} : null;
 
-export const Terminal = TerminalTermprop ?? TerminalContextMenu ?? TerminalBase;
+export class Terminal extends (TerminalTermprop ?? TerminalBase) {
+    static [GObject.GTypeName] = 'DDTermTerminal';
+
+    static {
+        GObject.registerClass(this);
+    }
+}

@@ -8,7 +8,6 @@
   "name": "Quick Settings Tweaks",
   "settings-schema": "org.gnome.shell.extensions.quick-settings-tweaks",
   "shell-version": [
-    "48",
     "49"
   ],
   "url": "https://github.com/qwreey/quick-settings-tweaks",

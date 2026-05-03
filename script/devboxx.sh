@@ -3,7 +3,6 @@ set -euo pipefail
 
 BOX_NAME="devbox"
 IMAGE="quay.io/toolbx/arch-toolbox:latest"
-#IMAGE="registry.fedoraproject.org/fedora-toolbox:latest"
 
 PACKAGES=(
   curl
@@ -22,6 +21,20 @@ PACKAGES=(
   opencode
   npm
   ripgrep
+  stow
+  ttyper
+)
+
+# 👇 apps/binaries you want exported to host
+EXPORT_BINS=(
+  nvim
+  vim
+  rg
+  eza
+  stow
+  opencode
+  zoxide
+  ttyper
 )
 
 echo "📦 Checking if distrobox exists..."
@@ -43,19 +56,27 @@ distrobox enter "$BOX_NAME" -- bash -c "
   set -e
 
   echo '🔄 Updating system…'
-   sudo pacman -Syu --noconfirm
-   #sudo dnf upgrade -y
+  sudo pacman -Syu --noconfirm
 
   echo '📦 Installing needed packages…'
-   sudo pacman -S --needed --noconfirm ${PACKAGES[*]}
-  # sudo dnf install -y ${PACKAGES[*]}
+  sudo pacman -S --needed --noconfirm ${PACKAGES[*]}
 
   echo '⬇️ Installing global npm tools…'
-  # Ensure pnpm’s global directory is created and install global tools
   npm setup || true
   mkdir -p ~/.npm-global
-  npm config set prefix "~/.npm-global"
+  npm config set prefix ~/.npm-global
   npm install -g live-server 
+
+  echo '📤 Exporting binaries to host…'
+
+  for bin in ${EXPORT_BINS[*]}; do
+    if command -v \$bin >/dev/null 2>&1; then
+      echo \"➡️ Exporting \$bin\"
+      distrobox-export --bin \$(command -v \$bin) --export-path ~/.local/bin
+    else
+      echo \"⚠️ Skipping \$bin (not found)\"
+    fi
+  done
 
   echo '🎉 Devbox setup finished inside container!'
 "

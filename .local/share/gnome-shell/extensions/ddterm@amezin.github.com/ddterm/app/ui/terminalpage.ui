@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+SPDX-FileCopyrightText: 2026 Aleksandr Mezin <mezin.alexander@gmail.com>
+
+SPDX-License-Identifier: GPL-3.0-or-later
+-->
+
+<interface domain="ddterm@amezin.github.com">
+  <requires lib="gtk+" version="3.24"/>
+
+  <menu id="terminal_menu">
+    <section>
+      <item>
+        <attribute name="label" translatable="yes">Open Hyperlink</attribute>
+        <attribute name="action">terminal.open-hyperlink</attribute>
+        <attribute name="hidden-when">action-disabled</attribute>
+      </item>
+      <item>
+        <attribute name="label" translatable="yes">Copy Hyperlink Address</attribute>
+        <attribute name="action">terminal.copy-hyperlink</attribute>
+        <attribute name="hidden-when">action-disabled</attribute>
+      </item>
+      <item>
+        <attribute name="label" translatable="yes">Copy File Path</attribute>
+        <attribute name="action">terminal.copy-filename</attribute>
+        <attribute name="hidden-when">action-disabled</attribute>
+      </item>
+    </section>
+    <section>
+      <item>
+        <attribute name="label" translatable="yes">Copy</attribute>
+        <attribute name="action">terminal.copy</attribute>
+      </item>
+      <item>
+        <attribute name="label" translatable="yes">Copy HTML</attribute>
+        <attribute name="action">terminal.copy-html</attribute>
+      </item>
+      <item>
+        <attribute name="label" translatable="yes">Paste</attribute>
+        <attribute name="action">terminal.paste</attribute>
+      </item>
+      <item>
+        <attribute name="label" translatable="yes">Select All</attribute>
+        <attribute name="action">terminal.select-all</attribute>
+      </item>
+    </section>
+    <section>
+      <item>
+        <attribute name="label" translatable="yes">Find</attribute>
+        <attribute name="action">terminal.find</attribute>
+      </item>
+    </section>
+    <section>
+      <item>
+        <attribute name="label" translatable="yes">Reset</attribute>
+        <attribute name="action">terminal.reset</attribute>
+      </item>
+      <item>
+        <attribute name="label" translatable="yes">Reset and Clear</attribute>
+        <attribute name="action">terminal.reset-and-clear</attribute>
+      </item>
+    </section>
+    <section>
+      <submenu>
+        <attribute name="label" translatable="yes">Zoom</attribute>
+        <item>
+          <attribute name="label" translatable="yes">Zoom In</attribute>
+          <attribute name="action">terminal.font-scale-increase</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">Zoom Out</attribute>
+          <attribute name="action">terminal.font-scale-decrease</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">Normal Size</attribute>
+          <attribute name="action">terminal.font-scale-reset</attribute>
+        </item>
+      </submenu>
+    </section>
+    <section>
+      <item>
+        <attribute name="label" translatable="yes">Show in File Manager</attribute>
+        <attribute name="action">terminal.show-in-file-manager</attribute>
+      </item>
+    </section>
+    <section>
+      <submenu>
+        <attribute name="label" translatable="yes">New Tab</attribute>
+        <item>
+          <attribute name="label" translatable="yes">New Tab Before Current Tab</attribute>
+          <attribute name="action">notebook.new-tab-before-current</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">New Tab After Current Tab</attribute>
+          <attribute name="action">notebook.new-tab-after-current</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">New Tab Before First Tab</attribute>
+          <attribute name="action">notebook.new-tab-front</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">New Tab After Last Tab</attribute>
+          <attribute name="action">notebook.new-tab</attribute>
+        </item>
+      </submenu>
+    </section>
+    <section>
+      <submenu>
+        <attribute name="label" translatable="yes">Layout</attribute>
+        <section>
+          <item>
+            <attribute name="label" translatable="yes">No Split</attribute>
+            <attribute name="action">page.split-layout</attribute>
+            <attribute name="target">no-split</attribute>
+          </item>
+          <item>
+            <attribute name="label" translatable="yes">Split Horizontally</attribute>
+            <attribute name="action">page.split-layout</attribute>
+            <attribute name="target">horizontal-split</attribute>
+          </item>
+          <item>
+            <attribute name="label" translatable="yes">Split Vertically</attribute>
+            <attribute name="action">page.split-layout</attribute>
+            <attribute name="target">vertical-split</attribute>
+          </item>
+        </section>
+        <section>
+          <item>
+            <attribute name="label" translatable="yes">Move Tab to Other Pane</attribute>
+            <attribute name="action">page.move-to-other-pane</attribute>
+          </item>
+        </section>
+      </submenu>
+    </section>
+    <submenu>
+      <attribute name="label" translatable="yes">Preferences</attribute>
+      <section>
+        <item>
+          <attribute name="label" translatable="yes">Preferences…</attribute>
+          <attribute name="action">app.preferences</attribute>
+        </item>
+      </section>
+      <section>
+        <item>
+          <attribute name="label" translatable="yes">Above All Windows</attribute>
+          <attribute name="action">app.window-above</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">On All Workspaces</attribute>
+          <attribute name="action">app.window-stick</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">Maximize Window</attribute>
+          <attribute name="action">app.window-maximize</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">Transparent Background</attribute>
+          <attribute name="action">app.transparent-background</attribute>
+        </item>
+      </section>
+      <section>
+        <item>
+          <attribute name="label" translatable="yes">Hide When Application Loses Focus</attribute>
+          <attribute name="action">app.hide-when-focus-lost</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">Hide When Esc Key Is Pressed</attribute>
+          <attribute name="action">app.hide-window-on-esc</attribute>
+        </item>
+      </section>
+      <section>
+        <item>
+          <attribute name="label" translatable="yes">Scroll On Output</attribute>
+          <attribute name="action">app.scroll-on-output</attribute>
+        </item>
+        <item>
+          <attribute name="label" translatable="yes">Scroll On Keystroke</attribute>
+          <attribute name="action">app.scroll-on-keystroke</attribute>
+        </item>
+      </section>
+      <section>
+        <item>
+          <attribute name="label" translatable="yes">Preserve Working Directory In New Tabs</attribute>
+          <attribute name="action">app.preserve-working-directory</attribute>
+        </item>
+      </section>
+      <section>
+        <item>
+          <attribute name="label" translatable="yes">Enable Keyboard Shortcuts</attribute>
+          <attribute name="action">app.shortcuts-enabled</attribute>
+        </item>
+      </section>
+    </submenu>
+    <section>
+      <item>
+        <attribute name="label" translatable="yes">Keep Open After Exit</attribute>
+        <attribute name="action">page.keep-open-after-exit</attribute>
+      </item>
+      <item>
+        <attribute name="label" translatable="yes">Close</attribute>
+        <attribute name="action">page.close</attribute>
+      </item>
+    </section>
+    <section>
+      <item>
+        <attribute name="label" translatable="yes">About ddterm</attribute>
+        <attribute name="action">app.about</attribute>
+      </item>
+    </section>
+  </menu>
+
+  <object id="vadjustment" class="GtkAdjustment"/>
+
+  <template class="DDTermTerminalPage" parent="GtkBox">
+    <property name="orientation">vertical</property>
+    <child>
+      <object class="GtkInfoBar" id="banner">
+        <property name="visible">True</property>
+        <property name="revealed" bind-source="DDTermTerminalPage" bind-property="banner-visible" bind-flags="sync-create|bidirectional"/>
+        <property name="message-type" bind-source="DDTermTerminalPage" bind-property="banner-type" bind-flags="sync-create|bidirectional"/>
+        <signal name="response" handler="_banner_response"/>
+        <child internal-child="content_area">
+          <object class="GtkBox">
+            <child>
+              <object class="GtkLabel" id="banner_label">
+                <property name="visible">True</property>
+                <property name="label" bind-source="DDTermTerminalPage" bind-property="banner-label" bind-flags="sync-create|bidirectional"/>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child internal-child="action_area">
+          <object class="GtkBox">
+            <child>
+              <object class="GtkButton" id="restart_button">
+                <property name="label" translatable="yes">Restart</property>
+                <property name="visible">True</property>
+                <property name="can-default">True</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkButton" id="close_terminal_button">
+                <property name="label" translatable="yes">Close Terminal</property>
+                <property name="visible">True</property>
+                <property name="can-default">True</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <action-widgets>
+          <action-widget response="0">restart_button</action-widget>
+          <action-widget response="1">close_terminal_button</action-widget>
+        </action-widgets>
+      </object>
+    </child>
+    <child>
+      <object class="GtkBox" id="terminal_with_scrollbar">
+        <property name="visible">True</property>
+        <property name="orientation">horizontal</property>
+        <child>
+          <object class="DDTermTerminal" id="terminal">
+            <property name="visible">True</property>
+            <property name="context-menu-model">terminal_menu</property>
+            <property name="vadjustment">vadjustment</property>
+            <signal name="child-exited" handler="_child_exited" after="yes"/>
+            <signal name="open-hyperlink" handler="_open_hyperlink"/>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkScrollbar" id="scrollbar">
+            <property name="visible">True</property>
+            <property name="orientation">vertical</property>
+            <property name="adjustment">vadjustment</property>
+            <style>
+              <class name="background"/>
+            </style>
+          </object>
+        </child>
+      </object>
+      <packing>
+        <property name="expand">True</property>
+        <property name="fill">True</property>
+      </packing>
+    </child>
+    <child>
+      <object class="HdySearchBar" id="search_bar">
+        <property name="visible">True</property>
+        <property name="show_close_button">True</property>
+        <signal name="notify::search-mode-enabled" handler="vfunc_grab_focus"/>
+        <style>
+          <class name="background"/>
+        </style>
+        <child>
+          <object class="DDTermSearchWidget" id="search_widget">
+            <property name="visible">True</property>
+            <signal name="find-next" handler="_find_next"/>
+            <signal name="find-prev" handler="_find_prev"/>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+  </template>
+
+</interface>

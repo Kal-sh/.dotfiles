@@ -29,6 +29,9 @@ alias rip="dnf history list | tail -200 | nl"
 # PACMAN
 # ─────────────────────────────────────────
 alias pi="sudo pacman -S"
+alias pis="sudo pacman -Ss"
+alias piu="sudo pacman -Syu"
+alias pin="sudo pacman -Qe"
 alias prm="sudo pacman -Rns"
 
 # Package Queries
@@ -190,8 +193,8 @@ alias fn="fd_dir"
 alias fdn="fdn_dir"
 alias fe="fn_file"
 alias ff="fd_file"
-alias sp="searchpkg"
-alias upd="update"
+#alias sp="searchpkg"
+#alias upd="update"
 
 # ─────────────────────────────────────────
 # SHELL & APPLICATIONS
@@ -211,6 +214,7 @@ setopt correct
 alias q="exit"
 alias cl="clear"
 alias ty="ttyper"
+alias lg="lazygit"
 
 # Source reload
 alias sr='

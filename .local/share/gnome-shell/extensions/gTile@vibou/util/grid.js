@@ -13,8 +13,8 @@ export const AutoTileLayouts = (cfg) => {
         .map(frac => Math.round(Math.clamp(frac, 0, 1) * fractionScaleFactor))
         .map(n => [n, fractionScaleFactor - n]);
     return {
-        "main": workspaceRatios.map(([main, minor]) => new GridSpecParser(`cols(${main}, ${minor}d)`).parse()),
-        "main-inverted": workspaceRatios.map(([main, minor]) => new GridSpecParser(`cols(${minor}d, ${main})`).parse()),
+        "main": workspaceRatios.map(([main, minor]) => new GridSpecParser(`cols(${main}, ${minor}:rows(1d))`).parse()),
+        "main-inverted": workspaceRatios.map(([main, minor]) => new GridSpecParser(`cols(${minor}:rows(1d), ${main})`).parse()),
         "cols": {
             1: [new GridSpecParser(cfg.get_string("autotile-gridspec-1")).parse()],
             2: [new GridSpecParser(cfg.get_string("autotile-gridspec-2")).parse()],

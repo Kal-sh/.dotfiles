@@ -25,6 +25,7 @@ const PanelIconBase = GObject.registerClass({
     },
     Signals: {
         'open-preferences': {},
+        'show-about-dialog': {},
     },
 }, class DDTermPanelIconBase extends PanelMenu.Button {
     _init(dontCreateMenu, icon, gettext_domain) {
@@ -66,6 +67,14 @@ const PanelIconPopupMenu = GObject.registerClass({
         this.preferences_item.connect('activate', () => {
             this.emit('open-preferences');
         });
+
+        this.about_item = new PopupMenu.PopupMenuItem(
+            gettext_domain.gettext('About ddterm')
+        );
+        this.menu.addMenuItem(this.about_item);
+        this.about_item.connect('activate', () => {
+            this.emit('show-about-dialog');
+        });
     }
 
     static type_name() {
@@ -103,12 +112,10 @@ const PanelIconToggleButton = GObject.registerClass({
 
     vfunc_event(event) {
         if (event.type() === Clutter.EventType.BUTTON_PRESS ||
-            event.type() === Clutter.EventType.TOUCH_BEGIN) {
+            event.type() === Clutter.EventType.TOUCH_BEGIN)
             this.active = !this.active;
-            return Clutter.EVENT_PROPAGATE;
-        }
 
-        return super.vfunc_event(event);
+        return Clutter.EVENT_PROPAGATE;
     }
 });
 
@@ -138,17 +145,18 @@ const PanelIconToggleAndMenu = GObject.registerClass({
         return 'toggle-and-menu-button';
     }
 
-    vfunc_event(event) {
+    vfunc_captured_event(event) {
         if (event.type() === Clutter.EventType.TOUCH_BEGIN ||
             event.type() === Clutter.EventType.BUTTON_PRESS) {
             if (event.get_button() === Clutter.BUTTON_PRIMARY ||
                 event.get_button() === Clutter.BUTTON_MIDDLE) {
                 this.active = !this.active;
-                return Clutter.EVENT_PROPAGATE;
+
+                return Clutter.EVENT_STOP;
             }
         }
 
-        return super.vfunc_event(event);
+        return Clutter.EVENT_PROPAGATE;
     }
 });
 
@@ -193,6 +201,7 @@ export const PanelIconProxy = GObject.registerClass({
     },
     Signals: {
         'open-preferences': {},
+        'show-about-dialog': {},
     },
 }, class DDTermPanelIconProxy extends GObject.Object {
     _init(params) {
@@ -241,6 +250,10 @@ export const PanelIconProxy = GObject.registerClass({
 
             this.icon.connect('open-preferences', () => {
                 this.emit('open-preferences');
+            });
+
+            this.icon.connect('show-about-dialog', () => {
+                this.emit('show-about-dialog');
             });
         } finally {
             this.thaw_notify();

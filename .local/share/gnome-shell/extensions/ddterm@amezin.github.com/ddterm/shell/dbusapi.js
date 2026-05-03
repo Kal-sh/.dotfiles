@@ -72,7 +72,7 @@ export const DBusApi = GObject.registerClass({
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.EXPLICIT_NOTIFY,
             0,
             100,
-            1
+            0
         ),
     },
     Signals: {
@@ -86,10 +86,12 @@ export const DBusApi = GObject.registerClass({
         'update-target-monitor': {},
     },
 }, class DDTermDBusApi extends GObject.Object {
-    #target_rect = null;
-    #target_monitor_scale = GLib.Variant.new_double(1);
+    #target_rect;
+    #target_monitor_scale;
     #version;
     #revision;
+    #interface_info;
+    #dbus_wrapper;
 
     constructor(params) {
         super(params);
@@ -108,10 +110,23 @@ export const DBusApi = GObject.registerClass({
             )
         );
 
-        this.dbus = Gio.DBusExportedObject.wrapJSObject(
-            Shell.get_file_contents_utf8_sync(xml_file_path),
-            this
-        );
+        this.#interface_info =
+            Gio.DBusInterfaceInfo.new_for_xml(Shell.get_file_contents_utf8_sync(xml_file_path));
+    }
+
+    export() {
+        this.unexport();
+        this.#dbus_wrapper = Gio.DBusExportedObject.wrapJSObject(this.#interface_info, this);
+        this.#dbus_wrapper.export(Gio.DBus.session, '/org/gnome/Shell/Extensions/ddterm');
+    }
+
+    unexport() {
+        this.#dbus_wrapper?.unexport();
+        this.#dbus_wrapper = null;
+    }
+
+    flush() {
+        this.#dbus_wrapper?.flush();
     }
 
     ToggleAsync(params, invocation) {
@@ -157,6 +172,14 @@ export const DBusApi = GObject.registerClass({
 
     GetTargetMonitorScale() {
         this.emit('update-target-monitor');
+
+        if (!this.#target_monitor_scale) {
+            throw new Gio.DBusError({
+                code: Gio.DBusError.FAILED,
+                message: 'Target monitor cannot be calculated right now',
+            });
+        }
+
         return GLib.Variant.new_tuple([this.#target_monitor_scale]);
     }
 
@@ -167,7 +190,7 @@ export const DBusApi = GObject.registerClass({
 
     get TargetMonitorScale() {
         this.emit('update-target-monitor');
-        return this.#target_monitor_scale;
+        return this.#target_monitor_scale ?? undefined;
     }
 
     get Version() {
@@ -210,11 +233,11 @@ export const DBusApi = GObject.registerClass({
 
         this.#target_rect = value;
         this.notify('target-rect');
-        this.dbus.emit_property_changed('TargetRect', value);
+        this.#dbus_wrapper?.emit_property_changed('TargetRect', value);
     }
 
     get target_monitor_scale() {
-        return this.#target_monitor_scale.get_double();
+        return this.#target_monitor_scale?.get_double() ?? 0.0;
     }
 
     set target_monitor_scale(value) {
@@ -225,6 +248,6 @@ export const DBusApi = GObject.registerClass({
 
         this.#target_monitor_scale = value;
         this.notify('target-monitor-scale');
-        this.dbus.emit_property_changed('TargetMonitorScale', value);
+        this.#dbus_wrapper?.emit_property_changed('TargetMonitorScale', value);
     }
 });

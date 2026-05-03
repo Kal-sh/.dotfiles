@@ -8,9 +8,9 @@ import Gtk from 'gi://Gtk';
 
 import Gettext from 'gettext';
 
-import { metadata } from './meta.js';
+import { get_version, metadata } from './meta.js';
 
-const COPYRIGHT = 'Copyright © 2020-2025 ddterm contributors';
+const COPYRIGHT = 'Copyright © 2020-2026 ddterm contributors';
 const ARTIST_RE = /^\s*#\s*Artwork\s+by\s*:\s*\n[^\n]+$/igm;
 
 function load_authors() {
@@ -37,9 +37,13 @@ function fix_markup(line) {
     );
 }
 
-export const AboutDialog = GObject.registerClass({
-},
-class DDTermAboutDialog extends Gtk.AboutDialog {
+export class AboutDialog extends Gtk.AboutDialog {
+    static [GObject.GTypeName] = 'DDTermAboutDialog';
+
+    static {
+        GObject.registerClass(this);
+    }
+
     constructor(...params) {
         super(...params);
 
@@ -48,7 +52,7 @@ class DDTermAboutDialog extends Gtk.AboutDialog {
         const artists = parse_authors(text.match(ARTIST_RE)?.join('\n') ?? '');
 
         this.program_name = metadata.name;
-        this.version = this.application.get_version();
+        this.version = get_version();
         this.logo_icon_name = this.application.application_id;
         this.website = metadata.url;
         this.comments = metadata.description;
@@ -59,4 +63,4 @@ class DDTermAboutDialog extends Gtk.AboutDialog {
         this.add_credit_section(Gettext.gettext('Contributors'), authors);
         this.artists = artists;
     }
-});
+}
