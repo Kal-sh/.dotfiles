@@ -5,7 +5,7 @@
  *
  * extension.js
  *
- * Copyright (c) 2021-2025 Gianni Lerro {glerro} ~ <glerro@pm.me>
+ * Copyright (c) 2021-2026 Gianni Lerro {glerro} ~ <glerro@pm.me>
  *
  * Wifi QR Code is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by the

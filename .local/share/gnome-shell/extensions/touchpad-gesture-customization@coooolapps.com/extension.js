@@ -7,9 +7,9 @@ import { WorkspaceSwitchingExtension } from './src/workspaceSwitching.js';
 import AltTabGestureExtension from './src/altTab.js';
 import { ForwardBackGestureExtension, } from './src/forwardBack.js';
 import * as VKeyboard from './src/utils/keyboard.js';
-import { SnapWindowExtension } from './src/snapWidnow.js';
+import { SnapWindowExtension } from './src/snapWindow.js';
 import { ShowDesktopExtension } from './src/pinchGestures/showDesktop.js';
-import { CloseWindowExtension } from './src/pinchGestures/closeWindow.js';
+import { OpenCloseWindowTabExtension } from './src/pinchGestures/openCloseWindowTab.js';
 import { ShowNotificationListExtension } from './src/pinchGestures/showNotificationList.js';
 import { VolumeControlGestureExtension } from './src/volumeControl.js';
 import { BrightnessControlGestureExtension } from './src/brightnessControl.js';
@@ -73,22 +73,22 @@ export default class TouchpadGestureCustomization extends Extension {
          */
         const verticalOverviewNavigationFingers = verticalSwipeToFingersMap.get(SwipeGestureType.OVERVIEW_NAVIGATION);
         const horizontalOverviewNavigationFingers = horizontalSwipeToFingersMap.get(SwipeGestureType.OVERVIEW_NAVIGATION);
-        const overviewRoundTripGesterExtension = new OverviewRoundTripGestureExtension(this.settings.get_enum('overview-navigation-states'));
+        const overviewRoundTripGestureExtension = new OverviewRoundTripGestureExtension(this.settings.get_enum('overview-navigation-states'));
 
         // By default, disable overview navigation when user doesn't assign any gestures
-        overviewRoundTripGesterExtension.setVerticalSwipeTracker([]);
+        overviewRoundTripGestureExtension.setVerticalSwipeTracker([]);
 
         // Enable vertical swipe for overview navigation
         if (verticalOverviewNavigationFingers?.length) {
-            overviewRoundTripGesterExtension.setVerticalSwipeTracker(verticalOverviewNavigationFingers);
+            overviewRoundTripGestureExtension.setVerticalSwipeTracker(verticalOverviewNavigationFingers);
         }
 
         // Enable horizontal swipe for overview navigation
         if (horizontalOverviewNavigationFingers?.length) {
-            overviewRoundTripGesterExtension?.setHorizontalSwipeTracker(horizontalOverviewNavigationFingers);
+            overviewRoundTripGestureExtension?.setHorizontalSwipeTracker(horizontalOverviewNavigationFingers);
         }
 
-        this._extensions.push(overviewRoundTripGesterExtension);
+        this._extensions.push(overviewRoundTripGestureExtension);
 
         /**
          * Workspace navigation
@@ -104,7 +104,7 @@ export default class TouchpadGestureCustomization extends Extension {
 
         // Enable vertical swipe for workspace navigation
         if (verticalWorkspaceNavigationFingers?.length)
-            gestureExtension.setVerticalWorkspceAnimationModifier(verticalWorkspaceNavigationFingers, workspaceSwitchingState);
+            gestureExtension.setVerticalWorkspaceAnimationModifier(verticalWorkspaceNavigationFingers, workspaceSwitchingState);
 
         // Enable horizontal swipe for workspace navigation
         if (horizontalWorkspaceNavigationFingers?.length)
@@ -144,15 +144,15 @@ export default class TouchpadGestureCustomization extends Extension {
             this._extensions.push(new ShowDesktopExtension(showDesktopFingers));
         }
 
-        // pinch to close window
-        const closeWindowFingers = pinchToFingersMap.get(PinchGestureType.CLOSE_WINDOW);
-        if (closeWindowFingers?.length)
-            this._extensions.push(new CloseWindowExtension(closeWindowFingers, PinchGestureType.CLOSE_WINDOW));
+        // pinch to open/close window
+        const openCloseWindowFingers = pinchToFingersMap.get(PinchGestureType.OPEN_CLOSE_WINDOW);
+        if (openCloseWindowFingers?.length)
+            this._extensions.push(new OpenCloseWindowTabExtension(openCloseWindowFingers, PinchGestureType.OPEN_CLOSE_WINDOW));
 
-        // pinch to close document
-        const closeDocumentFingers = pinchToFingersMap.get(PinchGestureType.CLOSE_DOCUMENT);
-        if (closeDocumentFingers?.length)
-            this._extensions.push(new CloseWindowExtension(closeDocumentFingers, PinchGestureType.CLOSE_DOCUMENT));
+        // pinch to open/close document
+        const openCloseDocumentFingers = pinchToFingersMap.get(PinchGestureType.OPEN_CLOSE_DOCUMENT);
+        if (openCloseDocumentFingers?.length)
+            this._extensions.push(new OpenCloseWindowTabExtension(openCloseDocumentFingers, PinchGestureType.OPEN_CLOSE_DOCUMENT));
 
         // pinch to show notification list
         const showNotificationListFingers = pinchToFingersMap.get(PinchGestureType.SHOW_NOTIFICATION_LIST);

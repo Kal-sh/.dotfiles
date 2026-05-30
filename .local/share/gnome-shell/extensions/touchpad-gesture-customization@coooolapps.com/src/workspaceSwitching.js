@@ -150,7 +150,7 @@ export class WorkspaceSwitchingExtension {
         ];
     }
 
-    setVerticalWorkspceAnimationModifier(nfingers, workspaceSwitchingState) {
+    setVerticalWorkspaceAnimationModifier(nfingers, workspaceSwitchingState) {
         this._verticalWorkspaceAnimationModifier =
             new WorkspaceAnimationModifier(workspaceSwitchingState, nfingers, Main.wm, Clutter.Orientation.VERTICAL);
     }

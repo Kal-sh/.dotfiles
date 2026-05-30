@@ -1,5 +1,6 @@
 import Gtk from 'gi://Gtk';
 import Gio from 'gi://Gio';
+import GioUnix from 'gi://GioUnix';
 import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 import Adw from 'gi://Adw';
@@ -239,7 +240,7 @@ const AppKeybindingGesturePrefsGroup = GObject.registerClass(class GIE_AppKeybin
      * @param appId
      */
     _addAppGestureRow(appId) {
-        const app = Gio.DesktopAppInfo.new(appId);
+        const app = GioUnix.DesktopAppInfo.new(appId);
         if (!app)
             return;
         const appRow = new AppGestureSettingsRow(app, this._getAppGestureSetting(appId), // this function updates extension settings
@@ -280,7 +281,7 @@ const AppKeybindingGesturePrefsGroup = GObject.registerClass(class GIE_AppKeybin
      * @param appId
      */
     _requestRemoveAppGestureRow(appId) {
-        const app = Gio.DesktopAppInfo.new(appId);
+        const app = GioUnix.DesktopAppInfo.new(appId);
         const dialog = new Gtk.MessageDialog({
             transient_for: this._prefsWindow,
             modal: true,

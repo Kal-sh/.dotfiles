@@ -8,9 +8,10 @@
     "46",
     "47",
     "48",
-    "49"
+    "49",
+    "50"
   ],
   "url": "https://github.com/rgolangh/gnome-shell-extension-containers",
   "uuid": "containers@royg",
-  "version": 40
+  "version": 41
 }

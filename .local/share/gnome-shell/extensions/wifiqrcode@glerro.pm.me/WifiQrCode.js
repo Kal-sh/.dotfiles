@@ -5,7 +5,7 @@
  *
  * WifiQrCode.js
  *
- * Copyright (c) 2021-2025 Gianni Lerro {glerro} ~ <glerro@pm.me>
+ * Copyright (c) 2021-2026 Gianni Lerro {glerro} ~ <glerro@pm.me>
  *
  * Wifi QR Code is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by the
@@ -61,7 +61,7 @@ export class WifiQrCode {
             this._network = this._quickSettings._network;
             if (!this._network._client) {
                 // Shell not initialized completely wait for max of 100 * 1s
-                console.log(`${this._extensionName}: Gnome Shell is not inizialized`);
+                console.debug(`${this._extensionName}: Gnome Shell is not inizialized`);
                 if ((this._nAttempts += 1) < 100) {
                     this._timeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT,
                         1000, this._checkDevices.bind(this));
@@ -77,7 +77,7 @@ export class WifiQrCode {
             }
         } else {
             // Shell not initialized completely wait for max of 100 * 1s
-            console.log(`${this._extensionName}: Gnome Shell is not inizialized`);
+            console.debug(`${this._extensionName}: Gnome Shell is not inizialized`);
             if ((this._nAttempts += 1) < 100) {
                 this._timeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT,
                     1000, this._checkDevices.bind(this));
@@ -90,7 +90,7 @@ export class WifiQrCode {
             (device.get_state() === NM.DeviceState.UNMANAGED))
             return;
 
-        console.log(`${this._extensionName}: Device Added: ${device.product}`);
+        console.debug(`${this._extensionName}: Device Added: ${device.product}`);
 
         this._signalManager.addSignal(device, 'state-changed', this._stateChanged.bind(this));
 
@@ -99,11 +99,11 @@ export class WifiQrCode {
 
     _addMenu(device) {
         if (device) {
-            console.log(`${this._extensionName}: Adding menu....`);
+            console.debug(`${this._extensionName}: Adding menu....`);
 
             if (!this._network._wirelessToggle._items.get(device)) {
                 // Device item not created wait for max of 1s
-                console.log(`${this._extensionName}: Device item not ready, waiting...`);
+                console.debug(`${this._extensionName}: Device item not ready, waiting...`);
                 if (!device.timeout) {
                     device.timeout = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 1000,  () => {
                         this._addMenu(device);
@@ -160,7 +160,7 @@ export class WifiQrCode {
             (device.get_state() === NM.DeviceState.UNMANAGED))
             return;
 
-        console.log(`${this._extensionName}: Device Removed: ${device.product}`);
+        console.debug(`${this._extensionName}: Device Removed: ${device.product}`);
 
         this._signalManager.disconnectBySource(device);
 
@@ -168,7 +168,7 @@ export class WifiQrCode {
     }
 
     _removeMenu(device) {
-        console.log(`${this._extensionName}: Removing menu....`);
+        console.debug(`${this._extensionName}: Removing menu....`);
 
         if (!this._network._wirelessToggle._items.get(device))
             return;
@@ -185,7 +185,7 @@ export class WifiQrCode {
         if (device.get_device_type() !== NM.DeviceType.WIFI)
             return;
 
-        console.log(`${this._extensionName}: Device State Changed: ${device.product}`);
+        console.debug(`${this._extensionName}: Device State Changed: ${device.product}`);
 
         if (!this._network._wirelessToggle._items.get(device))
             return;

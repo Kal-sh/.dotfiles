@@ -3,8 +3,8 @@ export var PinchGestureType;
 (function (PinchGestureType) {
     PinchGestureType[PinchGestureType["NONE"] = 0] = "NONE";
     PinchGestureType[PinchGestureType["SHOW_DESKTOP"] = 1] = "SHOW_DESKTOP";
-    PinchGestureType[PinchGestureType["CLOSE_WINDOW"] = 2] = "CLOSE_WINDOW";
-    PinchGestureType[PinchGestureType["CLOSE_DOCUMENT"] = 3] = "CLOSE_DOCUMENT";
+    PinchGestureType[PinchGestureType["OPEN_CLOSE_WINDOW"] = 2] = "OPEN_CLOSE_WINDOW";
+    PinchGestureType[PinchGestureType["OPEN_CLOSE_DOCUMENT"] = 3] = "OPEN_CLOSE_DOCUMENT";
     PinchGestureType[PinchGestureType["SHOW_NOTIFICATION_LIST"] = 4] = "SHOW_NOTIFICATION_LIST";
 })(PinchGestureType || (PinchGestureType = {}));
 

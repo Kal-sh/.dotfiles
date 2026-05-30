@@ -128,8 +128,9 @@ export default class AltTabGestureExtension {
             if (nelement > 1) {
                 const n = getIndexForProgress(this._adjustment.value, nelement);
                 this._switcher._select(n);
-                const adjustment = this._switcher._switcherList._scrollView.hscroll.adjustment;
-                const transition = adjustment.get_transition('value');
+                const adjustment = this._switcher._switcherList._scrollView.hscroll
+                    ?.adjustment;
+                const transition = adjustment?.get_transition('value');
 
                 if (transition) {
                     transition.advance(AltTabConstants.POPUP_SCROLL_TIME);

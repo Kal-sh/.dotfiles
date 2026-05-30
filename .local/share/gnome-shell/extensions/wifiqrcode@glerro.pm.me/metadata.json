@@ -11,10 +11,11 @@
     "46",
     "47",
     "48",
-    "49"
+    "49",
+    "50"
   ],
   "url": "https://gitlab.gnome.org/glerro/gnome-shell-extension-wifiqrcode",
   "uuid": "wifiqrcode@glerro.pm.me",
-  "version": 18,
-  "version-name": "2.5.0"
+  "version": 20,
+  "version-name": "2.6.1"
 }

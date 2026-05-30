@@ -5,7 +5,7 @@
  *
  * QrCode.js
  *
- * Copyright (c) 2021-2025 Gianni Lerro {glerro} ~ <glerro@pm.me>
+ * Copyright (c) 2021-2026 Gianni Lerro {glerro} ~ <glerro@pm.me>
  *
  * Wifi QR Code is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by the
@@ -70,7 +70,7 @@ export const QrCodeBox = GObject.registerClass({
     }
 
     _getWifiSettingsString(device) {
-        console.log(`${this._extensionName}: Collecting Wifi Settings`);
+        console.debug(`${this._extensionName}: Collecting Wifi Settings`);
 
         // device is a NM.Device class
         let _device = device;
@@ -165,7 +165,7 @@ const QrCodeActor = GObject.registerClass({
         this._extensionName = this._extension.metadata.name;
         this._extensionPath = this._extension.path;
 
-        console.log(`${this._extensionName}: Generating Wifi QR Code`);
+        console.debug(`${this._extensionName}: Generating Wifi QR Code`);
 
         // Define local variables
         this._qrcodetext = qrcodetext;
@@ -188,7 +188,7 @@ const QrCodeActor = GObject.registerClass({
     }
 
     // Copy QR Code to the Clipboard
-    vfunc_event(event) {
+    async vfunc_event(event) {
         if (event.type() === Clutter.EventType.BUTTON_PRESS) {
             if (event.get_button() === 3) {
                 let _qrSize = this._qrcode.size;
@@ -230,51 +230,58 @@ const QrCodeActor = GObject.registerClass({
                     return;
                 }
 
-                const [bytes] = imageFile.load_bytes(null);
-                const data = bytes.get_data();
-                if (!data) {
-                    console.log(`${this._extensionName}: Error reading temp file to copy in the clipboard`);
-                    return;
-                }
+                await imageFile.load_bytes_async(null, (source, result) => {
+                    try {
+                        const [bytes] = source.load_bytes_finish(result);
 
-                bytes.unref();
+                        const data = bytes.get_data();
+                        if (!data) {
+                            console.log(`${this._extensionName}: Error reading temp file to copy in the clipboard`);
+                            return;
+                        }
 
-                imageFile.delete(null);
+                        bytes.unref();
 
-                // Copy to Clipboard
-                const Clipboard = St.Clipboard.get_default();
-                const CLIPBOARD_TYPE = St.ClipboardType.CLIPBOARD;
-                Clipboard.set_content(CLIPBOARD_TYPE, 'image/png', data);
+                        imageFile.delete(null);
 
-                // Show Notification
-                if (SHELL_MAJOR > 45) {
-                    this._notifySource = new MessageTray.Source({
-                        title: 'Gnome Shell Extension',
-                        iconName: 'org.gnome.Shell.Extensions-symbolic',
-                    });
-                    this._notification = new MessageTray.Notification({
-                        source: this._notifySource,
-                        title: 'Wifi QR Code',
-                        body: _('QR Code copied to clipboard'),
-                        iconName: 'edit-paste-symbolic',
-                        isTransient: true,
-                        resident: false,
-                    });
-                } else {
-                    this._notifySource = new MessageTray.Source('Gnome Shell Extension',
-                        'edit-paste-symbolic');
-                    this._notification = new MessageTray.Notification(this._notifySource,
-                        'Wifi QR Code', _('QR Code copied to clipboard'));
-                    this._notification.setTransient(true);
-                }
+                        // Copy to Clipboard
+                        const Clipboard = St.Clipboard.get_default();
+                        const CLIPBOARD_TYPE = St.ClipboardType.CLIPBOARD;
+                        Clipboard.set_content(CLIPBOARD_TYPE, 'image/png', data);
 
-                this._notifySource.connectObject('destroy', () => (this._notifySource = null), this);
-                Main.messageTray.add(this._notifySource);
+                        // Show Notification
+                        if (SHELL_MAJOR > 45) {
+                            this._notifySource = new MessageTray.Source({
+                                title: 'Gnome Shell Extension',
+                                iconName: 'org.gnome.Shell.Extensions-symbolic',
+                            });
+                            this._notification = new MessageTray.Notification({
+                                source: this._notifySource,
+                                title: 'Wifi QR Code',
+                                body: _('QR Code copied to clipboard'),
+                                iconName: 'edit-paste-symbolic',
+                                isTransient: true,
+                                resident: false,
+                            });
+                        } else {
+                            this._notifySource = new MessageTray.Source('Gnome Shell Extension',
+                                'edit-paste-symbolic');
+                            this._notification = new MessageTray.Notification(this._notifySource,
+                                'Wifi QR Code', _('QR Code copied to clipboard'));
+                            this._notification.setTransient(true);
+                        }
 
-                if (SHELL_MAJOR > 45)
-                    this._notifySource.addNotification(this._notification);
-                else
-                    this._notifySource.showNotification(this._notification);
+                        this._notifySource.connectObject('destroy', () => (this._notifySource = null), this);
+                        Main.messageTray.add(this._notifySource);
+
+                        if (SHELL_MAJOR > 45)
+                            this._notifySource.addNotification(this._notification);
+                        else
+                            this._notifySource.showNotification(this._notification);
+                    } catch (e) {
+                        console.error(e.message, 'Wifi QR Code');
+                    }
+                });
             }
         }
     }

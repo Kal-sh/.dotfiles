@@ -275,6 +275,7 @@ export class ShowDesktopExtension {
                 // top actors should be at the beginning
                 .reverse()
                 .map(actor => actor.meta_window)
+                .filter(win => win !== null) // Type guard filter
                 .filter(win => win.get_window_type() !== Meta.WindowType.DESKTOP &&
                 this._windows.has(win) &&
                 (win.is_always_on_all_workspaces() ||
@@ -295,7 +296,7 @@ export class ShowDesktopExtension {
                 .map(win => win.get_compositor_private())
                 .filter((actor) => {
                 return (actor instanceof Meta.WindowActor &&
-                    actor.meta_window.get_monitor() ===
+                    actor.meta_window?.get_monitor() ===
                         monitor.monitor.index);
             });
             monitor.gestureBegin(windowActors);
@@ -380,7 +381,7 @@ export class ShowDesktopExtension {
     }
 
     _windowUnMinimized(_wm, actor) {
-        if (actor.meta_window.get_workspace().index !== this._workspace?.index)
+        if (actor.meta_window?.get_workspace().index !== this._workspace?.index)
             return;
         this._minimizingWindows = [];
         this._workspaceManagerState = WorkspaceManagerState.DEFAULT;

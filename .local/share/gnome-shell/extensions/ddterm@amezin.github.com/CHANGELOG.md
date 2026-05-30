@@ -14,6 +14,35 @@ The format is based on [Keep a Changelog], and this project adheres to
 [Keep a Changelog]: https://keepachangelog.com/en/1.1.0/
 [Semantic Versioning]: https://semver.org/spec/v2.0.0.html
 
+## [63.0.1] - 2026-05-10
+
+### Added
+
+- Releases will now include source code tarballs with subprojects [#1880].
+
+### Changed
+
+- Esperanto translation updates by [phlostically]: [#1886].
+
+### Fixed
+
+- Renamed settings schema to comply with GNOME Shell extension guidelines:
+[#1888].
+- Fix for Korean translation by [@seuimi]: [#1885], [#1886].
+- Restored cyclic navigation between tabs/pages: [#1898], [#1901].
+
+[#1880]: https://github.com/ddterm/gnome-shell-extension-ddterm/pull/1880
+[#1885]: https://github.com/ddterm/gnome-shell-extension-ddterm/issues/1885
+[#1886]: https://github.com/ddterm/gnome-shell-extension-ddterm/pull/1886
+[#1888]: https://github.com/ddterm/gnome-shell-extension-ddterm/pull/1888
+[#1898]: https://github.com/ddterm/gnome-shell-extension-ddterm/issues/1898
+[#1901]: https://github.com/ddterm/gnome-shell-extension-ddterm/pull/1901
+
+[@seuimi]: https://github.com/seuimi
+[phlostically]: https://hosted.weblate.org/user/phlostically/
+
+[63.0.1]: https://github.com/ddterm/gnome-shell-extension-ddterm/releases/tag/v63.0.1
+
 ## [63.0.0] - 2026-04-24
 
 ### Added
@@ -36,7 +65,7 @@ The format is based on [Keep a Changelog], and this project adheres to
 [#1875]: https://github.com/ddterm/gnome-shell-extension-ddterm/pull/1875
 
 [@mikelei8291]: https://github.com/mikelei8291
-[@seuimi]: https://github.com/seuimi
+[@yuhldr]: https://github.com/yuhldr
 
 ### Changed
 
@@ -95,6 +124,8 @@ The format is based on [Keep a Changelog], and this project adheres to
 
 - Some memory leaks from GObject reference cycles.
 
+[63.0.0]: https://github.com/ddterm/gnome-shell-extension-ddterm/releases/tag/v63.0.0
+
 ## [62.0.2] - 2025-10-13
 
 ### Changed
@@ -123,6 +154,8 @@ The format is based on [Keep a Changelog], and this project adheres to
 [#1507]: https://github.com/ddterm/gnome-shell-extension-ddterm/pull/1507
 [#1541]: https://github.com/ddterm/gnome-shell-extension-ddterm/pull/1541
 
+[62.0.2]: https://github.com/ddterm/gnome-shell-extension-ddterm/releases/tag/v62.0.2
+
 ## [62.0.1] - 2025-09-24
 
 ### Fixed
@@ -132,6 +165,8 @@ The format is based on [Keep a Changelog], and this project adheres to
 
 [#1505]: https://github.com/ddterm/gnome-shell-extension-ddterm/issues/1505
 [#1506]: https://github.com/ddterm/gnome-shell-extension-ddterm/pull/1506
+
+[62.0.1]: https://github.com/ddterm/gnome-shell-extension-ddterm/releases/tag/v62.0.1
 
 ## [62.0.0] - 2025-09-24
 
@@ -152,16 +187,12 @@ The format is based on [Keep a Changelog], and this project adheres to
 
 [@thenameisluk]: https://github.com/thenameisluk
 [@vantu5z]: https://github.com/vantu5z
-[@yuhldr]: https://github.com/yuhldr
 [@Atalanttore]: https://github.com/Atalanttore
 
 ### Fixed
 
 - Multiple minor bug fixes.
 
-[63.0.0]: https://github.com/ddterm/gnome-shell-extension-ddterm/releases/tag/v63.0.0
-[62.0.2]: https://github.com/ddterm/gnome-shell-extension-ddterm/releases/tag/v62.0.2
-[62.0.1]: https://github.com/ddterm/gnome-shell-extension-ddterm/releases/tag/v62.0.1
 [62.0.0]: https://github.com/ddterm/gnome-shell-extension-ddterm/releases/tag/v62.0.0
 
 <!-- markdownlint-configure-file {
