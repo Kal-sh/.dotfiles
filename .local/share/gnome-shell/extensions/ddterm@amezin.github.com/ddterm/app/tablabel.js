@@ -8,45 +8,11 @@ import Handy from 'gi://Handy';
 
 import Gettext from 'gettext';
 
-class EntryRow extends Handy.ActionRow {
-    static [GObject.GTypeName] = 'DDTermTabTitleEntryRow';
+import { EntryRow } from '../pref/widgets/entryrow.js';
+import { SwitchRow } from '../pref/widgets/switchrow.js';
 
-    static [GObject.properties] = {
-        'text': GObject.ParamSpec.string(
-            'text',
-            null,
-            null,
-            GObject.ParamFlags.READWRITE | GObject.ParamFlags.EXPLICIT_NOTIFY,
-            ''
-        ),
-    };
-
-    static {
-        GObject.registerClass(this);
-    }
-
-    #entry;
-
-    constructor(params) {
-        super(params);
-
-        this.#entry = new Gtk.Entry({
-            visible: true,
-            hexpand: true,
-            valign: Gtk.Align.CENTER,
-        });
-
-        this.bind_property(
-            'text',
-            this.#entry,
-            'text',
-            GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.BIDIRECTIONAL
-        );
-
-        this.set_activatable(true);
-        this.set_activatable_widget(this.#entry);
-        this.add(this.#entry);
-    }
+function text_to_width_chars(binding, value) {
+    return [true, Math.min(120, Math.max(40, value?.length ?? 0))];
 }
 
 export class TabTitleDialog extends Gtk.Dialog {
@@ -85,6 +51,15 @@ export class TabTitleDialog extends Gtk.Dialog {
             title: Gettext.gettext('Tab _Title'),
         });
 
+        entry.bind_property_full(
+            'text',
+            entry,
+            'width-chars',
+            GObject.BindingFlags.SYNC_CREATE,
+            text_to_width_chars,
+            null
+        );
+
         this.bind_property(
             'custom-title',
             entry,
@@ -92,27 +67,32 @@ export class TabTitleDialog extends Gtk.Dialog {
             GObject.BindingFlags.BIDIRECTIONAL | GObject.BindingFlags.SYNC_CREATE
         );
 
-        const expander = new Handy.ExpanderRow({
+        const toggle = new SwitchRow({
             visible: true,
-            show_enable_switch: true,
             use_underline: true,
             title: Gettext.gettext('Use Custom Tab Title'),
         });
 
-        expander.add(entry);
+        this.bind_property(
+            'use-custom-title',
+            toggle,
+            'active',
+            GObject.BindingFlags.BIDIRECTIONAL | GObject.BindingFlags.SYNC_CREATE
+        );
 
         this.bind_property(
             'use-custom-title',
-            expander,
-            'enable-expansion',
-            GObject.BindingFlags.BIDIRECTIONAL | GObject.BindingFlags.SYNC_CREATE
+            entry,
+            'sensitive',
+            GObject.BindingFlags.SYNC_CREATE
         );
 
         const group = new Handy.PreferencesGroup({
             visible: true,
         });
 
-        group.add(expander);
+        group.add(toggle);
+        group.add(entry);
 
         this.get_content_area().add(group);
     }

@@ -5,12 +5,13 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 import Gio from 'gi://Gio';
 import Gdk from 'gi://Gdk';
 import Gtk from 'gi://Gtk';
 
-import { PreferencesGroup, ActionRow } from './util.js';
+import { PreferencesGroup, ActionRow, add_reset_button } from './util.js';
 
 const IS_GTK3 = Gtk.get_major_version() === 3;
 
@@ -155,12 +156,26 @@ class ShortcutEditDialog extends Gtk.Dialog {
         ),
     };
 
+    static [Gtk.template] = GLib.Uri.resolve_relative(
+        import.meta.url, `./ui/gtk${Gtk.get_major_version()}/shortcutdialog.ui`,
+        GLib.UriFlags.NONE
+    );
+
+    static [Gtk.internalChildren] = [
+        'stack',
+        'label',
+        'enter_label',
+        'accept_label',
+    ];
+
     static {
         GObject.registerClass(this);
     }
 
+    static RESPONSE_SET = Gtk.ResponseType.OK;
+    static RESPONSE_ADD = 1;
+
     #controller;
-    #label;
 
     constructor(params) {
         super({
@@ -177,51 +192,18 @@ class ShortcutEditDialog extends Gtk.Dialog {
 
         this.#controller.propagation_phase = Gtk.PropagationPhase.CAPTURE;
 
-        const margins = {
-            margin_top: 16,
-            margin_bottom: 16,
-            margin_start: 16,
-            margin_end: 16,
-        };
-
-        this.#append(new Gtk.Label({
-            visible: true,
-            label: this.gettext_domain.gettext('Enter new shortcut'),
-            ...margins,
-        }));
-
-        this.#label = new Gtk.ShortcutLabel({
-            visible: true,
-            halign: Gtk.Align.CENTER,
-            valign: Gtk.Align.CENTER,
-            ...margins,
-        });
-
-        this.#append(this.#label);
-
-        this.#append(new Gtk.Label({
-            visible: true,
-            label: this.gettext_domain.gettext(
-                'Press Esc to cancel or Backspace to disable the keyboard shortcut'
-            ),
-            ...margins,
-        }));
-
-        this.add_button(this.gettext_domain.gettext('Cancel'), Gtk.ResponseType.CANCEL);
-        this.add_button(this.gettext_domain.gettext('Set'), Gtk.ResponseType.OK);
-        this.set_response_sensitive(Gtk.ResponseType.OK, false);
-        this.set_default_response(Gtk.ResponseType.OK);
+        this.#set_valid(false);
 
         this.connect('realize', this.#realize.bind(this));
     }
 
-    #append(widget) {
-        const content_area = this.get_content_area();
+    #set_valid(valid) {
+        this.set_response_sensitive(ShortcutEditDialog.RESPONSE_SET, valid);
+        this.set_response_sensitive(ShortcutEditDialog.RESPONSE_ADD, valid);
+        this._stack.set_visible_child(valid ? this._accept_label : this._enter_label);
 
-        if (content_area.add)
-            content_area.add(widget);
-        else
-            content_area.append(widget);
+        if (valid)
+            this.get_widget_for_response(ShortcutEditDialog.RESPONSE_SET).grab_focus();
     }
 
     #realize() {
@@ -246,8 +228,8 @@ class ShortcutEditDialog extends Gtk.Dialog {
                 return false;
 
             if (keyval_lower === Gdk.KEY_BackSpace) {
-                this.#label.accelerator = null;
-                this.response(Gtk.ResponseType.OK);
+                this._label.accelerator = null;
+                this.response(ShortcutEditDialog.RESPONSE_SET);
 
                 return true;
             }
@@ -255,24 +237,21 @@ class ShortcutEditDialog extends Gtk.Dialog {
 
         const name = Gtk.accelerator_name(keyval_lower, real_mask);
 
-        if (name !== this.#label.accelerator) {
-            this.#label.accelerator = name;
+        if (name !== this._label.accelerator) {
+            this._label.accelerator = name;
             this.notify('accelerator');
         }
 
-        const valid =
-            is_valid_accel(keyval_lower, real_mask) && is_valid_binding(keyval_lower, real_mask);
-
-        this.set_response_sensitive(Gtk.ResponseType.OK, valid);
-
-        if (valid)
-            this.get_widget_for_response(Gtk.ResponseType.OK).grab_focus();
+        this.#set_valid(
+            is_valid_accel(keyval_lower, real_mask) &&
+            is_valid_binding(keyval_lower, real_mask)
+        );
 
         return true;
     }
 
     get accelerator() {
-        return this.#label.accelerator;
+        return this._label.accelerator;
     }
 }
 
@@ -310,10 +289,23 @@ class ShortcutRow extends ActionRow {
         GObject.registerClass(this);
     }
 
+    #box;
     #labels;
 
     constructor(params) {
         super(params);
+
+        this.#box = new Gtk.Box({
+            visible: true,
+            orientation: Gtk.Orientation.VERTICAL,
+            homogeneous: true,
+            valign: Gtk.Align.CENTER,
+            spacing: 4,
+            margin_top: 4,
+            margin_bottom: 4,
+        });
+
+        this.add_suffix(this.#box);
 
         this.#labels = [];
 
@@ -328,7 +320,7 @@ class ShortcutRow extends ActionRow {
         const n = Math.max(1, value.length);
 
         while (this.#labels.length > n)
-            this.remove(this.#labels.pop());
+            this.#box.remove(this.#labels.pop());
 
         for (let i = 0; i < n; i++) {
             const accelerator = value[i] || null;
@@ -340,15 +332,15 @@ class ShortcutRow extends ActionRow {
 
             const label = new Gtk.ShortcutLabel({
                 visible: true,
+                halign: Gtk.Align.END,
                 disabled_text: this.gettext_domain.gettext('Disabled'),
                 accelerator,
-                valign: Gtk.Align.CENTER,
             });
 
-            if (this.add_suffix)
-                this.add_suffix(label);
+            if (this.#box.append)
+                this.#box.append(label);
             else
-                this.add(label);
+                this.#box.add(label);
 
             this.#labels.push(label);
         }
@@ -363,8 +355,23 @@ class ShortcutRow extends ActionRow {
         });
 
         dialog.connect('response', (_, response_id) => {
-            if (response_id === Gtk.ResponseType.OK) {
-                this.value = dialog.accelerator ? [dialog.accelerator] : [];
+            const { accelerator } = dialog;
+
+            if (response_id === ShortcutEditDialog.RESPONSE_SET) {
+                this.value = accelerator ? [accelerator] : [];
+                this.emit('accelerator-set');
+            } else if (response_id === ShortcutEditDialog.RESPONSE_ADD) {
+                const [keyval, modifiers] = accelerator_parse(accelerator);
+
+                this.freeze_notify();
+
+                try {
+                    this.remove_conflict(keyval, modifiers);
+                    this.value = [...this.value, accelerator];
+                } finally {
+                    this.thaw_notify();
+                }
+
                 this.emit('accelerator-set');
             }
 
@@ -433,6 +440,7 @@ class ShortcutGroup extends PreferencesGroup {
         });
 
         this.settings.bind(key, row, 'value', flags);
+        add_reset_button(row, this.settings, key, this.gettext_domain);
 
         const conflict_handler = this.connect('accelerator-set', (self, keyval, modifiers) => {
             row.remove_conflict(keyval, modifiers);
@@ -444,7 +452,7 @@ class ShortcutGroup extends PreferencesGroup {
 
                 try {
                     for (const accel of row.value) {
-                        let [keyval, modifiers] = accelerator_parse(accel);
+                        const [keyval, modifiers] = accelerator_parse(accel);
 
                         if (keyval || modifiers)
                             this.emit('accelerator-set', keyval, modifiers);

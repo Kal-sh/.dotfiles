@@ -9,14 +9,10 @@ import Gio from 'gi://Gio';
 import Gdk from 'gi://Gdk';
 import Gtk from 'gi://Gtk';
 
-import {
-    ActionRow,
-    ComboRow,
-    PreferencesGroup,
-    PreferencesRow,
-    ScaleRow,
-    StringList,
-} from './util.js';
+import { ActionRow } from './widgets/actionrow.js';
+import { ComboRow, StringList } from './widgets/comborow.js';
+import { ScaleRow } from './widgets/scalerow.js';
+import { add_reset_button, PreferencesGroup, PreferencesRow } from './util.js';
 
 function show_dialog(parent_window, message, message_type = Gtk.MessageType.ERROR) {
     const dialog = new Gtk.MessageDialog({
@@ -60,10 +56,10 @@ function copy_gnome_terminal_profile(settings) {
     }
 
     // Find default gnome terminal profile
-    let profiles_list = Gio.Settings.new_full(profile_list_schema, null, null);
-    let profilePath = profiles_list.settings_schema.get_path();
-    let uuid = profiles_list.get_string('default');
-    let gnome_terminal_profile = Gio.Settings.new_full(
+    const profiles_list = Gio.Settings.new_full(profile_list_schema, null, null);
+    const profilePath = profiles_list.settings_schema.get_path();
+    const uuid = profiles_list.get_string('default');
+    const gnome_terminal_profile = Gio.Settings.new_full(
         profile_schema,
         null,
         `${profilePath}:${uuid}/`
@@ -268,12 +264,12 @@ class ColorRow extends ActionRow {
     static [GObject.GTypeName] = 'DDTermColorRow';
 
     static [GObject.properties] = {
-        'rgba': GObject.ParamSpec.boxed(
-            'rgba',
+        'color': GObject.ParamSpec.object(
+            'color',
             null,
             null,
-            GObject.ParamFlags.READWRITE | GObject.ParamFlags.EXPLICIT_NOTIFY,
-            Gdk.RGBA
+            GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
+            Color
         ),
     };
 
@@ -292,10 +288,7 @@ class ColorRow extends ActionRow {
             visible: true,
         });
 
-        if (!this.rgba)
-            this.rgba = this.#button.rgba;
-
-        this.bind_property(
+        this.color.bind_property(
             'rgba',
             this.#button,
             'rgba',
@@ -304,26 +297,34 @@ class ColorRow extends ActionRow {
 
         this.set_activatable(true);
         this.set_activatable_widget(this.#button);
-
-        if (this.add_suffix)
-            this.add_suffix(this.#button);
-        else
-            this.add(this.#button);
+        this.add_suffix(this.#button);
     }
 
-    static create({ color, ...params }) {
+    static create({
+        color,
+        settings,
+        key,
+        flags = Gio.SettingsBindFlags.DEFAULT,
+        gettext_domain,
+        ...params
+    }) {
+        if (settings || key) {
+            color = new Color();
+
+            settings.bind(key, color, 'str', flags);
+        }
+
         const row = new this({
+            color,
             visible: true,
             use_underline: true,
             ...params,
         });
 
-        color.bind_property(
-            'rgba',
-            row,
-            'rgba',
-            GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.BIDIRECTIONAL
-        );
+        if (settings || key) {
+            settings.bind_writable(key, row, 'sensitive', false);
+            add_reset_button(row, settings, key, gettext_domain);
+        }
 
         return row;
     }
@@ -340,13 +341,8 @@ export class ColorsGroup extends PreferencesGroup {
     #color_scheme_combo;
     #foreground_color_row;
     #background_color_row;
-    #bold_color;
     #bold_color_expander;
-    #cursor_foreground_color;
-    #cursor_background_color;
     #cursor_color_expander;
-    #highlight_foreground_color;
-    #highlight_background_color;
     #highlight_color_expander;
     #palette;
     #copy_gnome_terminal_profile_button;
@@ -429,12 +425,26 @@ export class ColorsGroup extends PreferencesGroup {
             color: this.#color_scheme.colors[0],
         });
 
+        add_reset_button(
+            this.#foreground_color_row,
+            this.settings,
+            'foreground-color',
+            this.gettext_domain
+        );
+
         this.add(this.#foreground_color_row);
 
         this.#background_color_row = ColorRow.create({
             title: this.gettext('Background Color'),
             color: this.#color_scheme.colors[1],
         });
+
+        add_reset_button(
+            this.#background_color_row,
+            this.settings,
+            'background-color',
+            this.gettext_domain
+        );
 
         this.add(this.#background_color_row);
 
@@ -444,15 +454,13 @@ export class ColorsGroup extends PreferencesGroup {
             flags: Gio.SettingsBindFlags.NO_SENSITIVITY | Gio.SettingsBindFlags.INVERT_BOOLEAN,
         });
 
-        this.#bold_color = new Color();
-        this.settings.bind('bold-color', this.#bold_color, 'str', Gio.SettingsBindFlags.DEFAULT);
-
         const bold_color_row = ColorRow.create({
             title: this.gettext('Bold Color'),
-            color: this.#bold_color,
+            settings: this.settings,
+            key: 'bold-color',
+            gettext_domain: this.gettext_domain,
         });
 
-        this.settings.bind_writable('bold-color', bold_color_row, 'sensitive', false);
         this.#bold_color_expander.add_row(bold_color_row);
 
         this.#cursor_color_expander = this.add_expander_row({
@@ -461,46 +469,19 @@ export class ColorsGroup extends PreferencesGroup {
             flags: Gio.SettingsBindFlags.NO_SENSITIVITY,
         });
 
-        this.#cursor_foreground_color = new Color();
-        this.#cursor_background_color = new Color();
-
-        this.settings.bind(
-            'cursor-foreground-color',
-            this.#cursor_foreground_color,
-            'str',
-            Gio.SettingsBindFlags.DEFAULT
-        );
-
-        this.settings.bind(
-            'cursor-background-color',
-            this.#cursor_background_color,
-            'str',
-            Gio.SettingsBindFlags.DEFAULT
-        );
-
         const cursor_foreground_color_row = ColorRow.create({
             title: this.gettext('Cursor Foreground Color'),
-            color: this.#cursor_foreground_color,
+            settings: this.settings,
+            key: 'cursor-foreground-color',
+            gettext_domain: this.gettext_domain,
         });
 
         const cursor_background_color_row = ColorRow.create({
             title: this.gettext('Cursor Background Color'),
-            color: this.#cursor_background_color,
+            settings: this.settings,
+            key: 'cursor-background-color',
+            gettext_domain: this.gettext_domain,
         });
-
-        this.settings.bind_writable(
-            'cursor-foreground-color',
-            cursor_foreground_color_row,
-            'sensitive',
-            false
-        );
-
-        this.settings.bind_writable(
-            'cursor-background-color',
-            cursor_background_color_row,
-            'sensitive',
-            false
-        );
 
         this.#cursor_color_expander.add_row(cursor_foreground_color_row);
         this.#cursor_color_expander.add_row(cursor_background_color_row);
@@ -511,46 +492,19 @@ export class ColorsGroup extends PreferencesGroup {
             flags: Gio.SettingsBindFlags.NO_SENSITIVITY,
         });
 
-        this.#highlight_foreground_color = new Color();
-        this.#highlight_background_color = new Color();
-
-        this.settings.bind(
-            'highlight-foreground-color',
-            this.#highlight_foreground_color,
-            'str',
-            Gio.SettingsBindFlags.DEFAULT
-        );
-
-        this.settings.bind(
-            'highlight-background-color',
-            this.#highlight_background_color,
-            'str',
-            Gio.SettingsBindFlags.DEFAULT
-        );
-
         const highlight_foreground_color_row = ColorRow.create({
             title: this.gettext('Highlight Foreground Color'),
-            color: this.#highlight_foreground_color,
+            settings: this.settings,
+            key: 'highlight-foreground-color',
+            gettext_domain: this.gettext_domain,
         });
 
         const highlight_background_color_row = ColorRow.create({
             title: this.gettext('Highlight Background Color'),
-            color: this.#highlight_background_color,
+            settings: this.settings,
+            key: 'highlight-background-color',
+            gettext_domain: this.gettext_domain,
         });
-
-        this.settings.bind_writable(
-            'highlight-foreground-color',
-            highlight_foreground_color_row,
-            'sensitive',
-            false
-        );
-
-        this.settings.bind_writable(
-            'highlight-background-color',
-            highlight_background_color_row,
-            'sensitive',
-            false
-        );
 
         this.#highlight_color_expander.add_row(highlight_foreground_color_row);
         this.#highlight_color_expander.add_row(highlight_background_color_row);
@@ -586,6 +540,8 @@ export class ColorsGroup extends PreferencesGroup {
             'sensitive',
             false
         );
+
+        add_reset_button(opacity_row, this.settings, 'background-opacity', this.gettext_domain);
 
         const opacity_expander = this.add_expander_row({
             key: 'transparent-background',
@@ -736,6 +692,8 @@ export class ColorsGroup extends PreferencesGroup {
             'sensitive',
             false
         );
+
+        add_reset_button(palette_combo, this.settings, 'palette', this.gettext_domain);
 
         this.add(palette_combo);
 

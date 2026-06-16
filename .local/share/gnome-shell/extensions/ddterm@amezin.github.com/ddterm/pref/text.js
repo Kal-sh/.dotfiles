@@ -6,7 +6,7 @@ import GObject from 'gi://GObject';
 import Gio from 'gi://Gio';
 import Gtk from 'gi://Gtk';
 
-import { PreferencesGroup, ActionRow } from './util.js';
+import { PreferencesGroup, ActionRow, add_reset_button } from './util.js';
 
 class FontRow extends ActionRow {
     static [GObject.GTypeName] = 'DDTermFontRow';
@@ -48,11 +48,7 @@ class FontRow extends ActionRow {
 
         this.set_activatable(true);
         this.set_activatable_widget(this.#button);
-
-        if (this.add_suffix)
-            this.add_suffix(this.#button);
-        else
-            this.add(this.#button);
+        this.add_suffix(this.#button);
     }
 }
 
@@ -87,6 +83,8 @@ export class TextGroup extends PreferencesGroup {
             'font',
             Gio.SettingsBindFlags.NO_SENSITIVITY
         );
+
+        add_reset_button(this.#font_row, this.settings, 'custom-font', this.gettext_domain);
 
         this.add(this.#font_row);
 

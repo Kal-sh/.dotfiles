@@ -7,7 +7,6 @@ import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 import Gio from 'gi://Gio';
 import Mtk from 'gi://Mtk';
-import Shell from 'gi://Shell';
 
 import { AppControl } from './appcontrol.js';
 
@@ -17,7 +16,7 @@ function report_dbus_error_async(e, invocation) {
         return;
     }
 
-    let name = e.name;
+    let { name } = e;
     if (!name.includes('.'))
         name = `org.gnome.gjs.JSError.${name}`;
 
@@ -35,8 +34,24 @@ function handle_dbus_method_call_async(func, params, invocation) {
     }
 }
 
-export const DBusApi = GObject.registerClass({
-    Properties: {
+function get_file_contents(file) {
+    return new Promise((resolve, reject) => {
+        file.load_contents_async(null, (source, result) => {
+            try {
+                const [, contents] = source.load_contents_finish(result);
+
+                resolve(new TextDecoder().decode(contents));
+            } catch (ex) {
+                reject(ex);
+            }
+        });
+    });
+}
+
+export class DBusApi extends GObject.Object {
+    static [GObject.GTypeName] = 'DDTermDBusApi';
+
+    static [GObject.properties] = {
         'version': GObject.ParamSpec.string(
             'version',
             null,
@@ -81,8 +96,9 @@ export const DBusApi = GObject.registerClass({
             GObject.ParamFlags.READWRITE | GObject.ParamFlags.EXPLICIT_NOTIFY,
             false
         ),
-    },
-    Signals: {
+    };
+
+    static [GObject.signals] = {
         'missing-dependencies': {
             param_types: [GObject.type_from_name('GStrv'), GObject.type_from_name('GStrv')],
         },
@@ -91,13 +107,16 @@ export const DBusApi = GObject.registerClass({
         },
         'version-mismatch': {},
         'update-target-monitor': {},
-    },
-}, class DDTermDBusApi extends GObject.Object {
+    };
+
+    static {
+        GObject.registerClass(this);
+    }
+
     #target_rect;
     #target_monitor_scale;
     #version;
     #revision;
-    #interface_info;
     #dbus_wrapper;
     #has_window;
 
@@ -109,8 +128,10 @@ export const DBusApi = GObject.registerClass({
 
         if (this.revision)
             this.#revision = GLib.Variant.new_string(this.revision);
+    }
 
-        const [xml_file_path] = GLib.filename_from_uri(
+    async export() {
+        const introspection_file = Gio.File.new_for_uri(
             GLib.Uri.resolve_relative(
                 import.meta.url,
                 '../../data/com.github.amezin.ddterm.Extension.xml',
@@ -118,14 +139,27 @@ export const DBusApi = GObject.registerClass({
             )
         );
 
-        this.#interface_info =
-            Gio.DBusInterfaceInfo.new_for_xml(Shell.get_file_contents_utf8_sync(xml_file_path));
-    }
+        const interface_info = Gio.DBusInterfaceInfo.new_for_xml(
+            await get_file_contents(introspection_file)
+        );
 
-    export() {
         this.unexport();
-        this.#dbus_wrapper = Gio.DBusExportedObject.wrapJSObject(this.#interface_info, this);
+
+        this.#dbus_wrapper = Gio.DBusExportedObject.wrapJSObject(interface_info, this);
         this.#dbus_wrapper.export(Gio.DBus.session, '/org/gnome/Shell/Extensions/ddterm');
+
+        // Make sure the app gets new rect and scale if the extension was temporarily disabled.
+        // For example, during screen lock
+
+        if (this.#target_rect)
+            this.#dbus_wrapper.emit_property_changed('TargetRect', this.#target_rect);
+
+        if (this.#target_monitor_scale) {
+            this.#dbus_wrapper.emit_property_changed(
+                'TargetMonitorScale',
+                this.#target_monitor_scale
+            );
+        }
     }
 
     unexport() {
@@ -276,4 +310,4 @@ export const DBusApi = GObject.registerClass({
         this.#dbus_wrapper?.emit_property_changed('HasWindow', this.#has_window);
         this.flush();
     }
-});
+}

@@ -7,7 +7,9 @@ import GObject from 'gi://GObject';
 import Gio from 'gi://Gio';
 import Gtk from 'gi://Gtk';
 
-import { PreferencesGroup, ComboRow, ScaleRow } from './util.js';
+import { ComboRow } from './widgets/comborow.js';
+import { ScaleRow } from './widgets/scalerow.js';
+import { PreferencesGroup, add_reset_button } from './util.js';
 import { Monitor } from '../util/displayconfig.js';
 
 class SpecialMonitor extends Monitor {
@@ -218,6 +220,7 @@ export class PositionSizeGroup extends PreferencesGroup {
         });
 
         monitor_combo.bind_name_model(extended_monitors, v => v.display_name);
+        add_reset_button(monitor_combo, this.settings, 'window-monitor', this.gettext_domain);
         this.add(monitor_combo);
 
         const monitor_setting = new MonitorSetting({ monitors: extended_monitors });
@@ -313,5 +316,38 @@ export class PositionSizeGroup extends PreferencesGroup {
         );
 
         this.add(window_size_row);
+
+        const workarea_size_adjustment = new Gtk.Adjustment({
+            upper: 1,
+            step_increment: 0.01,
+            page_increment: 0.10,
+        });
+
+        this.settings.bind(
+            'workarea-size',
+            workarea_size_adjustment,
+            'value',
+            Gio.SettingsBindFlags.DEFAULT
+        );
+
+        const workarea_size_row = new ScaleRow({
+            adjustment: workarea_size_adjustment,
+            digits: 2,
+            round_digits: 2,
+            visible: true,
+            use_underline: true,
+            title: this.gettext('Work Area _Size'),
+        });
+
+        workarea_size_row.set_format_value_func((_, v) => percent_format.format(v));
+
+        this.settings.bind_writable(
+            'workarea-size',
+            workarea_size_row,
+            'sensitive',
+            false
+        );
+
+        this.add(workarea_size_row);
     }
 }

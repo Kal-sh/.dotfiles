@@ -89,8 +89,6 @@ function create_dbus_interface(
         window_geometry.disconnect(flush_handler);
     });
 
-    dbus_interface.export();
-
     rollback.push(() => {
         dbus_interface.unexport();
     });
@@ -145,21 +143,16 @@ function create_panel_icon(settings, window_matcher, app_control, icon, gettext_
     return panel_icon;
 }
 
-function install(extension, rollback) {
+async function install(extension, rollback) {
     const installer = new Installer(extension.launcher_path);
-    installer.install();
 
-    if (GObject.signal_lookup('shutdown', Shell.Global)) {
-        const shutdown_handler = global.connect('shutdown', () => {
-            installer.uninstall();
-        });
-
-        rollback.push(() => {
-            global.disconnect(shutdown_handler);
-        });
-    }
+    const shutdown_handler = global.connect('shutdown', () => {
+        installer.uninstall().catch(logError);
+    });
 
     rollback.push(() => {
+        global.disconnect(shutdown_handler);
+
         // Don't uninstall desktop/service files because of screen locking
         // GNOME Shell picks up newly installed desktop files with a noticeable delay
         if (Main.sessionMode.isLocked)
@@ -170,8 +163,10 @@ function install(extension, rollback) {
         if (!extension.is_deactivating())
             return;
 
-        installer.uninstall();
+        installer.uninstall().catch(logError);
     });
+
+    await installer.install();
 }
 
 function bind_keys(settings, app_control, rollback) {
@@ -221,13 +216,6 @@ class EnabledExtension {
 
     constructor(extension) {
         this.extension = extension;
-
-        try {
-            this.#enable();
-        } catch (ex) {
-            this.disable();
-            throw ex;
-        }
     }
 
     disable() {
@@ -240,7 +228,7 @@ class EnabledExtension {
         }
     }
 
-    #enable() {
+    async enable() {
         const rollback = this.#disable_callbacks;
 
         this.settings = this.extension.getSettings();
@@ -295,8 +283,10 @@ class EnabledExtension {
                     MessageTray.NotificationDestroyedReason.EXPIRED
                 );
 
-                if (!this.extension.check_version_match())
-                    this.notifications.show_version_mismatch();
+                this.extension.check_version_match().then(result => {
+                    if (!result)
+                        this.notifications.show_version_mismatch();
+                }).catch(logError);
             }
         });
 
@@ -354,6 +344,8 @@ class EnabledExtension {
             this.window_matcher.disable();
         });
 
+        this.window_matcher.check_all_windows();
+
         this.app_control = new AppControl({
             service: this.service,
             window_matcher: this.window_matcher,
@@ -403,7 +395,7 @@ class EnabledExtension {
             this.settings.disconnect(skip_taskbar_handler);
         });
 
-        create_dbus_interface(
+        const dbus_interface = create_dbus_interface(
             this.window_geometry,
             this.window_matcher,
             this.app_control,
@@ -411,6 +403,20 @@ class EnabledExtension {
             this.extension,
             rollback
         );
+
+        const results = await Promise.allSettled([
+            dbus_interface.export(),
+            // Installed files are optional, don't re-throw install errors
+            install(this.extension, rollback).catch(error => {
+                logError(error);
+                this.notifications.show_error(error);
+            }),
+        ]);
+
+        const errors = results.map(result => result.reason).filter(Boolean);
+
+        if (errors.length > 0)
+            throw errors.length === 1 ? errors[0] : new AggregateError(errors);
 
         bind_keys(
             this.settings,
@@ -426,8 +432,6 @@ class EnabledExtension {
             this.extension,
             rollback
         );
-
-        install(this.extension, rollback);
     }
 
     #set_skip_taskbar() {
@@ -487,7 +491,6 @@ export default class DDTermExtension extends Extension {
         super(meta);
 
         this.launcher_path = GLib.build_filenamev([this.path, 'bin', APP_ID]);
-        this.metadata_path = GLib.build_filenamev([this.path, 'metadata.json']);
 
         this.app_process = null;
         this.enabled_state = null;
@@ -526,9 +529,25 @@ export default class DDTermExtension extends Extension {
             this.enabled_state.service.extra_env = value;
     }
 
-    check_version_match() {
-        const metadata_updated =
-            JSON.parse(Shell.get_file_contents_utf8_sync(this.metadata_path));
+    reload_metadata() {
+        return new Promise((resolve, reject) => {
+            const file = this.metadata.dir.get_child('metadata.json');
+
+            file.load_contents_async(null, (source, result) => {
+                try {
+                    const [, contents] = source.load_contents_finish(result);
+                    const decoded = new TextDecoder().decode(contents);
+
+                    resolve(JSON.parse(decoded));
+                } catch (ex) {
+                    reject(ex);
+                }
+            });
+        });
+    }
+
+    async check_version_match() {
+        const metadata_updated = await this.reload_metadata();
 
         return this.metadata.version === metadata_updated.version &&
             this.metadata['version-name'] === metadata_updated['version-name'];
@@ -552,9 +571,17 @@ export default class DDTermExtension extends Extension {
         });
     }
 
-    enable() {
+    async enable() {
         this.enabled_state = new EnabledExtension(this);
         this.enabled_state.logger = this.logger;
+
+        try {
+            await this.enabled_state.enable();
+        } catch (ex) {
+            this.disable();
+            throw ex;
+        }
+
         this.enabled_state.service.extra_argv = this.app_extra_args;
         this.enabled_state.service.extra_env = this.app_extra_env;
     }

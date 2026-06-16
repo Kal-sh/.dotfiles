@@ -91,6 +91,7 @@ export const WindowManager = GObject.registerClass({
     #map_handler;
     #maximized_handler;
     #focus_window_handler;
+    #focus_window_check_cancellable;
     #geometry_fixup_handlers;
     #wl_clipboard_activator;
 
@@ -135,6 +136,9 @@ export const WindowManager = GObject.registerClass({
             ([signal, callback]) => this.geometry.connect(signal, callback)
         );
 
+        if (!this.#actor.visible && this.#client_type === Meta.WindowClientType.WAYLAND)
+            this.window.move_to_monitor(this.geometry.monitor_index);
+
         this.#window_handlers = Object.entries({
             'unmanaged': () => {
                 this.disable();
@@ -161,7 +165,7 @@ export const WindowManager = GObject.registerClass({
             const current_auto_maximize = this.#mutter_settings.get_boolean('auto-maximize');
 
             if (current_auto_maximize !== should_maximize) {
-                this.#saved_auto_maximize = current_auto_maximize;
+                this.#saved_auto_maximize = this.#mutter_settings.get_user_value('auto-maximize');
                 this.#mutter_settings.set_boolean('auto-maximize', should_maximize);
             }
 
@@ -271,23 +275,38 @@ export const WindowManager = GObject.registerClass({
         this.disable();
     }
 
-    #hide_when_focus_lost() {
-        if (this.window.is_hidden())
-            return;
+    async #hide_when_focus_lost() {
+        try {
+            this.#focus_window_check_cancellable?.cancel();
 
-        const win = global.display.focus_window;
-        if (this.window === win)
-            return;
-
-        if (win) {
-            if (this.window.is_ancestor_of_transient(win))
+            if (this.window.is_hidden())
                 return;
 
-            if (is_wlclipboard(win))
+            const win = global.display.focus_window;
+
+            if (this.window === win)
                 return;
+
+            if (win) {
+                if (this.window.is_ancestor_of_transient(win))
+                    return;
+
+                const cancellable = Gio.Cancellable.new();
+
+                this.#focus_window_check_cancellable = cancellable;
+
+                if (await is_wlclipboard(win, cancellable))
+                    return;
+
+                cancellable.set_error_if_cancelled();
+            }
+
+            this.emit('hide-request');
+        } catch (ex) {
+            if (!ex.matches(Gio.io_error_quark(), Gio.IOErrorEnum.CANCELLED) &&
+                !ex.matches(Gio.io_error_quark(), Gio.IOErrorEnum.NOT_FOUND))
+                logError(ex);
         }
-
-        this.emit('hide-request');
     }
 
     #setup_hide_when_focus_lost() {
@@ -296,8 +315,10 @@ export const WindowManager = GObject.registerClass({
             this.#focus_window_handler = null;
         }
 
-        if (!this.settings.get_boolean('hide-when-focus-lost'))
+        if (!this.settings.get_boolean('hide-when-focus-lost')) {
+            this.#focus_window_check_cancellable?.cancel();
             return;
+        }
 
         this.#focus_window_handler = global.display.connect(
             'notify::focus-window',
@@ -605,7 +626,11 @@ export const WindowManager = GObject.registerClass({
         if (this.#saved_auto_maximize === undefined)
             return;
 
-        this.#mutter_settings.set_boolean('auto-maximize', this.#saved_auto_maximize);
+        if (this.#saved_auto_maximize === null)
+            this.#mutter_settings.reset('auto-maximize');
+        else
+            this.#mutter_settings.set_value('auto-maximize', this.#saved_auto_maximize);
+
         this.#saved_auto_maximize = undefined;
     }
 
@@ -638,6 +663,8 @@ export const WindowManager = GObject.registerClass({
             global.display.disconnect(this.#focus_window_handler);
             this.#focus_window_handler = null;
         }
+
+        this.#focus_window_check_cancellable?.cancel();
 
         if (this.#map_animation_override_handler) {
             global.window_manager.disconnect(this.#map_animation_override_handler);

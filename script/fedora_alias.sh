@@ -215,6 +215,7 @@ alias q="exit"
 alias cl="clear"
 alias ty="ttyper"
 alias lg="lazygit"
+alias y="yazi"
 
 # Source reload
 alias sr='

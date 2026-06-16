@@ -6,7 +6,8 @@ import GObject from 'gi://GObject';
 import Gio from 'gi://Gio';
 import Gtk from 'gi://Gtk';
 
-import { PreferencesGroup, SpinRow } from './util.js';
+import { SpinRow } from './widgets/spinrow.js';
+import { add_reset_button, PreferencesGroup } from './util.js';
 
 export class ScrollingGroup extends PreferencesGroup {
     static [GObject.GTypeName] = 'DDTermScrollingPreferencesGroup';
@@ -62,6 +63,13 @@ export class ScrollingGroup extends PreferencesGroup {
             this.#lines_adjustment,
             'value',
             Gio.SettingsBindFlags.NO_SENSITIVITY
+        );
+
+        add_reset_button(
+            this.#lines_row,
+            this.settings,
+            'scrollback-lines',
+            this.gettext_domain
         );
 
         this.add(this.#lines_row);

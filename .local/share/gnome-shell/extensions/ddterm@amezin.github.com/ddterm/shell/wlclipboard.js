@@ -4,11 +4,79 @@
 
 import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
+import Gio from 'gi://Gio';
 import Meta from 'gi://Meta';
 
 import { WindowMatchGeneric } from './windowmatch.js';
 
-export function is_wlclipboard(win) {
+function read_async(path, cancellable) {
+    return new Promise((resolve, reject) => {
+        const file = Gio.File.new_for_path(path);
+
+        file.load_contents_async(cancellable, (source, result) => {
+            try {
+                resolve(source.load_contents_finish(result));
+            } catch (ex) {
+                reject(ex);
+            }
+        });
+    });
+}
+
+function wait_cancellable(promise, cancellable) {
+    if (!cancellable)
+        return promise;
+
+    let cancel_handler;
+
+    return new Promise((resolve, reject) => {
+        cancel_handler = cancellable.connect(source => {
+            try {
+                source.set_error_if_cancelled();
+            } catch (ex) {
+                reject(ex);
+            }
+        });
+
+        promise.then(resolve, reject);
+    }).finally(() => {
+        cancellable.disconnect(cancel_handler);
+    });
+}
+
+let read_tasks = null;
+
+// Async file read isn't really interruptible, it's just a blocking read()
+// in a thread. So keep at most one concurrent async read per path, and reuse
+// the result if possible.
+async function read_async_locking(path, cancellable) {
+    for (let task = read_tasks?.get(path); task; task = read_tasks?.get(path)) {
+        cancellable?.set_error_if_cancelled();
+
+        try {
+            // eslint-disable-next-line no-await-in-loop
+            return await wait_cancellable(task, cancellable);
+        } catch {
+            continue;
+        }
+    }
+
+    const task = read_async(path, cancellable).finally(() => {
+        read_tasks.delete(path);
+
+        if (read_tasks.size === 0)
+            read_tasks = null;
+    });
+
+    if (!read_tasks)
+        read_tasks = new Map();
+
+    read_tasks.set(path, task);
+
+    return task;
+}
+
+export async function is_wlclipboard(win, cancellable = null) {
     if (!win)
         return false;
 
@@ -21,19 +89,31 @@ export function is_wlclipboard(win) {
     const pid = win.get_pid();
 
     try {
-        const [, bytes] = GLib.file_get_contents(`/proc/${pid}/cmdline`);
+        const [, bytes] = await read_async_locking(`/proc/${pid}/cmdline`, cancellable);
         const argv0_bytes = bytes.slice(0, bytes.indexOf(0));
         const argv0 = new TextDecoder().decode(argv0_bytes);
+
         return ['wl-copy', 'wl-paste'].includes(GLib.path_get_basename(argv0));
-    } catch {
-        return false;
+    } catch (ex) {
+        // /proc read can return ENOENT or ESRCH if the process has terminated
+        // ESRCH is, unfortunately, converted to generic IOErrorEnum.FAILED
+        if (ex.matches(Gio.io_error_quark(), Gio.IOErrorEnum.FAILED) &&
+            ex.message.includes('No such process'))
+            throw GLib.Error.new_literal(ex.domain, Gio.IOErrorEnum.NOT_FOUND, ex.message);
+
+        throw ex;
     }
 }
 
-export const WlClipboardActivator = GObject.registerClass({
-}, class DDTermWlClipboardActivator extends WindowMatchGeneric {
-    _init(params) {
-        super._init({
+export class WlClipboardActivator extends WindowMatchGeneric {
+    static [GObject.GTypeName] = 'DDTermWlClipboardActivator';
+
+    static {
+        GObject.registerClass(this);
+    }
+
+    constructor(params) {
+        super({
             track_signals: [
                 'notify::title',
                 'shown',
@@ -42,20 +122,31 @@ export const WlClipboardActivator = GObject.registerClass({
         });
     }
 
-    check_window(win) {
+    async check_window(win, cancellable) {
         if (win.get_client_type() !== Meta.WindowClientType.WAYLAND)
             return GLib.SOURCE_REMOVE;
 
         if (!win.title)
             return GLib.SOURCE_CONTINUE;
 
-        if (!is_wlclipboard(win))
+        try {
+            if (!await is_wlclipboard(win, cancellable))
+                return GLib.SOURCE_REMOVE;
+        } catch (ex) {
+            if (ex.matches(Gio.io_error_quark(), Gio.IOErrorEnum.CANCELLED))
+                throw ex;
+
+            if (!ex.matches(Gio.io_error_quark(), Gio.IOErrorEnum.NOT_FOUND))
+                logError(ex);
+
             return GLib.SOURCE_REMOVE;
+        }
 
         if (win.is_hidden())
             return GLib.SOURCE_CONTINUE;
 
         win.focus(global.get_current_time());
+
         return GLib.SOURCE_REMOVE;
     }
-});
+}

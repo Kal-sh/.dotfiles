@@ -12,4 +12,4 @@ nnoremap p :<C-u>let @"=system('wl-paste', '')<CR>p
 nnoremap P :<C-u>let @"=system('wl-paste', '')<CR>P
 
 " relative line number
-set relativenumber
+"set relativenumber
