@@ -1,5 +1,6 @@
 // SPDX-FileCopyrightText: 2023 Aleksandr Mezin <mezin.alexander@gmail.com>
 // SPDX-FileContributor: Mohammad Javad Naderi
+// SPDX-FileContributor: Finn van Riper
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -433,6 +434,10 @@ export class Notebook extends Gtk.Box {
                 bindings.pop().unbind();
         });
 
+        // Re-emit here instead of forwarding view's notify::n-pages, which
+        // fires before the page is fully attached or detached.
+        this.notify('n-pages');
+
         this.view.selected_page = page;
         this.grab_focus();
         this.#update_tab_switch_accels();
@@ -448,6 +453,10 @@ export class Notebook extends Gtk.Box {
         if (disconnect)
             disconnect();
 
+        // Re-emit here instead of forwarding view's notify::n-pages, which
+        // fires before the page is fully attached or detached. Triggering
+        // it early causes the window to lose focus when the current tab closes.
+        this.notify('n-pages');
         this.#update_tab_switch_accels();
         this.emit('session-update');
     }
@@ -458,10 +467,6 @@ export class Notebook extends Gtk.Box {
 
         this.#update_tab_switch_accels();
         this.emit('session-update');
-    }
-
-    _notify_n_pages() {
-        this.notify('n-pages');
     }
 
     _notify_selected_page() {
@@ -577,12 +582,12 @@ export class Notebook extends Gtk.Box {
     #update_tab_pos() {
         switch (this.tab_pos) {
         case Gtk.PositionType.BOTTOM:
-            this.reorder_child(this._bar, -1);
+            this.reorder_child(this.view, 0);
             this._tab_switch_button.direction = Gtk.ArrowType.UP;
             break;
 
         case Gtk.PositionType.TOP:
-            this.reorder_child(this._bar, 0);
+            this.reorder_child(this.view, -1);
             this._tab_switch_button.direction = Gtk.ArrowType.DOWN;
             break;
 

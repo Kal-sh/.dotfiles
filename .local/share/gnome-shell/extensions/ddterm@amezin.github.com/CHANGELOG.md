@@ -14,6 +14,50 @@ The format is based on [Keep a Changelog], and this project adheres to
 [Keep a Changelog]: https://keepachangelog.com/en/1.1.0/
 [Semantic Versioning]: https://semver.org/spec/v2.0.0.html
 
+## [63.2.2] - 2026-06-25
+
+### Fixed
+
+- Losing keyboard focus when closing one pane of a split window by [@van-riper]:
+[#2024].
+- Moved dark mode setting to "Window" page in preferences dialog: [#2027].
+
+[#2024]: https://github.com/ddterm/gnome-shell-extension-ddterm/pull/2024
+[#2027]: https://github.com/ddterm/gnome-shell-extension-ddterm/pull/2027
+
+[@van-riper]: https://github.com/van-riper
+
+[63.2.2]: https://github.com/ddterm/gnome-shell-extension-ddterm/releases/tag/v63.2.2
+
+## [63.2.1] - 2026-06-22
+
+### Fixed
+
+- Potential failure in desktop entry and D-Bus service file installation:
+[#1984].
+- Transparent tab bar with custom themes: [#1997], [#2003], [#2000].
+- Potential crash fix when splitting a pane containing only one tab
+by [@van-riper]: [#1991].
+- Chinese translation improvements by [@flytothehighest]: [#1987].
+- Spanish translation improvements by [Libre]: [#1996].
+- Korean translation improvements by [@seuimi]: [#2002], [#2013].
+
+[#1984]: https://github.com/ddterm/gnome-shell-extension-ddterm/pull/1984
+[#1987]: https://github.com/ddterm/gnome-shell-extension-ddterm/pull/1987
+[#1991]: https://github.com/ddterm/gnome-shell-extension-ddterm/pull/1991
+[#1996]: https://github.com/ddterm/gnome-shell-extension-ddterm/pull/1996
+[#1997]: https://github.com/ddterm/gnome-shell-extension-ddterm/issues/1997
+[#2000]: https://github.com/ddterm/gnome-shell-extension-ddterm/pull/2000
+[#2002]: https://github.com/ddterm/gnome-shell-extension-ddterm/pull/2002
+[#2003]: https://github.com/ddterm/gnome-shell-extension-ddterm/issues/2003
+[#2013]: https://github.com/ddterm/gnome-shell-extension-ddterm/pull/2013
+
+[@flytothehighest]: https://github.com/flytothehighest
+[@seuimi]: https://github.com/seuimi
+[Libre]: https://hosted.weblate.org/user/Libertad/
+
+[63.2.1]: https://github.com/ddterm/gnome-shell-extension-ddterm/releases/tag/v63.2.1
+
 ## [63.2.0] - 2026-06-10
 
 ### Added
@@ -38,8 +82,6 @@ custom style to ddterm from `~/.config/gtk-3.0/gtk.css`.
 [#1979]: https://github.com/ddterm/gnome-shell-extension-ddterm/pull/1979
 [#1982]: https://github.com/ddterm/gnome-shell-extension-ddterm/pull/1982
 
-[@flytothehighest]: https://github.com/flytothehighest
-
 [63.2.0]: https://github.com/ddterm/gnome-shell-extension-ddterm/releases/tag/v63.2.0
 
 ## [63.1.1] - 2026-06-07
@@ -56,8 +98,6 @@ custom style to ddterm from `~/.config/gtk-3.0/gtk.css`.
 [#1959]: https://github.com/ddterm/gnome-shell-extension-ddterm/pull/1959
 [#1960]: https://github.com/ddterm/gnome-shell-extension-ddterm/pull/1960
 [#1965]: https://github.com/ddterm/gnome-shell-extension-ddterm/pull/1965
-
-[Libre]: https://hosted.weblate.org/user/Libertad/
 
 [63.1.1]: https://github.com/ddterm/gnome-shell-extension-ddterm/releases/tag/v63.1.1
 
@@ -98,7 +138,6 @@ they are now better visually separated in Preferences dialog: [#1917].
 [@Luca0208]: https://github.com/Luca0208
 [@mikelei8291]: https://github.com/mikelei8291
 [@ponta0]: https://github.com/ponta0
-[@seuimi]: https://github.com/seuimi
 
 [63.1.0]: https://github.com/ddterm/gnome-shell-extension-ddterm/releases/tag/v63.1.0
 
