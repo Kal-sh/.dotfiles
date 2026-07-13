@@ -14,6 +14,26 @@ The format is based on [Keep a Changelog], and this project adheres to
 [Keep a Changelog]: https://keepachangelog.com/en/1.1.0/
 [Semantic Versioning]: https://semver.org/spec/v2.0.0.html
 
+## [63.2.3] - 2026-07-05
+
+### Fixed
+
+- Animation description is now displayed on a separate line
+in the preferences dialog: [#2035].
+- Chinese translation improvements by [@flytothehighest]: [#2033].
+- Spanish translation improvements by [Libre]: [#2033].
+- Korean translation improvements by [@seuimi]: [#2042].
+
+[#2033]: https://github.com/ddterm/gnome-shell-extension-ddterm/pull/2033
+[#2035]: https://github.com/ddterm/gnome-shell-extension-ddterm/pull/2035
+[#2042]: https://github.com/ddterm/gnome-shell-extension-ddterm/pull/2042
+
+[@flytothehighest]: https://github.com/flytothehighest
+[Libre]: https://hosted.weblate.org/user/Libertad/
+[@seuimi]: https://github.com/seuimi
+
+[63.2.3]: https://github.com/ddterm/gnome-shell-extension-ddterm/releases/tag/v63.2.3
+
 ## [63.2.2] - 2026-06-25
 
 ### Fixed
@@ -51,10 +71,6 @@ by [@van-riper]: [#1991].
 [#2002]: https://github.com/ddterm/gnome-shell-extension-ddterm/pull/2002
 [#2003]: https://github.com/ddterm/gnome-shell-extension-ddterm/issues/2003
 [#2013]: https://github.com/ddterm/gnome-shell-extension-ddterm/pull/2013
-
-[@flytothehighest]: https://github.com/flytothehighest
-[@seuimi]: https://github.com/seuimi
-[Libre]: https://hosted.weblate.org/user/Libertad/
 
 [63.2.1]: https://github.com/ddterm/gnome-shell-extension-ddterm/releases/tag/v63.2.1
 

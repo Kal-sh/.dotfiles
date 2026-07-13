@@ -6,8 +6,14 @@
 
 # Custom functions
 
+# grep
 grepcat() {
   grep "$1" "$2"
+}
+
+# find and move
+find_move() {
+  find . -type f -name "$1" -exec mv {} "$2" \;
 }
 
 # Defination

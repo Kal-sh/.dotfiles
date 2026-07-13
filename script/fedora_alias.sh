@@ -183,6 +183,7 @@ alias gits="git global-status"
 
 # .bash_profile
 alias gr="grepcat"
+alias fm="find_move"
 alias def="word"
 alias jr="jctl_err"
 alias jf="jctl_live"
