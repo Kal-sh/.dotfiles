@@ -5,7 +5,7 @@
         "keyword": "g",
         "cmd": "https://google.com/search?q=%s",
         "icon": "/usr/share/ulauncher/media/google-search-icon.png",
-        "is_default_search": false,
+        "is_default_search": true,
         "run_without_argument": false,
         "added": 1762643687.8880103
     },
@@ -112,7 +112,7 @@
     "55e5f98e-058f-44f0-ac3c-4d2cf4c77098": {
         "id": "55e5f98e-058f-44f0-ac3c-4d2cf4c77098",
         "name": "Z-Library",
-        "keyword": "z",
+        "keyword": "zz",
         "cmd": "https://z-library.sk/s/?q=%s",
         "icon": "~/Pictures/Wallpapers/PNG/icons8-library-80.png",
         "is_default_search": false,

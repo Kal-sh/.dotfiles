@@ -21,7 +21,7 @@
  * with Wifi QR Code. If not, see <https://www.gnu.org/licenses/>.
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
- * SPDX-FileCopyrightText: 2021-2025 Gianni Lerro <glerro@pm.me>
+ * SPDX-FileCopyrightText: 2021-2026 Gianni Lerro <glerro@pm.me>
  */
 
 'use strict';

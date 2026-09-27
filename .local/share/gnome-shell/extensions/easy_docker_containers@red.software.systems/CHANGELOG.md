@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file. _(The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).)_
 
+## [35] - 2026-09-21
+
+### Fixed
+
+- Use only the first entry of `com.docker.compose.project.config_files` when resolving a Dev Container's compose file, so the user's real project file is read instead of the transient override files appended by the Dev Container CLI.
+- Stop logging an error when a Dev Container's temporary compose override file has already been deleted from `/tmp`; a missing file is now treated as expected.
+
+## [34] - 2026-07-08
+
+### Added
+
+- Add a preference to group Docker Compose services under one compose menu per compose file, with compose-level actions and a Services submenu for individual containers.
+- Show Docker Compose entries with a compose-specific icon and running/total service count.
+
+### Changed
+
+- Organize the container menu into groups separated by dividers: Docker Compose projects first, then standalone containers, then Dev Container workspaces.
+- Enable Docker Compose service grouping by default.
+- Constrain the container menu height to the active monitor work area and show scrollbars only when needed.
+
 ## [33] - 2026-05-21
 
 ### Added

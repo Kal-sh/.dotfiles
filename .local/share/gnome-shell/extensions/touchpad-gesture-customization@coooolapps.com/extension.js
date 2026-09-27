@@ -1,6 +1,6 @@
 import GLib from 'gi://GLib';
 import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
-import { PinchGestureType, SwipeGestureType, } from './common/settings.js';
+import { PinchGestureType, VerticalSwipeGestureType, HorizontalSwipeGestureType, } from './common/settings.js';
 import * as Constants from './constants.js';
 import { OverviewRoundTripGestureExtension } from './src/overviewRoundTrip.js';
 import { WorkspaceSwitchingExtension } from './src/workspaceSwitching.js';
@@ -13,6 +13,8 @@ import { OpenCloseWindowTabExtension } from './src/pinchGestures/openCloseWindow
 import { ShowNotificationListExtension } from './src/pinchGestures/showNotificationList.js';
 import { VolumeControlGestureExtension } from './src/volumeControl.js';
 import { BrightnessControlGestureExtension } from './src/brightnessControl.js';
+import { MediaControlGestureExtension } from './src/mediaControl.js';
+import { PinchVolumeControlExtension } from './src/pinchGestures/volumeControl.js';
 
 export default class TouchpadGestureCustomization extends Extension {
      
@@ -71,8 +73,8 @@ export default class TouchpadGestureCustomization extends Extension {
         /**
          * Overview navigation
          */
-        const verticalOverviewNavigationFingers = verticalSwipeToFingersMap.get(SwipeGestureType.OVERVIEW_NAVIGATION);
-        const horizontalOverviewNavigationFingers = horizontalSwipeToFingersMap.get(SwipeGestureType.OVERVIEW_NAVIGATION);
+        const verticalOverviewNavigationFingers = verticalSwipeToFingersMap.get(VerticalSwipeGestureType.OVERVIEW_NAVIGATION);
+        const horizontalOverviewNavigationFingers = horizontalSwipeToFingersMap.get(HorizontalSwipeGestureType.OVERVIEW_NAVIGATION);
         const overviewRoundTripGestureExtension = new OverviewRoundTripGestureExtension(this.settings.get_enum('overview-navigation-states'));
 
         // By default, disable overview navigation when user doesn't assign any gestures
@@ -94,8 +96,8 @@ export default class TouchpadGestureCustomization extends Extension {
          * Workspace navigation
          */
         // TODO: match workspace navigation control in overview mode and normal mode
-        const verticalWorkspaceNavigationFingers = verticalSwipeToFingersMap.get(SwipeGestureType.WORKSPACE_SWITCHING);
-        const horizontalWorkspaceNavigationFingers = horizontalSwipeToFingersMap.get(SwipeGestureType.WORKSPACE_SWITCHING);
+        const verticalWorkspaceNavigationFingers = verticalSwipeToFingersMap.get(VerticalSwipeGestureType.WORKSPACE_SWITCHING);
+        const horizontalWorkspaceNavigationFingers = horizontalSwipeToFingersMap.get(HorizontalSwipeGestureType.WORKSPACE_SWITCHING);
         const gestureExtension = new WorkspaceSwitchingExtension();
         const workspaceSwitchingState = this.settings.get_enum('workspace-switching-states');
 
@@ -114,8 +116,8 @@ export default class TouchpadGestureCustomization extends Extension {
         /**
          * Window switching (Alt + tab)
          */
-        const verticalWindowSwitchingFingers = verticalSwipeToFingersMap.get(SwipeGestureType.WINDOW_SWITCHING);
-        const horizontalWindowSwitchingFingers = horizontalSwipeToFingersMap.get(SwipeGestureType.WINDOW_SWITCHING);
+        const verticalWindowSwitchingFingers = verticalSwipeToFingersMap.get(VerticalSwipeGestureType.WINDOW_SWITCHING);
+        const horizontalWindowSwitchingFingers = horizontalSwipeToFingersMap.get(HorizontalSwipeGestureType.WINDOW_SWITCHING);
 
         if (verticalWindowSwitchingFingers?.length ||
             horizontalWindowSwitchingFingers?.length) {
@@ -159,6 +161,11 @@ export default class TouchpadGestureCustomization extends Extension {
         if (showNotificationListFingers?.length)
             this._extensions.push(new ShowNotificationListExtension(showNotificationListFingers));
 
+        // pinch to control volume
+        const pinchVolumeControlFingers = pinchToFingersMap.get(PinchGestureType.VOLUME_CONTROL);
+        if (pinchVolumeControlFingers?.length)
+            this._extensions.push(new PinchVolumeControlExtension(pinchVolumeControlFingers));
+
         // TODO: consider having an option for 'hold and swipe gestures' that can either
         // be set to window tiling or app gesture (need to fix how to activate window tiling with
         // hold and swipe without being blocked by overview navigation)
@@ -167,15 +174,15 @@ export default class TouchpadGestureCustomization extends Extension {
          */
         // TODO: when both vertical and horizontal swipe are not set to window manipulation
         // the switch for minimise window should be disbaled
-        const verticalWindowManipulationFingers = verticalSwipeToFingersMap.get(SwipeGestureType.WINDOW_MANIPULATION);
+        const verticalWindowManipulationFingers = verticalSwipeToFingersMap.get(VerticalSwipeGestureType.WINDOW_MANIPULATION);
         if (verticalWindowManipulationFingers?.length)
             this._extensions.push(new SnapWindowExtension(verticalWindowManipulationFingers));
 
         /**
          * Volume Control
          */
-        const verticalVolumeControlFingers = verticalSwipeToFingersMap.get(SwipeGestureType.VOLUME_CONTROL);
-        const horizontalVolumeControlFingers = horizontalSwipeToFingersMap.get(SwipeGestureType.VOLUME_CONTROL);
+        const verticalVolumeControlFingers = verticalSwipeToFingersMap.get(VerticalSwipeGestureType.VOLUME_CONTROL);
+        const horizontalVolumeControlFingers = horizontalSwipeToFingersMap.get(HorizontalSwipeGestureType.VOLUME_CONTROL);
 
         if (verticalVolumeControlFingers?.length ||
             horizontalVolumeControlFingers?.length) {
@@ -197,8 +204,8 @@ export default class TouchpadGestureCustomization extends Extension {
         /**
          * Brightness Control
          */
-        const verticalBrightnessControlFingers = verticalSwipeToFingersMap.get(SwipeGestureType.BRIGHTNESS_CONTROL);
-        const horizontalBrightnessControlFingers = horizontalSwipeToFingersMap.get(SwipeGestureType.BRIGHTNESS_CONTROL);
+        const verticalBrightnessControlFingers = verticalSwipeToFingersMap.get(VerticalSwipeGestureType.BRIGHTNESS_CONTROL);
+        const horizontalBrightnessControlFingers = horizontalSwipeToFingersMap.get(HorizontalSwipeGestureType.BRIGHTNESS_CONTROL);
 
         if (verticalBrightnessControlFingers?.length ||
             horizontalBrightnessControlFingers?.length) {
@@ -215,6 +222,27 @@ export default class TouchpadGestureCustomization extends Extension {
             }
 
             this._extensions.push(brightnessControlGestureExtension);
+        }
+
+        /**
+         * Media Control
+         */
+        const verticalMediaControlFingers = verticalSwipeToFingersMap.get(VerticalSwipeGestureType.MEDIA_CONTROL);
+        const horizontalMediaControlFingers = horizontalSwipeToFingersMap.get(HorizontalSwipeGestureType.MEDIA_CONTROL);
+
+        if (verticalMediaControlFingers?.length ||
+            horizontalMediaControlFingers?.length) {
+            const mediaControlGestureExtension = new MediaControlGestureExtension();
+
+            if (verticalMediaControlFingers?.length) {
+                mediaControlGestureExtension.setVerticalSwipeTracker(verticalMediaControlFingers);
+            }
+
+            if (horizontalMediaControlFingers?.length) {
+                mediaControlGestureExtension.setHorizontalSwipeTracker(horizontalMediaControlFingers);
+            }
+
+            this._extensions.push(mediaControlGestureExtension);
         }
 
         /**
@@ -287,6 +315,8 @@ export default class TouchpadGestureCustomization extends Extension {
                 this.settings.get_boolean('allow-minimize-window');
             Constants.ExtSettings.ALLOW_FULLSCREEN_WINDOW =
                 this.settings.get_boolean('allow-fullscreen-window');
+            Constants.ExtSettings.ALTTAB_ALL_WORKSPACES =
+                this.settings.get_boolean('alttab-all-workspaces');
             Constants.ExtSettings.FOLLOW_NATURAL_SCROLL =
                 this.settings.get_boolean('follow-natural-scroll');
             Constants.ExtSettings.DEFAULT_OVERVIEW_GESTURE_DIRECTION =
@@ -295,6 +325,8 @@ export default class TouchpadGestureCustomization extends Extension {
                 this.settings.get_boolean('invert-volume-gesture-direction');
             Constants.ExtSettings.INVERT_BRIGHTNESS_DIRECTION =
                 this.settings.get_boolean('invert-brightness-gesture-direction');
+            Constants.ExtSettings.INVERT_MEDIA_DIRECTION =
+                this.settings.get_boolean('invert-media-gesture-direction');
             Constants.ExtSettings.APP_GESTURES = this.settings.get_boolean('enable-forward-back-gesture');
             Constants.TouchpadConstants.SWIPE_MULTIPLIER =
                 Constants.TouchpadConstants.DEFAULT_SWIPE_MULTIPLIER *

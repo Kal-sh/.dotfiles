@@ -123,15 +123,32 @@ const getJsonName = (value) => {
 const readDevcontainerNameFromConfig = async (configFile) => {
   if (!configFile) return null;
 
+  // `com.docker.compose.project.config_files` is the list of every `-f`
+  // argument passed at container creation (e.g. the transient Dev Container
+  // override files), comma-separated per compose v2. Only the first entry is
+  // the user's real project file, so only that one is relevant.
+  //
+  // Splitting is comma-only: spaces are legal inside paths (folders and
+  // config files can contain them), so whitespace is never treated as a
+  // separator. If no comma is present the whole string is one path.
+  const firstConfigFile = configFile.includes(",")
+    ? configFile.split(",")[0].trim()
+    : configFile.trim();
+  if (!firstConfigFile) return null;
+
   try {
-    const file = Gio.File.new_for_path(configFile);
-    const [ok, contents] = await file.load_contents_async(null);
-    if (!ok) return null;
+    const file = Gio.File.new_for_path(firstConfigFile);
+    const [contents] = await file.load_contents_async(null);
+    if (!contents) return null;
 
     const decoder = new TextDecoder("utf-8");
     const config = parseJsonc(decoder.decode(contents));
     return getJsonName(config);
   } catch (e) {
+    // The Dev Container CLI deletes its temporary compose override files
+    // from /tmp as soon as the container starts, so a missing file is
+    // expected and should not be logged as an error.
+    if (e?.code === Gio.IOErrorEnum.NOT_FOUND) return null;
     logError(e);
     return null;
   }

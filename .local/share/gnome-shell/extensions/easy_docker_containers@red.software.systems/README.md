@@ -1,6 +1,6 @@
 # Easy Docker Containers
 
-A GNOME Shell extension _(GNOME Panel applet)_ to be able to generally control your available Docker containers.
+A GNOME Shell extension _(GNOME Panel applet)_ to be able to generally control your available Docker containers, as single instances, compose instances and dev containers.
 
 ## Screenshot
 
@@ -21,6 +21,16 @@ The following actions are available from the GNOME Panel menu per Docker contain
 - **Exec** _(Will login to the running container interactively through your default terminal application.)_
 - **Logs** _(Will start the running container's Docker logs in your default terminal application.)_
 
+### Menu organization preferences
+
+Container entries are sorted automatically, with running containers before stopped containers and names sorted alphabetically within each state. The menu height is constrained to the active monitor's work area, and scrollbars appear only when the list is too long to fit on screen.
+
+The extension preferences include a container display option:
+
+- **Group containers by type** _(Separates containers into Docker Compose projects, single instances, and devcontainers — each group divided by a separator. Enabled by default.)_
+
+When this option is enabled, the menu is organized into sections divided by separators: Docker Compose projects first, then standalone containers, and finally Dev Container workspaces. Each compose file is collected under a single compose menu that shows the compose project name with a compose-specific icon and a running/total service count, exposes compose-level actions (start, stop, pause, restart) for the whole project, and provides a **Services** submenu for the individual containers. Running or partially running compose groups appear before fully stopped groups.
+
 ### Devcontainer support
 
 When a stopped container was created from a [Dev Container](https://containers.dev/) workspace (i.e. the workspace folder contains a `.devcontainer/devcontainer.json`), the extension shows additional information and actions:
@@ -32,7 +42,7 @@ When a stopped container was created from a [Dev Container](https://containers.d
 
 For **running** devcontainers, an additional action is available:
 
-- **Open in IDE** _(Runs the configured IDE command to attach your editor to the running container — see [IDE command](#post-recreate-command-ide-reattachment) below.)_
+- **Open in IDE** _(Runs the configured IDE command to attach your editor to the running container — see [IDE command](#open-in-ide-command) below.)_
 
 > **Note:** these actions require the [`devcontainer` CLI](https://github.com/devcontainers/cli) to be installed and reachable on `PATH` (including version-manager-managed paths such as NVM or pyenv).
 
@@ -48,7 +58,7 @@ Use `%workspaceFolder%` as a placeholder for the workspace folder path. Examples
 | IDE | Command |
 |-----|---------|
 | VS Code / Cursor | `code --folder-uri "vscode-remote://dev-container+$(printf '%s' '%workspaceFolder%' \| od -An -tx1 \| tr -dc '[:xdigit:]')/workspaceFolder"` |
-| Zed | `zed %workspaceFolder%` _(Zed detects the devcontainer and prompts to reopen)_ |
+| Zed | `zed %workspaceFolder%` _(Zed detects the devcontainer on open and prompts to reopen)_ |
 | IntelliJ / JetBrains | No CLI hook available — reconnect manually from inside the IDE. |
 
 Leave the field empty to skip this step entirely.
@@ -57,7 +67,7 @@ Leave the field empty to skip this step entirely.
 
 1. Properly installed and already running Docker service.
 2. Corresponding Linux user in `docker` Linux group for manage '_Docker_' without `sudo` permission.
-3. _(Devcontainer features only)_ [`devcontainer` CLI](https://github.com/devcontainers/cli) installed and on `PATH`.
+3. _(Dev Container features only)_ the [`devcontainer` CLI](https://github.com/devcontainers/cli) installed and on `PATH`.
 
 [^1]: independently from the extension itself
 

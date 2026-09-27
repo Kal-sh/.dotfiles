@@ -63,7 +63,7 @@ arch | cachyos)
     tor
     ncdu
     nethogs
-    tor
+    ttyper
     wl-clipboard
     gnome-tweaks
     tree-sitter-cli

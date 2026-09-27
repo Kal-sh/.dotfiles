@@ -1,0 +1,49 @@
+{
+  "required_api_version": "^2.0.0",
+  "name": "Zen Browser Search",
+  "description": "Search bookmarks and history in Zen Browser",
+  "developer_name": "Claudio Sanches",
+  "icon": "images/icon.svg",
+  "options": {
+    "query_debounce": 0.1
+  },
+  "preferences": [
+    {
+      "id": "kw",
+      "type": "keyword",
+      "name": "Zen Browser Search",
+      "default_value": "zen"
+    },
+    {
+      "id": "search_type",
+      "type": "select",
+      "name": "Search Type",
+      "description": "Select what to search for",
+      "default_value": "both",
+      "options": [
+        { "value": "both", "text": "Bookmarks and History" },
+        { "value": "bookmarks", "text": "Bookmarks Only" },
+        { "value": "history", "text": "History Only" }
+      ]
+    },
+    {
+      "id": "order",
+      "type": "select",
+      "name": "History Sorting",
+      "description": "How to sort history results",
+      "default_value": "frecency",
+      "options": [
+        { "value": "frecency", "text": "Relevance (Frecency)" },
+        { "value": "visit", "text": "Visit Count" },
+        { "value": "recent", "text": "Last Visit" }
+      ]
+    },
+    {
+      "id": "limit",
+      "type": "input",
+      "name": "Result Limit",
+      "description": "Maximum number of results to display",
+      "default_value": "5"
+    }
+  ]
+}

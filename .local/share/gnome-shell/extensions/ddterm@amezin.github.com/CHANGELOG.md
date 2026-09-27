@@ -14,6 +14,34 @@ The format is based on [Keep a Changelog], and this project adheres to
 [Keep a Changelog]: https://keepachangelog.com/en/1.1.0/
 [Semantic Versioning]: https://semver.org/spec/v2.0.0.html
 
+## [64.0.0] - 2026-09-23
+
+### Added
+
+- `pillarbox` or `letterbox` css classes are automatically assigned
+to the window when work area size is less than 100%: [#2077].
+- GNOME 51 support: [#2109].
+
+### Removed
+
+- Support for GNOME 46 (Ubuntu 24.04): [#2053].
+- Support for GNOME 47: [#2068].
+
+### Fixed
+
+- Autohiding unnecessary vertical borders: [#2071], [#2077].
+- Moved background opacity preferences from "Terminal" page to "Window":
+[#2072].
+
+[#2053]: https://github.com/ddterm/gnome-shell-extension-ddterm/pull/2053
+[#2068]: https://github.com/ddterm/gnome-shell-extension-ddterm/pull/2068
+[#2071]: https://github.com/ddterm/gnome-shell-extension-ddterm/issues/2071
+[#2072]: https://github.com/ddterm/gnome-shell-extension-ddterm/pull/2072
+[#2077]: https://github.com/ddterm/gnome-shell-extension-ddterm/pull/2077
+[#2109]: https://github.com/ddterm/gnome-shell-extension-ddterm/pull/2109
+
+[64.0.0]: https://github.com/ddterm/gnome-shell-extension-ddterm/releases/tag/v64.0.0
+
 ## [63.2.3] - 2026-07-05
 
 ### Fixed

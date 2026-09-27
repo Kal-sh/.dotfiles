@@ -288,12 +288,23 @@ const EEPSIndicator = GObject.registerClass(
                     appType = 'native';
                 }
 
-                // Get Easy Effects App Version
-                const appVersionString = await this.execCommunicate(this.command.concat(['-v']));
-                const appVersionArray = appVersionString.split(' ');
-                const appVersion = appVersionArray[appVersionArray.length - 1];
-                const [majorVer, unusedMinorVer, unusedBuildVer] = appVersion.split('.', 3);
-                const easyEffectsIsQT = Number(majorVer) >= 8;
+                // Get Easy Effects App Version. Some legacy GApplication builds
+                // return no output for -v when started through D-Bus activation.
+                // Those builds predate the Qt port, so default to the GTK parser.
+                let easyEffectsIsQT = false;
+                try {
+                    const appVersionString = await this.execCommunicate(
+                        this.command.concat(['-v'])
+                    );
+                    const appVersionMatch = appVersionString.match(/(\d+)\.\d+/);
+
+                    if (!appVersionMatch)
+                        throw new Error(`Could not parse EasyEffects version: ${appVersionString}`);
+
+                    easyEffectsIsQT = Number(appVersionMatch[1]) >= 8;
+                } catch (error) {
+                    log(`Could not get EasyEffects version; assuming legacy GTK release: ${error}`);
+                }
 
                 // Build menu with last values
                 this._buildMenu(this.categoryNames[0], this.categoryNames[1], this.command);

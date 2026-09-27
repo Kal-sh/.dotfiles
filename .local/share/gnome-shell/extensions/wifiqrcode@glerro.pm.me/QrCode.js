@@ -21,7 +21,7 @@
  * with Wifi QR Code. If not, see <https://www.gnu.org/licenses/>.
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
- * SPDX-FileCopyrightText: 2021-2025 Gianni Lerro <glerro@pm.me>
+ * SPDX-FileCopyrightText: 2021-2026 Gianni Lerro <glerro@pm.me>
  */
 
 'use strict';
@@ -53,7 +53,7 @@ export const QrCodeBox = GObject.registerClass({
 }, class QrCodeBox extends St.BoxLayout {
     constructor(extension, device, isVisible = true) {
         super({
-            vertical: true,
+            orientation: Clutter.Orientation.VERTICAL,
             x_align: Clutter.ActorAlign.CENTER,
             y_align: Clutter.ActorAlign.CENTER,
             y_expand: true,
